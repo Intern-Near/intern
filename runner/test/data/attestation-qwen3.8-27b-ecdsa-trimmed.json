@@ -1,0 +1,29 @@
+{
+  "gateway_attestation": {
+    "signing_address": "0xb98a789cdc4817275f5155593ba73ef2a957e779",
+    "signing_algo": "ecdsa",
+    "intel_quote": "<removed: 10014 bytes>",
+    "event_log": "<removed: 5409 bytes>",
+    "report_data": "<removed: 130 bytes>",
+    "request_nonce": "036fb6b4bc4cb250b004862ad06d0c6b77cd60fe97840ebed802e3975953339a",
+    "info": "<removed: 53740 bytes>"
+  },
+  "model_attestations": [
+    {
+      "model_name": "Qwen/Qwen3.8-27B",
+      "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+      "signing_algo": "ecdsa",
+      "signing_public_key": "db10f54ceab867043a1528a1958f69602499a5518a5dc3f2252259d738322c407b1b9990c7dea6073f7380242ac574b7540a9ae224f51057de8aa2766ecf372a",
+      "request_nonce": "036fb6b4bc4cb250b004862ad06d0c6b77cd60fe97840ebed802e3975953339a",
+      "intel_quote": "<removed: 10014 bytes>",
+      "nvidia_payload": "<removed: 98362 bytes>",
+      "event_log": "<removed: 5226 bytes>",
+      "info": "<removed: 39604 bytes>",
+      "ohttp_attestation": "<removed: 363 bytes>",
+      "compose_manager_attestation": "<removed: 66749 bytes>",
+      "ohttp_key_config": "<removed: 92 bytes>"
+    }
+  ],
+  "ohttp_key_config": "<removed: 92 bytes>",
+  "ohttp_attestation": "<removed: 363 bytes>"
+}

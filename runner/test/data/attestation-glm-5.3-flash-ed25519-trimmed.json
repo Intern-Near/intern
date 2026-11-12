@@ -1,0 +1,29 @@
+{
+  "gateway_attestation": {
+    "signing_address": "40599fb284f43953bb356b09080fd803c960fc10285ad90eca462ca711ad4acb",
+    "signing_algo": "ed25519",
+    "intel_quote": "<removed: 10014 bytes>",
+    "event_log": "<removed: 5409 bytes>",
+    "report_data": "<removed: 130 bytes>",
+    "request_nonce": "719ba0bc8167f6f9a6e859c32ec8faf06db99f4d37c8e1e8843728496d0e27e0",
+    "info": "<removed: 53740 bytes>"
+  },
+  "model_attestations": [
+    {
+      "model_name": "z-ai/glm-5.3-flash",
+      "signing_address": "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff",
+      "signing_algo": "ed25519",
+      "signing_public_key": "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff",
+      "request_nonce": "719ba0bc8167f6f9a6e859c32ec8faf06db99f4d37c8e1e8843728496d0e27e0",
+      "intel_quote": "<removed: 10014 bytes>",
+      "nvidia_payload": "<removed: 98362 bytes>",
+      "event_log": "<removed: 9483 bytes>",
+      "info": "<removed: 44842 bytes>",
+      "ohttp_attestation": "<removed: 363 bytes>",
+      "compose_manager_attestation": "<removed: 103563 bytes>",
+      "ohttp_key_config": "<removed: 92 bytes>"
+    }
+  ],
+  "ohttp_key_config": "<removed: 92 bytes>",
+  "ohttp_attestation": "<removed: 363 bytes>"
+}

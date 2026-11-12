@@ -1,0 +1,12 @@
+{
+  "signer_contract": "v1.signer-prod.testnet",
+  "method": "derived_public_key",
+  "args": {
+    "path": "hl-1",
+    "predecessor": "hlguard1.hackcheck-2026-1103.testnet",
+    "domain_id": 0
+  },
+  "result": "secp256k1:5PQMKrnErXPZohJepKB6aHonYVmdNGLZVWwecXNb3m2XjRb8FP3D4hbdpbPDXHfvZxqg1y5X7DooCwobXDNxddBj",
+  "address": "0x283779ffb96dc9ac3a03333e39b18ed0a793e040",
+  "read_at": "2026-11-11T18:00:03.918Z"
+}
