@@ -1,0 +1,1120 @@
+.home {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--s-4) var(--page-gutter) var(--s-8);
+}
+.home main {
+  display: grid;
+  gap: var(--s-5);
+}
+.home main > * {
+  min-width: 0;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-bottom: var(--s-4);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+.topbar-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.pill-gum {
+  background: var(--gum);
+}
+.banner {
+  margin-bottom: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  background: var(--tomato);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-m);
+  font-weight: 600;
+}
+.loading {
+  min-height: 60dvh;
+  place-content: center;
+  justify-items: center;
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+}
+
+/* The desk scene */
+.scene {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 500px;
+  border: var(--line-bold) solid var(--ink);
+  border-radius: 28px;
+  overflow: hidden;
+  background: #f6c98f url("/room/desk-strip.webp") center bottom / cover no-repeat;
+}
+.stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--s-5) 0 9% var(--s-4);
+  min-width: 0;
+}
+.stage-tin {
+  margin-right: -3%;
+}
+.intern-wrap {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+}
+/* The words on the slip the Intern holds up. The slip is blank in the art. */
+.slip {
+  position: absolute;
+  top: 10.2%;
+  left: 50%;
+  width: 44%;
+  transform: translateX(-50%) rotate(-1deg);
+  display: grid;
+  justify-items: center;
+  line-height: 1.25;
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+  animation: slip-in 600ms steps(12, end) 200ms both;
+}
+@keyframes slip-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.scene-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+  gap: var(--s-5);
+  align-items: start;
+  padding: var(--s-6) var(--s-5) var(--s-8) 0;
+}
+.rank-block {
+  display: grid;
+  gap: var(--s-2);
+}
+.rank-block h1 {
+  font-size: clamp(2.75rem, 4.6vw, 4.25rem);
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+.rank-line {
+  max-width: 30ch;
+  font-size: var(--text-m);
+  line-height: 1.35;
+}
+
+/* Rank ladder */
+.ladder {
+  list-style: none;
+  display: flex;
+  gap: var(--s-5);
+  margin: var(--s-3) 0 0;
+  padding: 0;
+}
+.ladder li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.ladder li + li::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  left: calc(var(--s-5) * -1);
+  width: var(--s-5);
+  height: 4px;
+  background: var(--ink);
+}
+.medal {
+  width: 72px;
+  height: 72px;
+  display: block;
+  overflow: hidden;
+  background: var(--card);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: 50%;
+}
+.medal img {
+  width: 150%;
+  max-width: none;
+  margin: -6% 0 0 -25%;
+}
+.ladder .is-current .medal {
+  background: var(--sticky);
+  box-shadow: var(--lift);
+}
+.ladder .is-ahead .medal img,
+.ladder .is-past .medal img {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.ladder .is-ahead .medal-name {
+  color: var(--pencil);
+}
+
+/* Countdown panel */
+.countdown {
+  padding: var(--s-5);
+  border-width: var(--line-bold);
+  border-radius: var(--radius-l);
+}
+.big-clock {
+  font-family: var(--font-mono);
+  font-size: var(--mono-xl);
+  line-height: 1.25;
+  color: var(--sticky);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.big-clock.is-urgent {
+  color: var(--tomato-lit);
+}
+.stat-rows {
+  margin: var(--s-3) 0 0;
+}
+.stat-rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-top: 1px solid #34323a;
+  font-size: var(--text-s);
+}
+.stat-rows dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dim {
+  color: var(--dim);
+}
+.up {
+  color: var(--mint-lit);
+}
+.down {
+  color: var(--tomato-lit);
+}
+
+/* The last refusal, pinned to the desk */
+.last-nope {
+  position: absolute;
+  left: var(--s-4);
+  right: var(--s-4);
+  bottom: var(--s-4);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--s-4));
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2);
+  font-size: var(--text-s);
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+}
+.nope-chip {
+  flex: none;
+  padding: 2px var(--s-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--tomato);
+  border: var(--line-card) solid var(--ink);
+  border-radius: 8px;
+  transform: rotate(-6deg);
+}
+.last-nope time {
+  flex: none;
+  color: var(--pencil);
+}
+
+/* Today's shift */
+.shift {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+}
+.shift li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  font-weight: 600;
+  font-size: var(--text-s);
+  color: var(--pencil);
+  background: transparent;
+  border: var(--line-card) dashed var(--pencil);
+  border-radius: var(--radius-pill);
+}
+.shift-dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  border: var(--line-card) solid currentColor;
+  border-radius: 50%;
+}
+.shift .is-done {
+  color: var(--ink);
+  background: var(--mint);
+  border: var(--line-card) solid var(--ink);
+}
+.shift .is-now {
+  color: var(--ink);
+  background: var(--sticky);
+  border: var(--line-card) solid var(--ink);
+  box-shadow: var(--lift);
+}
+
+/* Three panels */
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+.panels > * {
+  min-width: 0;
+}
+.panel-dark,
+.card {
+  padding: var(--s-5);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: 28px;
+}
+.card {
+  background: var(--card);
+}
+.panel-dark h2,
+.card h2 {
+  font-size: var(--display-s);
+  margin-bottom: var(--s-3);
+}
+.panel-dark h2,
+.panel-dark h3 {
+  color: var(--sticky);
+}
+.empty {
+  padding: var(--s-4);
+  color: var(--dim);
+  border: 2px dashed #3b3940;
+  border-radius: var(--radius-m);
+}
+
+/* Feed */
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.feed li {
+  display: grid;
+  grid-template-columns: 40px 84px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 58px;
+  padding: var(--s-2) 0;
+  border-top: 1px solid #34323a;
+  font-size: var(--text-s);
+  line-height: 1.3;
+}
+.feed li:first-child {
+  border-top: 0;
+}
+.feed li.is-fresh {
+  animation: row-in var(--t-enter) var(--ease) both, row-flash 1.8s ease-out both;
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes row-flash {
+  from {
+    background: #3a3520;
+  }
+  to {
+    background: transparent;
+  }
+}
+.feed-face {
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+  background: var(--cream);
+  border-radius: 10px;
+}
+.tag {
+  justify-self: start;
+  padding: 2px var(--s-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--card);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.tag-yes {
+  background: var(--mint);
+  border-radius: var(--radius-pill);
+}
+.tag-nope {
+  background: var(--tomato);
+  outline: 2px solid var(--tomato);
+  outline-offset: 2px;
+}
+.tag-money {
+  background: var(--sky);
+}
+.tag-vote {
+  background: var(--gum);
+}
+.feed-text {
+  overflow-wrap: anywhere;
+}
+.feed-code {
+  color: var(--tomato-lit);
+}
+.feed-note {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--dim);
+}
+
+/* Today's bet */
+.bet {
+  padding: var(--s-4);
+  background: #24232a;
+  border-radius: var(--radius-m);
+}
+.bet-line {
+  font-family: var(--font-mono);
+  font-size: var(--mono-m);
+  line-height: 1.4;
+}
+.bet-sub {
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+.bet-result {
+  font-family: var(--font-mono);
+  font-size: var(--mono-l);
+  line-height: 1.3;
+}
+.bet-result .feed-note {
+  font-family: var(--font-text);
+}
+.bet-steps {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+  font-size: var(--text-s);
+  color: var(--dim);
+}
+.bet-steps .is-done {
+  color: var(--screen-text);
+}
+.bet-steps .is-done span[aria-hidden] {
+  color: var(--mint-lit);
+}
+.book-h {
+  margin-top: var(--s-5);
+  font-size: var(--text-l);
+}
+.book-sub {
+  margin-bottom: var(--s-3);
+  font-size: var(--text-xs);
+  color: var(--dim);
+}
+.book {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: var(--s-2);
+}
+.book li {
+  aspect-ratio: 1;
+  border: 2px dashed #46444c;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.book li.is-got {
+  border: 0;
+  background: var(--cream);
+}
+.book img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Pool */
+.dial-bar {
+  display: flex;
+  min-height: 36px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.dial-bar span {
+  display: grid;
+  place-items: center;
+  flex-basis: 0;
+  white-space: nowrap;
+  padding: 0 var(--s-2);
+}
+.dial-safe {
+  background: var(--sky);
+  border-right: var(--line-bold) solid var(--ink);
+}
+.dial-brave {
+  background: var(--sticky);
+}
+.pool-rows {
+  margin: var(--s-3) 0;
+}
+.pool-rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  font-size: var(--text-s);
+  border-top: 1px solid #e9dfcc;
+}
+.pool-rows > div:first-child {
+  border-top: 0;
+}
+.pool-rows .sub {
+  padding-left: var(--s-4);
+  color: var(--pencil);
+  border-top: 0;
+  padding-top: 0;
+}
+.pool-rows dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fine {
+  font-size: var(--text-xs);
+  color: var(--pencil);
+}
+
+/* Medium: info under the stage, panels in two columns */
+@media (max-width: 1180px) {
+  .scene {
+    grid-template-columns: 1fr;
+  }
+  .stage {
+    padding: var(--s-5) var(--s-4) 0;
+    min-height: 300px;
+  }
+  .scene-info {
+    padding: var(--s-5) var(--s-5) var(--s-8);
+    background: var(--cream);
+    border-top: var(--line-bold) solid var(--ink);
+  }
+  .panels {
+    grid-template-columns: 1fr 1fr;
+  }
+  .panels > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Phone */
+@media (max-width: 720px) {
+  .brand {
+    font-size: 1.375rem;
+  }
+  .brand img {
+    width: 36px;
+    height: 36px;
+  }
+  .scene {
+    min-height: 0;
+    border-radius: 22px;
+  }
+  .stage {
+    min-height: 0;
+    padding: var(--s-4) var(--s-2) 0;
+  }
+  /* Tin has its own card further down; on a phone the desk belongs to the Intern and Stamp */
+  .stage .stage-tin {
+    display: none;
+  }
+  /* A small Intern has a small slip: keep one line */
+  .slip span:last-child {
+    display: none;
+  }
+  .slip {
+    top: 11.5%;
+  }
+  .scene-info {
+    grid-template-columns: 1fr;
+    padding: var(--s-4) var(--s-4) var(--s-4);
+  }
+  .last-nope {
+    position: static;
+    width: auto;
+    max-width: none;
+    margin: 0 var(--s-4) var(--s-4);
+    align-items: flex-start;
+    border-radius: var(--radius-m);
+    background: var(--card);
+  }
+  /* On a phone the desk picture belongs to the stage only, so the characters always stand on it */
+  .scene {
+    background: var(--cream);
+  }
+  .stage {
+    background: #f6c98f url("/room/desk-strip-s.webp") center bottom / cover no-repeat;
+  }
+  .shift {
+    grid-template-columns: 1fr 1fr;
+  }
+  .panels {
+    grid-template-columns: 1fr;
+  }
+  .panel-dark,
+  .card {
+    padding: var(--s-4);
+    border-radius: 22px;
+  }
+  .feed li {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-areas: "face tag time" "face text text";
+    row-gap: 2px;
+    align-items: start;
+    padding: var(--s-3) 0;
+  }
+  .feed-face {
+    grid-area: face;
+  }
+  .feed .tag {
+    grid-area: tag;
+  }
+  .feed-text {
+    grid-area: text;
+  }
+  .feed time {
+    grid-area: time;
+  }
+  .big-clock {
+    font-size: var(--mono-xl);
+  }
+}
+
+/* ---------- The verdict moment (step 4) ---------- */
+.pill-link {
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--sticky);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.stage {
+  position: relative;
+}
+.stamp-wrap {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  margin-left: -4%;
+}
+.stamp-wrap .stage-stamp {
+  margin-left: 0;
+}
+/* Stamp leaps… */
+.stamp-wrap.is-up {
+  transform: translateY(-34%) rotate(-6deg);
+  transition: transform 200ms var(--ease);
+}
+/* …and comes down. The one accelerating curve in the product. */
+.stamp-wrap.is-down {
+  animation: stamp-slam 120ms var(--ease-stamp) both;
+}
+@keyframes stamp-slam {
+  from {
+    transform: translateY(-34%) rotate(-6deg);
+  }
+  to {
+    transform: translateY(0) rotate(0);
+  }
+}
+.stamp-wrap.is-hop {
+  animation: stamp-hop 320ms var(--ease-bounce) both;
+}
+@keyframes stamp-hop {
+  40% {
+    transform: translateY(-9%);
+  }
+}
+/* 3px, once, on impact */
+.scene.is-shaking {
+  animation: shake 180ms linear 100ms both;
+}
+@keyframes shake {
+  20% {
+    transform: translate(3px, -2px);
+  }
+  45% {
+    transform: translate(-3px, 2px);
+  }
+  70% {
+    transform: translate(2px, 1px);
+  }
+}
+
+.verdict-zone {
+  position: absolute;
+  top: var(--s-5);
+  left: var(--s-5);
+  display: grid;
+  justify-items: start;
+  gap: var(--s-4);
+  pointer-events: none;
+}
+.lights {
+  list-style: none;
+  display: flex;
+  gap: var(--s-2);
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  background: var(--screen);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+  animation: row-in var(--t-enter) var(--ease) both;
+}
+.lamp {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #4a4850;
+  border-radius: 50%;
+  background: #2a292f;
+  transition: background var(--t-light) linear, border-color var(--t-light) linear;
+}
+.light-ok .lamp {
+  background: var(--mint-lit);
+  border-color: var(--mint-lit);
+}
+/* Failed is never colour alone: the lamp becomes a square with a cross */
+.light-fail .lamp {
+  background: var(--tomato-lit);
+  border-color: var(--tomato-lit);
+  border-radius: 4px;
+  background-image:
+    linear-gradient(45deg, transparent 44%, var(--ink) 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, var(--ink) 44% 56%, transparent 56%);
+}
+.light-skipped .lamp {
+  border-style: dashed;
+  border-color: var(--dim);
+}
+
+/* The mark Stamp leaves on the wall */
+.mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 4.6vw, 4rem);
+  line-height: 1;
+  padding: 0.12em 0.4em 0.18em;
+  color: var(--ink);
+}
+.mark-nope {
+  background: var(--tomato);
+  border: 8px double var(--ink);
+  border-radius: 14px;
+  transform: rotate(-6deg);
+  animation: mark-land 160ms var(--ease) 100ms both;
+}
+.mark-yes {
+  background: var(--mint);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-pill);
+  animation: mark-land-soft 240ms var(--ease-bounce) both;
+}
+@keyframes mark-land {
+  from {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.5);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+@keyframes mark-land-soft {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.last-nope.is-moment {
+  border-width: var(--line-bold);
+  box-shadow: var(--lift);
+  animation: row-in var(--t-enter) var(--ease) 120ms both;
+}
+.yes-chip {
+  flex: none;
+  padding: 2px var(--s-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--mint);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+}
+/* The rule's code types in, in the program's own voice */
+.typed {
+  display: inline-block;
+  vertical-align: bottom;
+  overflow: hidden;
+  white-space: nowrap;
+  width: calc(var(--n) * 1ch);
+  animation: typing 320ms steps(16, end) 260ms both;
+}
+@keyframes typing {
+  from {
+    width: 0;
+  }
+}
+.circled {
+  position: relative;
+  display: inline-block;
+  font-weight: 700;
+}
+.circled svg {
+  position: absolute;
+  inset: -22% -14%;
+  width: 128%;
+  max-width: none;
+  height: 144%;
+  overflow: visible;
+}
+.circled path {
+  fill: none;
+  stroke: var(--tomato);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 360ms ease-out 420ms forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.new-sticker {
+  flex: none;
+  display: grid;
+  justify-items: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  animation: peel 520ms var(--ease-bounce) 620ms both;
+}
+.new-sticker img {
+  width: 56px;
+  height: 56px;
+  border: var(--line-card) solid var(--ink);
+  border-radius: 12px;
+  transform: rotate(5deg);
+}
+@keyframes peel {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-18deg) scale(0.6);
+  }
+}
+.book li.is-new {
+  animation: peel 520ms var(--ease-bounce) 700ms both;
+  outline: 3px solid var(--sticky);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .verdict-zone {
+    top: var(--s-3);
+    left: var(--s-3);
+    gap: var(--s-2);
+  }
+  .lamp {
+    width: 14px;
+    height: 14px;
+  }
+  .mark {
+    font-size: 1.625rem;
+  }
+  /* Wall space above the characters, so the lights and the mark never cover a face */
+  .stage {
+    padding-top: 84px;
+  }
+  .mark-nope {
+    border-width: 6px;
+  }
+  .pill-link {
+    display: none;
+  }
+}
+
+/* Reduced motion: the mark, the rule and the circle are simply present */
+@media (prefers-reduced-motion: reduce) {
+  .scene.is-shaking,
+  .stamp-wrap.is-down,
+  .stamp-wrap.is-hop {
+    animation: none;
+  }
+  .stamp-wrap.is-up {
+    transform: none;
+  }
+  .circled path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+  .typed {
+    animation: none;
+  }
+}
+
+/* ---------- Navigation and links to a NOPE ---------- */
+.nav {
+  display: flex;
+  gap: var(--s-1);
+  margin-right: auto;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  font-weight: 700;
+  font-size: var(--text-s);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+}
+.nav a[aria-current="page"] {
+  color: var(--cream);
+  background: var(--ink);
+}
+a.feed-code {
+  color: var(--tomato-lit);
+  text-underline-offset: 3px;
+}
+.see {
+  flex: none;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+@media (max-width: 720px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+  .nav {
+    order: 3;
+    width: 100%;
+  }
+}
+
+/* ---------- Polish pass ---------- */
+.skip {
+  position: absolute;
+  left: var(--s-4);
+  top: -80px;
+  z-index: 50;
+  padding: var(--s-3) var(--s-4);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--sticky);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-m);
+}
+.skip:focus {
+  top: var(--s-3);
+}
+.topbar {
+  position: relative;
+}
+/* Every tap target is at least 44px tall */
+.nav a {
+  min-height: var(--tap);
+}
+.topbar .pill-link {
+  min-height: var(--tap);
+}
+.see,
+.times a,
+a.feed-code {
+  display: inline-block;
+  padding-block: 10px;
+  margin-block: -10px;
+}
+/* The bet is part of its panel, not a second card inside it */
+.bet {
+  padding: 0 0 var(--s-4);
+  background: none;
+  border-bottom: 1px solid #34323a;
+  border-radius: 0;
+}
+number-flow-react {
+  font-variant-numeric: tabular-nums;
+  --number-flow-char-height: 1.4em;
+}
+.unreachable {
+  gap: var(--s-3);
+  text-align: center;
+}
+.unreachable h1 {
+  font-size: var(--display-m);
+}
+.unreachable-text {
+  max-width: 52ch;
+  font-family: var(--font-text);
+  font-size: var(--text-m);
+}
+.unreachable .btn {
+  font-family: var(--font-display);
+}
+.unreachable-why {
+  max-width: 70ch;
+  color: var(--pencil);
+  overflow-wrap: anywhere;
+}
+
+.home .btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--s-5);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-m);
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--sticky);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--lift);
+  cursor: pointer;
+}
+.home .btn:active {
+  transform: translateY(3px) scale(0.97);
+  box-shadow: var(--lift-pressed);
+}
+.home .btn-quiet {
+  background: var(--card);
+}
+
+@media (max-width: 720px) {
+  /* The sentence gets the full width; the time and the link sit under it */
+  .last-nope {
+    flex-wrap: wrap;
+  }
+  .last-nope > span:nth-child(2) {
+    flex: 1 1 60%;
+  }
+}
+
+/* More pages than fit on a phone: the row of links scrolls sideways instead of wrapping */
+.nav {
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  min-width: 0;
+}
+.nav::-webkit-scrollbar {
+  display: none;
+}
+.nav a {
+  flex: none;
+}
+.panel-dark h2 a {
+  font-family: var(--font-text);
+  font-size: var(--text-s);
+  font-weight: 700;
+  color: var(--sticky);
+  margin-left: var(--s-3);
+}
+
+.pill-live {
+  background: var(--mint);
+}
+.pill-in,
+.pill-me {
+  min-height: var(--tap);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.pill-in {
+  background: var(--sticky);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.pill-me {
+  background: var(--mint);
+}

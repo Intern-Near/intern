@@ -1,0 +1,17 @@
+[package]
+name = "stickers"
+version = "0.1.0"
+description = "The $INTERN sticker NFTs (01 1.3, section 9.5): NEP-171/177/181. Boss badges (not transferable), the sixteen originals, goal stickers. Only the coin contract mints."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+near-contract-standards = { workspace = true }
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

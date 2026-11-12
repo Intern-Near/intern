@@ -1,0 +1,14 @@
+# build output
+/target/
+target/
+node_modules/
+dist/
+# secrets: keys live in ~/.near-credentials and in .env files, never in the repository
+.env
+.env.*
+!.env.example
+*.pem
+# local noise
+*.log
+.DS_Store
+__pycache__/

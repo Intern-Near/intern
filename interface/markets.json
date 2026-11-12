@@ -1,0 +1,26 @@
+{
+  "interface_version": "1.3",
+  "about": "The six markets of 01-SHARED-INTERFACE.md section 4, one list per network, each entry in the shape of the MarketInfo type. Indexes differ per network and can change: they are pinned at deploy and re-checked before each deploy.",
+  "source": "Hyperliquid POST /info {\"type\":\"metaAndAssetCtxs\"}, pulled 2026-11-11, recorded in research-scripts/hl_markets_2026-11-11.txt. Every index and size-decimals value below was compared with that file on 2026-11-11.",
+  "notes": {
+    "SHIB": "Hyperliquid name kSHIB: one unit is 1,000 SHIB",
+    "PEPE": "Hyperliquid name kPEPE: one unit is 1,000 PEPE"
+  },
+  "number_format": "A price has at most 5 significant figures and at most 6 - sz_decimals decimal places; a size has sz_decimals decimal places; trailing zeros are removed. Prices and sizes are sent as whole numbers scaled by 100,000,000 (_e8).",
+  "testnet": [
+    { "market": "DOGE",  "hl_name": "DOGE",  "hl_asset": 173, "sz_decimals": 0 },
+    { "market": "SHIB",  "hl_name": "kSHIB", "hl_asset": 29,  "sz_decimals": 0 },
+    { "market": "PEPE",  "hl_name": "kPEPE", "hl_asset": 12,  "sz_decimals": 0 },
+    { "market": "PENGU", "hl_name": "PENGU", "hl_asset": 139, "sz_decimals": 0 },
+    { "market": "WIF",   "hl_name": "WIF",   "hl_asset": 78,  "sz_decimals": 0 },
+    { "market": "TRUMP", "hl_name": "TRUMP", "hl_asset": 150, "sz_decimals": 1 }
+  ],
+  "mainnet": [
+    { "market": "DOGE",  "hl_name": "DOGE",  "hl_asset": 12,  "sz_decimals": 0 },
+    { "market": "SHIB",  "hl_name": "kSHIB", "hl_asset": 38,  "sz_decimals": 0 },
+    { "market": "PEPE",  "hl_name": "kPEPE", "hl_asset": 15,  "sz_decimals": 0 },
+    { "market": "PENGU", "hl_name": "PENGU", "hl_asset": 163, "sz_decimals": 0 },
+    { "market": "WIF",   "hl_name": "WIF",   "hl_asset": 98,  "sz_decimals": 0 },
+    { "market": "TRUMP", "hl_name": "TRUMP", "hl_asset": 174, "sz_decimals": 1 }
+  ]
+}

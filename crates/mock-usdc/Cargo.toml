@@ -1,0 +1,17 @@
+[package]
+name = "mock-usdc"
+version = "1.1.0"
+description = "STAND-IN for USDC on NEAR testnet: a plain NEP-141 token with 6 decimals and an open mint. Worth nothing."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+near-contract-standards = { workspace = true }
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

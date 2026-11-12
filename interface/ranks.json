@@ -1,0 +1,12 @@
+{
+  "interface_version": "1.3",
+  "about": "The three ranks of 01-SHARED-INTERFACE.md section 3. Each entry has the shape of the Limits type. Values are PROPOSED and fixed at deploy; no vote can change them.",
+  "min_notional": "11000000",
+  "limit_base": "The smaller of brave_at_open and the BRAVE pool now (get_pot().brave.total). A limit in dollars is limit_base x bps / 10000, rounded down. The rulebook text always uses brave_at_open.",
+  "starts_as": { "rank": "INTERN", "status": "EMPLOYED" },
+  "ranks": [
+    { "rank": "INTERN",  "per_bet_bps": 200,  "max_bets": 1, "per_round_bps": 200,  "sides": ["LONG"],          "max_leverage": 1, "markets": ["DOGE", "SHIB", "PEPE", "PENGU"] },
+    { "rank": "ANALYST", "per_bet_bps": 500,  "max_bets": 2, "per_round_bps": 800,  "sides": ["LONG"],          "max_leverage": 1, "markets": ["DOGE", "SHIB", "PEPE", "PENGU", "WIF", "TRUMP"] },
+    { "rank": "TRADER",  "per_bet_bps": 1000, "max_bets": 3, "per_round_bps": 2000, "sides": ["LONG", "SHORT"], "max_leverage": 2, "markets": ["DOGE", "SHIB", "PEPE", "PENGU", "WIF", "TRUMP"] }
+  ]
+}

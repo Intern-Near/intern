@@ -1,0 +1,52 @@
+.desk {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(0px, 2vw, 24px);
+  padding: var(--s-5) var(--s-4) 0;
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-l);
+  /* the desk top: characters stand on this line */
+  background: linear-gradient(to top, #e9c79b 0 13%, var(--ink) 13% calc(13% + 2px), var(--card) calc(13% + 2px));
+  overflow: hidden;
+}
+.controls {
+  display: grid;
+  gap: var(--s-3);
+  margin-top: var(--s-5);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.chips .label {
+  width: 72px;
+  margin: 0;
+}
+.chip-btn {
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  font-size: var(--text-s);
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.chip-btn[aria-pressed="true"] {
+  background: var(--sticky);
+}
+.pose-grid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s-4);
+}
+.pose-grid li {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+}

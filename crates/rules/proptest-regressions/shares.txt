@@ -1,0 +1,10 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 18622ddd6f42d1cab92fb14787652868382c621e09e7caff23bcab9f8c6cf69f # shrinks to gain = 0, victim = 1000000
+cc 203e032e4625fa6d3b8167b9c602803dc074e12d8396a6944c15e4368ce68b4b # shrinks to pool = 0, supply_raw = 0, parts = [10000000]
+cc d66529f6c6366a3c90eaf03051216c3dbaab85a47ee650b6c7e0faf9ada083b4 # shrinks to pool = 583676877169183533265, supply = 516205, parts = [409241539908421, 75503973670763, 645962009922494]
+cc 4362fe4acd2fc97b303b20e467d1c2874ebfe5efa7e6ab3e0fbaed9e108f6bd2 # shrinks to pool = 1391223418686962, supply = 1, paid = 1391223418686962

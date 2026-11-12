@@ -1,0 +1,17 @@
+[package]
+name = "shared"
+version = "1.3.0"
+description = "Types shared by every $INTERN build, and the Host trait (01-SHARED-INTERFACE.md section 11). No NEAR SDK, no_std."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+# Off by default. Writes and reads the enums as their exact interface spellings ("INTERN", "OVER_TRADE_LIMIT"...).
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", default-features = false, optional = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

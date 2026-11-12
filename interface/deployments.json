@@ -1,0 +1,12 @@
+{
+  "testnet": {
+    "stub": "stub.hackcheck-2026-1103.testnet",
+    "coin": "coin.desk-lab-2026.testnet",
+    "usdc": "usdc.desk-lab-2026.testnet",
+    "runner": "intern-runner-ed25519.testnet",
+    "stickers": "stickers.desk-lab-2026.testnet",
+    "launchpad": "launch.desk-lab-2026.testnet",
+    "lender": "lender.desk-lab-2026.testnet",
+    "rpc": "https://test.rpc.fastnear.com"
+  }
+}

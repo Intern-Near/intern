@@ -1,0 +1,33 @@
+[package]
+name = "coin"
+version = "0.7.0"
+description = "The $INTERN coin contract (01-SHARED-INTERFACE.md 1.1). Step 3: the coin, the BRAVE pool, pending money, rounds, the feed."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# STAND-IN for checks 3-5 until Engine 2's ai-check arrives (step 7): accepts the signature "FAKE".
+# Never on in a build called real. get_constants().model.id names the checker in use.
+fake-ai-check = []
+# TEST ONLY: `test_set` / `test_clear_clock` for the sandbox tests. Never deployed.
+test-hooks = []
+
+[dependencies]
+shared = { path = "../shared", features = ["serde"] }
+rules = { path = "../rules" }
+# Engine 2's libraries (01 section 11), handover 2 (version 0.2.0): the strict answer rule of 01 §6.2 is their only rule.
+ai-check = { path = "../ai-check" }
+hl-order = { path = "../hl-order" }
+wire = { path = "wire" }
+# `unstable` is what switches on env::ecrecover in near-sdk 5.30.1 (read in the SDK source).
+near-sdk = { workspace = true, features = ["unstable"] }
+near-contract-standards = { workspace = true }
+
+[dev-dependencies]
+k256 = "0.14.0"
+# `unit-testing` runs the host functions through nearcore's own VM logic (near-vm-runner 0.38).
+near-sdk = { workspace = true, features = ["unstable", "unit-testing"] }

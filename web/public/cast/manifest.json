@@ -1,0 +1,110 @@
+{
+ "intern-idle": {
+  "file": "intern-idle.webp",
+  "w": 787,
+  "h": 771,
+  "kb": 24.7
+ },
+ "intern-thinking": {
+  "file": "intern-thinking.webp",
+  "w": 703,
+  "h": 772,
+  "kb": 25.5
+ },
+ "intern-proposing": {
+  "file": "intern-proposing.webp",
+  "w": 708,
+  "h": 1003,
+  "kb": 32.8
+ },
+ "intern-waiting": {
+  "file": "intern-waiting.webp",
+  "w": 604,
+  "h": 772,
+  "kb": 25.6
+ },
+ "intern-happy": {
+  "file": "intern-happy.webp",
+  "w": 840,
+  "h": 798,
+  "kb": 31.6
+ },
+ "intern-refused": {
+  "file": "intern-refused.webp",
+  "w": 785,
+  "h": 793,
+  "kb": 33.3
+ },
+ "intern-promoted": {
+  "file": "intern-promoted.webp",
+  "w": 892,
+  "h": 941,
+  "kb": 44.1
+ },
+ "intern-fired": {
+  "file": "intern-fired.webp",
+  "w": 962,
+  "h": 781,
+  "kb": 44.2
+ },
+ "intern-analyst": {
+  "file": "intern-analyst.webp",
+  "w": 787,
+  "h": 772,
+  "kb": 26.9
+ },
+ "intern-trader": {
+  "file": "intern-trader.webp",
+  "w": 788,
+  "h": 855,
+  "kb": 40.1
+ },
+ "stamp-watching": {
+  "file": "stamp-watching.webp",
+  "w": 666,
+  "h": 829,
+  "kb": 20.1
+ },
+ "stamp-slamming": {
+  "file": "stamp-slamming.webp",
+  "w": 653,
+  "h": 1028,
+  "kb": 25.2
+ },
+ "stamp-landed": {
+  "file": "stamp-landed.webp",
+  "w": 926,
+  "h": 800,
+  "kb": 33.9
+ },
+ "tin-resting": {
+  "file": "tin-resting.webp",
+  "w": 681,
+  "h": 572,
+  "kb": 15.9
+ },
+ "tin-coin": {
+  "file": "tin-coin.webp",
+  "w": 681,
+  "h": 787,
+  "kb": 21.4
+ },
+ "shredder-asleep": {
+  "file": "shredder-asleep.webp",
+  "w": 764,
+  "h": 851,
+  "kb": 26.9
+ },
+ "shredder-awake": {
+  "file": "shredder-awake.webp",
+  "w": 908,
+  "h": 752,
+  "kb": 36.9
+ },
+ "mug-mug": {
+  "file": "mug-mug.webp",
+  "w": 717,
+  "h": 854,
+  "kb": 26.1
+ }
+}

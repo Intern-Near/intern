@@ -1,0 +1,19 @@
+[package]
+name = "stub"
+version = "1.1.0"
+description = "STAND-IN. A testnet contract that answers every view and action of 01-SHARED-INTERFACE.md with made-up data, switchable by set_scene. Not the product."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+shared = { path = "../../shared", features = ["serde"] }
+rules = { path = "../../rules" }
+wire = { path = "../wire" }
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

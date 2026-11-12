@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc ad68331c0cbf2651361e1c450d91c12f421a4b48fc324784280f05d25a636177 # shrinks to rank = Analyst, at_open = 1325543860, asks = [(Doge, Long, 15860133, 1, 0)]

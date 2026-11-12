@@ -1,0 +1,75 @@
+.sprite {
+  display: inline-block;
+  position: relative;
+  /* Asked-for size, but allowed to shrink with its row on narrow screens */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  aspect-ratio: 1;
+  user-select: none;
+}
+.sprite-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The feet line sits at 1110/1160 of the canvas: squash and breathe from there */
+  transform-origin: 50% 95.7%;
+  animation: sprite-pop 320ms var(--ease-bounce) both;
+}
+.sprite-idle .sprite-img {
+  animation:
+    sprite-pop 320ms var(--ease-bounce) both,
+    sprite-breathe 3.6s ease-in-out 320ms infinite;
+}
+@keyframes sprite-pop {
+  0% {
+    transform: scale(1.06, 0.9);
+  }
+  55% {
+    transform: scale(0.97, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes sprite-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.012, 0.985);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sprite-img,
+  .sprite-idle .sprite-img {
+    animation: sprite-fade var(--t-fade-reduced) linear both;
+  }
+  @keyframes sprite-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* A boss's mug: the neutral mug, tinted with that boss's colour */
+.mug {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.mug img {
+  width: 100%;
+  height: 100%;
+}
+.mug-tint {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  -webkit-mask: var(--mug-src) center / 100% 100% no-repeat;
+  mask: var(--mug-src) center / 100% 100% no-repeat;
+}

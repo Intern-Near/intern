@@ -1,0 +1,15 @@
+[package]
+name = "sandbox"
+version = "0.3.0"
+description = "Sandbox tests (near-workspaces, a local NEAR node) for the coin contract and mock-usdc. Build the wasm first: see run.sh."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dev-dependencies]
+near-workspaces = "=0.24.0"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde_json = { workspace = true }
+anyhow = "1"
+base64 = "0.22"

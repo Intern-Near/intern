@@ -1,0 +1,14 @@
+[package]
+name = "rules"
+version = "1.1.0"
+description = "Pure rules for $INTERN (01-SHARED-INTERFACE.md 1.1): limits, the NOPE checks, the round clock, the rulebook text, share and vote maths. No NEAR SDK."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+shared = { path = "../shared" }
+
+[dev-dependencies]
+proptest = "=1.5.0"
+serde_json = { workspace = true }
