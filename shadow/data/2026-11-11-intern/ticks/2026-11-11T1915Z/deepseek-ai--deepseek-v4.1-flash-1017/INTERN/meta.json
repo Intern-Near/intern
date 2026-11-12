@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "case": "shadow INTERN",
+  "what": "Shadow run 2026-11-11T1641Z, tick 2026-11-11T1915Z, told rank INTERN on a paper pool of 1000000000 (6 decimals).",
+  "recorded_at": "2026-11-11T19:15:00.509Z",
+  "expected": {
+    "round_id": 1993805,
+    "nonce": "a207ad693f6629fb",
+    "rulebook": "You are the Intern, an AI trader. A program checks your answer against the rules below. An answer that breaks a rule is refused.\nround: 1993805\nnonce: a207ad693f6629fb\nrank: INTERN\nmarkets: DOGE, SHIB, PEPE, PENGU\nsides: long\nmax_leverage: 1\nmax_margin_e6: 20000000\nmin_notional_e6: 10000000\nbets_left: 1\nplaybook: none\nAmounts are US dollars times 1,000,000, so 10000000 is $10. A bet's notional is margin_e6 times leverage and must be at least min_notional_e6.\nAnswer with exactly one line of JSON and nothing else, in one of these two forms:\n{\"v\":1,\"round\":1993805,\"nonce\":\"a207ad693f6629fb\",\"action\":\"skip\"}\n{\"v\":1,\"round\":1993805,\"nonce\":\"a207ad693f6629fb\",\"action\":\"bet\",\"market\":\"DOGE\",\"side\":\"long\",\"margin_e6\":\"10000000\",\"leverage\":1}"
+  },
+  "market_data": {
+    "source": "prices-pre.json.gz in this tick",
+    "fetched_at": "2026-11-11T19:15:00.506Z",
+    "saved_as": "../../prices-pre.json.gz"
+  },
+  "request": {
+    "url": "https://cloud-api.near.ai/v1/chat/completions",
+    "headers": {
+      "authorization": "Bearer [redacted]",
+      "content-type": "application/json",
+      "accept": "application/json",
+      "accept-encoding": "identity",
+      "x-no-aliasing": "true"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ms": 32367,
+    "headers": {
+      "access-control-expose-headers": "*",
+      "alt-svc": "h3=\":8443\"; ma=86400",
+      "cache-control": "no-store",
+      "connection": "keep-alive",
+      "content-length": "5092",
+      "content-type": "application/json",
+      "date": "Wed, 11 Nov 2026 19:15:33 GMT",
+      "inference-id": "5ddfee34-d4c3-5cf4-8d63-19c9f363b36f",
+      "server": "nginx/1.29.1",
+      "vary": "origin, access-control-request-headers, accept-encoding",
+      "x-request-id": "ebb0ff46-870e-4006-9f17-fa87cd159fca",
+      "x-serving-provider": "near"
+    },
+    "chat_id": "chatcmpl-ebb0ff46-870e-4006-9f17-fa87cd159fca"
+  },
+  "preflight": {
+    "ecdsa": {
+      "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+      "nonce": "7e1775280c88ee26c345c5f809229142109e33557204fe19cf42080e4c74b0d9",
+      "fetched_at": "2026-11-11T16:41:11.161Z"
+    },
+    "ed25519": {
+      "signing_address": "236f5a6b91dd47dc3b7b36e43d4eb531a042ffb8f8fbf3a1555b78cef4fdda4c",
+      "nonce": "6744a3b4dbd1ad81c19f2b86fbe78899f0da2a5f99b53887b389feecedea79d3",
+      "fetched_at": "2026-11-11T16:41:11.604Z"
+    }
+  },
+  "signatures": {
+    "ecdsa": {
+      "status": 200,
+      "attempts": 1,
+      "fetched_at": "2026-11-11T19:15:34.182Z"
+    },
+    "ed25519": {
+      "status": 200,
+      "attempts": 1,
+      "fetched_at": "2026-11-11T19:15:34.599Z"
+    }
+  },
+  "shadow": {
+    "run_id": "2026-11-11T1641Z",
+    "tick": "2026-11-11T1915Z",
+    "rank": "INTERN",
+    "prompt_markets": "six",
+    "thinking": "default",
+    "rulebook": "proposed-A"
+  }
+}
