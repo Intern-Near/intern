@@ -1,0 +1,206 @@
+{
+  "generated_by": "hyperliquid-python-sdk 0.24.0",
+  "keys_are_test_only": {
+    "user": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "agent": "0x2222222222222222222222222222222222222222222222222222222222222222",
+    "faucet": "0x3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "cases": [
+    {
+      "id": "approve-agent-1794500000000",
+      "kind": "user",
+      "primary": "HyperliquidTransaction:ApproveAgent",
+      "action": {
+        "type": "approveAgent",
+        "signatureChainId": "0x66eee",
+        "hyperliquidChain": "Testnet",
+        "agentAddress": "0x1563915e194d8cfba1943570603f7606a3115508",
+        "agentName": "tailfade",
+        "nonce": 1794500000000
+      },
+      "digest": "0xfabef0942deeafb03999b82a5e0d79759bab85f5a3bb53e6729276edbb89299c",
+      "signer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+      "signature": {
+        "r": "0xe265311e0de7922ad0708680b77a56c510f1f62e84dc4c91ab0aefb2fe12cb00",
+        "s": "0x6c06b50488d18efed217cf44b8e0e69a08985622fcd5bfa0e5dbed1d7671a71a",
+        "v": 28
+      }
+    },
+    {
+      "id": "approve-agent-1794500000123",
+      "kind": "user",
+      "primary": "HyperliquidTransaction:ApproveAgent",
+      "action": {
+        "type": "approveAgent",
+        "signatureChainId": "0x66eee",
+        "hyperliquidChain": "Testnet",
+        "agentAddress": "0x1563915e194d8cfba1943570603f7606a3115508",
+        "agentName": "",
+        "nonce": 1794500000123
+      },
+      "digest": "0x9db282d61489ee73303de6c1f6f745fa02b968ca6715499c9b63f911f455efbc",
+      "signer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+      "signature": {
+        "r": "0xe6bec6107636ce8cb4f5d38c673a46087b0dd6794e61c3713e6b6fa7826118cd",
+        "s": "0x7f7755baaad71b6e4e9b9228bca9272c58462ef3803f6b8293eda56bf6de5f98",
+        "v": 28
+      }
+    },
+    {
+      "id": "usd-send-1794500001000",
+      "kind": "user",
+      "primary": "HyperliquidTransaction:UsdSend",
+      "action": {
+        "type": "usdSend",
+        "signatureChainId": "0x66eee",
+        "hyperliquidChain": "Testnet",
+        "destination": "0x66726d2cf438f3d9b3b61bc6e1f52dbf51f4df43",
+        "amount": "30",
+        "time": 1794500001000
+      },
+      "digest": "0x01a1fcfc669415a61e9692e02095b6553a6b541ca6d165acb50fbedf33a0bca3",
+      "signer": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+      "signature": {
+        "r": "0x13617084256081242d93f6a2a44d6c8b85fb8c125427362008ef8f745c121113",
+        "s": "0x64e4df393f98de583571dee4f99ac25686b35adfe4b04dc9673ad9556c6acbb8",
+        "v": 27
+      }
+    },
+    {
+      "id": "usd-send-1794500002000",
+      "kind": "user",
+      "primary": "HyperliquidTransaction:UsdSend",
+      "action": {
+        "type": "usdSend",
+        "signatureChainId": "0x66eee",
+        "hyperliquidChain": "Testnet",
+        "destination": "0x46f8eb2a044a826c70e9682fe3bfd65970340132",
+        "amount": "12.5",
+        "time": 1794500002000
+      },
+      "digest": "0x00b09a8fd97f5830e6347b1e796b138e4e9db3ebd9155377bb4ebd0ce4cb7baf",
+      "signer": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+      "signature": {
+        "r": "0xe549e1f3db0ce94d16215a28e18612d3849d794f39bf5dcd60d8d876bc05b48c",
+        "s": "0x162c131ed0a4367e745781273decad07805abcf66ddcf443fe316ab445e1e38c",
+        "v": 27
+      }
+    },
+    {
+      "id": "leverage-isolated-2x",
+      "kind": "l1",
+      "action": {
+        "type": "updateLeverage",
+        "asset": 173,
+        "isCross": false,
+        "leverage": 2
+      },
+      "nonce": 1794500003000,
+      "testnet": true,
+      "action_hash": "0x20e6277540992f0043196a535889c974eb92aabc7acd53af1d3397ef92645a3f",
+      "digest": "0x982e557eec918310c1594405a290b6e3cdaeeb40ebed3728f3f775e39b357b0e",
+      "signer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+      "signature": {
+        "r": "0x114599e2a8c1f5a8ee3bdf508c72e5eac7a025ab85794c303734a2a01c2f7b9",
+        "s": "0x76b41df0ba89b587174b13ea6f2eca5cccf31ba22b67dffda9bed18aa6f01f15",
+        "v": 28
+      }
+    },
+    {
+      "id": "order-tail-doge",
+      "kind": "l1",
+      "action": {
+        "type": "order",
+        "orders": [
+          {
+            "a": 173,
+            "b": true,
+            "p": "0.069421",
+            "s": "300",
+            "r": false,
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "grouping": "na"
+      },
+      "nonce": 1794500004000,
+      "testnet": true,
+      "action_hash": "0x702669bb4f9f1fe2f02de360d8dc8455373fdd1305cedc54bbc71894544bf3f8",
+      "digest": "0xac6492c3fa9e7317005e4198ac929247686afd203bcb8bf6b42c0751b0ebdbaa",
+      "signer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+      "signature": {
+        "r": "0xc8466c42e3952c3af58f5bbad40e901daf04363ff676d07ef009423749630089",
+        "s": "0x167ee8ac4df373181d280f23ffed1d94cdea1b2d5add3e81d89bc2bdcde4ba6a",
+        "v": 28
+      }
+    },
+    {
+      "id": "order-fade-doge",
+      "kind": "l1",
+      "action": {
+        "type": "order",
+        "orders": [
+          {
+            "a": 173,
+            "b": false,
+            "p": "0.067998",
+            "s": "721",
+            "r": false,
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "grouping": "na"
+      },
+      "nonce": 1794500005000,
+      "testnet": true,
+      "action_hash": "0xa0ae95eccb008718fc9e102ef7b38a8b701f9a59e093e483d8e8edfdb0bf4984",
+      "digest": "0x6e50e0f1255932ef831f98ebd56be683b52a4fad741135d385cfd797ccc6d5d8",
+      "signer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+      "signature": {
+        "r": "0xa5b653c5e861b15d7e479b24d0311c5529c7c19d70c9784474c7abf8b4c82b86",
+        "s": "0x4f0c467419599ae362f743557f778afb4c4f80eb45cb5b680506c20d62d711fe",
+        "v": 28
+      }
+    },
+    {
+      "id": "order-close-doge",
+      "kind": "l1",
+      "action": {
+        "type": "order",
+        "orders": [
+          {
+            "a": 173,
+            "b": false,
+            "p": "0.06801",
+            "s": "300",
+            "r": true,
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "grouping": "na"
+      },
+      "nonce": 1794500006000,
+      "testnet": true,
+      "action_hash": "0x03a5604e67bb7b200b0f162917562b874dc5fdff195b8a6b0dfa40eaafd71049",
+      "digest": "0x2d3cb92eaac314ba4e1373f5a8e5a9582dc1e3dfcca98c9353b46387dc399f40",
+      "signer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+      "signature": {
+        "r": "0x9c65a4675c6eb5792bece969a240243bcae246b1b664d8b0f7f19312ae91ae6c",
+        "s": "0x357dc6c1577106bb174c2887d4760c289779199ce6258b16d29a4f867a3c8444",
+        "v": 27
+      }
+    }
+  ]
+}

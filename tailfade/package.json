@@ -1,0 +1,25 @@
+{
+  "name": "intern-tailfade",
+  "private": true,
+  "type": "module",
+  "description": "Tail or Fade (spec 12b): a visitor's own Hyperliquid account, derived from their NEAR account through NEAR's signing network; a trading key held in the browser; $10 or $25 bets at 2x isolated that follow or oppose the Intern's bet. Plus the testnet faucet that funds a visitor's address once.",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "faucet": "node --env-file-if-exists=.env src/faucet-server.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "verify": "npm run typecheck && npm run lint && npm test"
+  },
+  "dependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}
