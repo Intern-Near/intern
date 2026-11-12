@@ -52,7 +52,7 @@ when something fails.
 
 A playbook is at most 2,000 bytes (01 §6.1). On 2026-11-12 the live rulebook (round 11) was given a 2,000-byte
 playbook on its `playbook:` line and the pinned model `z-ai/glm-5.3-flash` was asked through NEAR AI, exactly as the
-runner asks. Nothing was proposed. Recordings: `fixtures/ai/playbook-check/20261112T1745/`.
+runner asks. Nothing was proposed. Recordings: `fixtures/ai/playbook-check/20261112T1744/`.
 
 | Playbook (2,000 bytes) | Request | Model time | Tokens in / out | Checks 3–5 (signature, rulebook, strict line) | Answer |
 |---|---|---|---|---|---|
