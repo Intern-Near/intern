@@ -38,6 +38,13 @@ coin-fast (attack-suite fixes: numbers near the top of u128, payments above $1 t
 | `launch.desk-lab-2026.testnet` | `HqNovoZXb4CwteMkac3pSPBvS3coC2RyhpWzbdiSTMqt` | `Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT` |
 | `stub.hackcheck-2026-1103.testnet` | `EVJrvpSuWENaun4N5jZysuFM7mPmn1cQrYDTZGFNnVmC` | `FArWUwVDh57zyMX9cfLQHRY8x5yMMPqi4NdBZvfKkesB` |
 
+## Pool top-up (2026-11-12)
+
+So the Intern's 2% limit is clear of the $11 minimum bet: `boss1.desk-lab-2026.testnet` minted 1,000 test dollars
+(tx `2N8HC7pts53KPUgFxmd71gGvjjvd7oS4f8M5QcAvGzi7`) and paid them into BRAVE (tx
+`GN9KQhByXUfjqNVqHXwPcumBbXMfkKSdYSND4nQua7BC`, 17:26 UTC; it opened round 11, so the money converts at round 12).
+From then on the Intern runs on Railway (project `intern-runner`), not from a laptop.
+
 ## Using an account yourself
 
 The `near` command line finds the key by account name when you add `sign-with-legacy-keychain`.
