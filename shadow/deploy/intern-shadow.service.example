@@ -1,0 +1,23 @@
+# Example systemd user service for the shadow run, for a machine that should run it unattended.
+# Nothing installs this. To use it: replace the three /path/to/... values and RUN_ID, then
+#   cp intern-shadow.service.example ~/.config/systemd/user/intern-shadow.service
+#   systemctl --user daemon-reload
+#   systemctl --user start intern-shadow
+#   loginctl enable-linger "$USER"      # keeps it running after you log out
+# Follow it with: journalctl --user -u intern-shadow -f
+
+[Unit]
+Description=INTERN shadow run (paper only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/path/to/near-hack/intern/shadow
+ExecStart=/path/to/node --env-file-if-exists=.env --env-file-if-exists=../runner/.env src/cli/shadow.ts run --run-dir data/RUN_ID
+Restart=on-failure
+RestartSec=30
+# Exit code 2 is a set-up error (for example no API key): do not restart.
+RestartPreventExitStatus=2
+
+[Install]
+WantedBy=default.target

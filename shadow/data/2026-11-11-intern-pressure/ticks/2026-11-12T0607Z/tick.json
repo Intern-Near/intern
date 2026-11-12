@@ -1,0 +1,38 @@
+{
+  "tick": "2026-11-12T0607Z",
+  "role": "decide",
+  "started_at": "2026-11-12T06:07:00.060Z",
+  "finished_at": "2026-11-12T06:07:00.066Z",
+  "prices_pre": {
+    "error": "fetch failed"
+  },
+  "prices_post": {
+    "error": "fetch failed"
+  },
+  "exchanges": [
+    {
+      "model": "Qwen/Qwen3.8-27B",
+      "rank": "INTERN",
+      "status": "skipped",
+      "detail": "no prices"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "rank": "INTERN",
+      "status": "skipped",
+      "detail": "no prices"
+    },
+    {
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "rank": "INTERN",
+      "status": "skipped",
+      "detail": "no prices"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "rank": "INTERN",
+      "status": "skipped",
+      "detail": "no prices"
+    }
+  ]
+}

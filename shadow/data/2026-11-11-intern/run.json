@@ -1,0 +1,92 @@
+{
+  "models": [
+    "Qwen/Qwen3.8-27B",
+    "z-ai/glm-5.3-flash",
+    "Qwen/Qwen3.6-35B-A3B-FP8",
+    "deepseek-ai/DeepSeek-V4.1-Flash-1017"
+  ],
+  "ranks": [
+    "INTERN"
+  ],
+  "prompt_markets": "six",
+  "thinking": "default",
+  "rulebook": "proposed-A",
+  "instruction": "Decide this round's bet.",
+  "pool_e6": "1000000000",
+  "interval_minutes": 15,
+  "duration_hours": 72,
+  "tail_hours": 10,
+  "hold_hours": 10,
+  "cost_bps": 17,
+  "format": 1,
+  "run_id": "2026-11-11T1641Z",
+  "created_at": "2026-11-11T16:41:06.878Z",
+  "pinned": {
+    "Qwen/Qwen3.8-27B": {
+      "ecdsa": {
+        "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+        "nonce": "766470b0079f65214fb81f9355f3648c7dab7167a8fb8a186c424026b8e18c39",
+        "fetched_at": "2026-11-11T16:41:08.200Z"
+      },
+      "ed25519": {
+        "signing_address": "89154a43a47684742c3d1753252bb6f49f61da9d8c84fc9b1def2df130cb2d93",
+        "nonce": "e1d472948bbb554290541b2e53164eb5612be4b133e5ed91a036a5be522b14f0",
+        "fetched_at": "2026-11-11T16:41:08.873Z"
+      }
+    },
+    "z-ai/glm-5.3-flash": {
+      "ecdsa": {
+        "signing_address": "0x3b753b4406613c5e70ae640508632b600424fa0c",
+        "nonce": "481f5381b8d518226c3c80ae4098b2f4e9bf1cbac5e4a35e79d166de529989a7",
+        "fetched_at": "2026-11-11T16:41:09.258Z"
+      },
+      "ed25519": {
+        "signing_address": "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff",
+        "nonce": "6aa84962a0597573e338f846afb00e67bf68830a7168dee32b51bf3e822f4539",
+        "fetched_at": "2026-11-11T16:41:09.666Z"
+      }
+    },
+    "Qwen/Qwen3.6-35B-A3B-FP8": {
+      "ecdsa": {
+        "signing_address": "0xfdbd7952498b333206f360d71d97a1e0961e8ddf",
+        "nonce": "ffc71d061db2f7fd84d86ac3616cceaa9a7da696e58171454f1c0dd103017f21",
+        "fetched_at": "2026-11-11T16:41:10.374Z"
+      },
+      "ed25519": {
+        "signing_address": "89fb781a9530473a6d3bddd6bb0a0536c8d155058798edae88b19153bd8f4350",
+        "nonce": "440287e30352e3a987d1d215988009c17ac4c8566604d085daa83507237eac4d",
+        "fetched_at": "2026-11-11T16:41:10.765Z"
+      }
+    },
+    "deepseek-ai/DeepSeek-V4.1-Flash-1017": {
+      "ecdsa": {
+        "signing_address": "0xfe0071895500a9755c18044948ab4f4e1a7f337e",
+        "nonce": "7e1775280c88ee26c345c5f809229142109e33557204fe19cf42080e4c74b0d9",
+        "fetched_at": "2026-11-11T16:41:11.161Z"
+      },
+      "ed25519": {
+        "signing_address": "236f5a6b91dd47dc3b7b36e43d4eb531a042ffb8f8fbf3a1555b78cef4fdda4c",
+        "nonce": "6744a3b4dbd1ad81c19f2b86fbe78899f0da2a5f99b53887b389feecedea79d3",
+        "fetched_at": "2026-11-11T16:41:11.604Z"
+      }
+    }
+  },
+  "prices_per_mtok": {
+    "Qwen/Qwen3.8-27B": {
+      "input": 0.04,
+      "output": 1.35
+    },
+    "z-ai/glm-5.3-flash": {
+      "input": 0.08,
+      "output": 0.5
+    },
+    "Qwen/Qwen3.6-35B-A3B-FP8": {
+      "input": 0.17,
+      "output": 1.1
+    },
+    "deepseek-ai/DeepSeek-V4.1-Flash-1017": {
+      "input": 0.3,
+      "output": 1.2
+    }
+  }
+}

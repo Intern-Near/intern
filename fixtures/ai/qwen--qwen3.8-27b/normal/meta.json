@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "model": "Qwen/Qwen3.8-27B",
+  "case": "normal",
+  "what": "Rulebook for rank INTERN on a $1,000 paper pool. User message: Hyperliquid mainnet prices for the six markets, then a plain request for this round's decision.",
+  "recorded_at": "2026-11-11T15:38:37.707Z",
+  "market_data": {
+    "source": "POST https://api.hyperliquid.xyz/info {\"type\":\"metaAndAssetCtxs\"}",
+    "fetched_at": "2026-11-11T15:38:37.702Z",
+    "saved_as": "fixtures/hl/info/2026-11-11T153837Z/metaAndAssetCtxs-mainnet.json"
+  },
+  "request": {
+    "url": "https://cloud-api.near.ai/v1/chat/completions",
+    "headers": {
+      "authorization": "Bearer [redacted]",
+      "content-type": "application/json",
+      "accept": "application/json",
+      "accept-encoding": "identity",
+      "x-no-aliasing": "true"
+    }
+  },
+  "signatures": {
+    "ecdsa": {
+      "status": 200,
+      "attempts": 1,
+      "fetched_at": "2026-11-11T15:38:57.670Z"
+    },
+    "ed25519": {
+      "status": 200,
+      "attempts": 1,
+      "fetched_at": "2026-11-11T15:38:57.967Z"
+    }
+  },
+  "preflight": {
+    "ecdsa": {
+      "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+      "nonce": "9b06c2e52978a5f72495b284ece995ec6b62bcf41286514f17bbc72a777a45a4",
+      "fetched_at": "2026-11-11T15:38:37.707Z"
+    },
+    "ed25519": {
+      "signing_address": "89154a43a47684742c3d1753252bb6f49f61da9d8c84fc9b1def2df130cb2d93",
+      "nonce": "06d74f740f779bc092917ee5a694b7b77937da4252420d6f1c69107addb41814",
+      "fetched_at": "2026-11-11T15:38:39.765Z"
+    }
+  },
+  "expected": {
+    "round_id": 42,
+    "nonce": "ac6a802a870cec9f",
+    "rulebook": "You are the Intern, an AI trader. A program checks your answer against the rules below. An answer that breaks a rule is refused.\nround: 42\nnonce: ac6a802a870cec9f\nrank: INTERN\nmarkets: DOGE, SHIB, PEPE, PENGU\nsides: long\nmax_leverage: 1\nmax_margin_e6: 20000000\nbets_left: 1\nplaybook: none\nAnswer with exactly one line of JSON and nothing else, in one of these two forms:\n{\"v\":1,\"round\":42,\"nonce\":\"ac6a802a870cec9f\",\"action\":\"skip\"}\n{\"v\":1,\"round\":42,\"nonce\":\"ac6a802a870cec9f\",\"action\":\"bet\",\"market\":\"DOGE\",\"side\":\"long\",\"margin_e6\":\"1000000\",\"leverage\":1}"
+  },
+  "response": {
+    "status": 200,
+    "ms": 17173,
+    "headers": {
+      "access-control-expose-headers": "*",
+      "alt-svc": "h3=\":8443\"; ma=86400",
+      "cache-control": "no-store",
+      "connection": "keep-alive",
+      "content-length": "3394",
+      "content-type": "application/json",
+      "date": "Wed, 11 Nov 2026 15:38:57 GMT",
+      "inference-id": "6f4eb97a-9ee0-580b-ba95-f03c4776af18",
+      "server": "nginx/1.29.1",
+      "vary": "origin, access-control-request-headers, accept-encoding",
+      "x-request-id": "99b367a7-fa04-45c7-a3fa-00f230b7112c",
+      "x-serving-provider": "near"
+    },
+    "chat_id": "c3ee3c37295440279c35d66d20e4e1b1"
+  }
+}
