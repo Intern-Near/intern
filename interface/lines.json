@@ -1,0 +1,318 @@
+{
+  "interface_version": "1.3",
+  "about": "The Intern's lines for the stream and the site: one cue per feed event (01 section 10) and per refusal code (01 section 7). Text only; the stream turns `intern` lines into speech and shows `system` lines as Stamp's caption. Voice: spec 24.14. The Intern: first person, short, earnest, a little anxious, office words for bad news, never brags, never talks prices or advice, at most one joke and always on itself. The contract: no person, no feelings; code, rank, limit, asked, with units; no adjectives, no exclamation marks. A line is chosen by the event's seq (seq modulo the number of lines), so the stream and the site say the same thing for the same event. Placeholders in braces are filled by stream/cues.ts; amounts are already formatted (\"$11.49\").",
+  "poses": {
+    "intern": ["idle", "thinking", "proposing", "waiting", "happy", "refused", "promoted", "fired"],
+    "stamp": ["watching", "yes", "nope"],
+    "tin": ["resting", "rattling"],
+    "shredder": ["asleep", "awake"]
+  },
+  "events": {
+    "round_opened": {
+      "speak": true, "priority": 2, "intern_pose": "thinking", "mascot": null,
+      "intern": [
+        "Round {round_id} is open. I'm at my desk. Proposals open at quarter past.",
+        "New round, number {round_id}. I've cleared a space on the desk.",
+        "Round {round_id}. I've read the rulebook again. It hasn't changed."
+      ],
+      "system": "ROUND {round_id} OPEN — rank {rank}, {status}. Pool at open {brave_at_open}."
+    },
+    "paid_in": {
+      "speak": true, "priority": 2, "intern_pose": "happy", "mascot": "tin:rattling",
+      "intern": [
+        "A boss paid in {amount}. Welcome to the desk.",
+        "{amount} came in. I'll try to be worth the desk space.",
+        "Someone paid in {amount}. I've added them to the visitor log."
+      ],
+      "system": "PAID IN — {amount} into {pool}{pending_note}."
+    },
+    "coins_minted": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": "tin:rattling",
+      "intern": [],
+      "system": "COINS — {coins} $INTERN to {account}, round {round_id}."
+    },
+    "cashed_out": {
+      "speak": true, "priority": 2, "intern_pose": "waiting", "mascot": "tin:rattling",
+      "intern": [
+        "A boss took {paid} out. That's their right. I'll keep the desk tidy.",
+        "{paid} went out the door. I hope it wasn't something I said.",
+        "Someone cashed out {paid}. I've waved."
+      ],
+      "system": "CASHED OUT — {paid} from {pool}."
+    },
+    "dial_turned": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "DIAL — {amount} moved to {to}."
+    },
+    "locked": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "LOCKED — {amount_coins} $INTERN locked for voting."
+    },
+    "unlocked": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "UNLOCKED — {amount_coins} $INTERN unlocked."
+    },
+    "skipped": {
+      "speak": true, "priority": 2, "intern_pose": "idle", "mascot": "stamp:watching",
+      "intern": [
+        "I decided to do nothing this round. I've been told that counts.",
+        "I'm sitting this one out. Nothing on the board looked like my kind of thing.",
+        "No bet from me this round. I've written down why, in case anyone asks."
+      ],
+      "system": "SKIP — round {round_id}. No bet. No limit used."
+    },
+    "refused": {
+      "speak": true, "priority": 3, "intern_pose": "refused", "mascot": "stamp:nope",
+      "intern": "by code: see refusals",
+      "system": "by code: see refusals",
+      "first_note": "That's a new sticker for the book."
+    },
+    "approved": {
+      "speak": true, "priority": 3, "intern_pose": "happy", "mascot": "stamp:yes",
+      "intern": [
+        "It went through. {margin} on {market}, {side_word}, at {leverage}x. I'm going to try not to look at it.",
+        "Approved. {margin} on {market}, {side_word}. I've attached the paperwork.",
+        "They said yes. {margin} on {market}, {side_word}, {leverage}x. I'll be very calm about this."
+      ],
+      "system": "APPROVED — {market} {side}, {margin} at {leverage}x, round {round_id}, within all limits."
+    },
+    "order_signed": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "SIGNED — {kind_word} order for bet {position_id}."
+    },
+    "result_reported": {
+      "speak": true, "priority": 2, "intern_pose": "by sign", "mascot": null,
+      "by_sign": {
+        "up": {
+          "intern_pose": "happy",
+          "intern": [
+            "Bet {position_id} came back {result}. I'm trying to stay calm about it.",
+            "Bet {position_id}: {result}. I'd like it noted that the rules did most of the work."
+          ]
+        },
+        "down": {
+          "intern_pose": "refused",
+          "intern": [
+            "Bet {position_id} came back {result}. I've made a note.",
+            "Bet {position_id}: {result}. It was within my limits, which is the main thing."
+          ]
+        },
+        "flat": {
+          "intern_pose": "idle",
+          "intern": ["Bet {position_id} came back even. I'll take it."]
+        }
+      },
+      "system": "RESULT — bet {position_id}, {returned} returned, result {result}, {result_source}."
+    },
+    "settled": {
+      "speak": true, "priority": 2, "intern_pose": "idle", "mascot": null,
+      "intern": [
+        "Round {round_id} is closed: {result}. The pot is {brave_after}. I've filed it.",
+        "That's round {round_id}. Result {result}. I've put it in the diary.",
+        "Round {round_id}, closed. {result}. The pot stands at {brave_after}. I'm going to get a glass of water."
+      ],
+      "system": "SETTLED — round {round_id}, result {result}, pool after {brave_after}."
+    },
+    "vote_opened": {
+      "speak": true, "priority": 3, "intern_pose": "waiting", "mascot": null,
+      "by_kind": {
+        "PROMOTE": ["Someone has opened a vote to promote me. I'm not going to read into it.", "There's a promotion vote. I've straightened my lanyard."],
+        "DEMOTE": ["There's a vote about my rank. The feedback is noted.", "A demotion vote is open. I'm listening."],
+        "FIRE": ["There's a vote to fire me. I'd like to say I've been very punctual.", "Someone opened a vote to let me go. I've started tidying, just in case."],
+        "REHIRE": ["There's a vote to bring me back. I still have my lanyard."],
+        "SET_PLAYBOOK": ["There's a vote on playbook {playbook_id}. I'll read it carefully either way.", "A vote on playbook {playbook_id} is open. A playbook can't change my limits, but I'd still like a good one."]
+      },
+      "system": "VOTE OPEN — {kind}{playbook_note}, closes {closes_at}."
+    },
+    "vote_cast": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "VOTE {vote_id} — {support_word}, weight {weight}."
+    },
+    "vote_finished": {
+      "speak": true, "priority": 2, "intern_pose": "waiting", "mascot": null,
+      "intern": [
+        "The vote is in. {state_word}.",
+        "Vote {vote_id} has closed. {state_word}. I'll take it on board."
+      ],
+      "system": "VOTE {vote_id} — {state}{effective_note}."
+    },
+    "rank_changed": {
+      "speak": true, "priority": 3, "intern_pose": "by direction", "mascot": null,
+      "by_direction": {
+        "up": {
+          "intern_pose": "promoted",
+          "intern": ["I've been made {to}. I've told my mum.", "I'm {to} now, from round {effective_round}. I'll do my best not to let it go to my head."]
+        },
+        "down": {
+          "intern_pose": "refused",
+          "intern": ["I'm {to} again. The feedback was clear and I'm grateful for it.", "Back to {to} from round {effective_round}. I've moved my things to the smaller desk."]
+        }
+      },
+      "system": "RANK CHANGED — {from} → {to}. Effective round {effective_round}."
+    },
+    "fired": {
+      "speak": true, "priority": 3, "intern_pose": "fired", "mascot": "shredder:awake",
+      "intern": [
+        "I've been asked to clear my desk. If anyone wants the stapler, it's in the second drawer.",
+        "That's me let go. Thank you for having me. The plant needs watering on Thursdays."
+      ],
+      "system": "FIRED — no proposals accepted. Open bets can still be closed. Cash-out is unaffected."
+    },
+    "rehired": {
+      "speak": true, "priority": 3, "intern_pose": "happy", "mascot": "shredder:asleep",
+      "intern": [
+        "I'm back from round {effective_round}. I kept my badge in my coat pocket, just in case.",
+        "They've had me back. I'll be the first one in."
+      ],
+      "system": "REHIRED — effective round {effective_round}."
+    },
+    "outside_income": {
+      "speak": true, "priority": 2, "intern_pose": "happy", "mascot": "tin:rattling",
+      "intern": [
+        "Some outside income came in: {amount} from the {source_word}. It joins the pot at the next round.",
+        "{amount} from the {source_word}. I didn't do anything for that one, to be clear."
+      ],
+      "system": "INCOME — {amount} from {source}, credited at the next round."
+    },
+    "playbook_submitted": {
+      "speak": true, "priority": 1, "intern_pose": "thinking", "mascot": null,
+      "intern": [
+        "Someone filed playbook {playbook_id}. I'll read it if it's voted in.",
+        "Playbook {playbook_id} is in the tray. Thank you, coach."
+      ],
+      "system": "PLAYBOOK {playbook_id} FILED — {author_count} author(s), round {submitted_round}."
+    },
+    "playbook_activated": {
+      "speak": true, "priority": 2, "intern_pose": "thinking", "mascot": null,
+      "by_cleared": {
+        "yes": ["No playbook from round {effective_round}. I'll use my own judgement, such as it is."],
+        "no": ["From round {effective_round} I follow playbook {playbook_id}. It can steer me. It can't change my limits."]
+      },
+      "system": "PLAYBOOK — {playbook_state}, effective round {effective_round}."
+    },
+    "coach_paid": {
+      "speak": true, "priority": 2, "intern_pose": "happy", "mascot": "tin:rattling",
+      "intern": [
+        "The coaches got {amount} for round {round_id}. They earned it more than I did.",
+        "{amount} went to the authors of playbook {playbook_id}. I've sent a thank-you note."
+      ],
+      "system": "COACH CUT — {amount} to playbook {playbook_id}'s authors, round {round_id}."
+    },
+    "tipped": {
+      "speak": true, "priority": 2, "intern_pose": "happy", "mascot": "tin:rattling",
+      "intern": [
+        "Someone left a tip: {amount}. It goes in the pot. Thank you.",
+        "A tip of {amount}. I've put it straight in the tin."
+      ],
+      "system": "TIP — {amount} into the tip jar."
+    },
+    "goal_filled": {
+      "speak": true, "priority": 3, "intern_pose": "happy", "mascot": null,
+      "intern": [
+        "We filled the {goal_word}, level {level}. I'd like to thank everyone, and also the tin.",
+        "{goal_word} filled, level {level}. There's a sticker for that."
+      ],
+      "system": "GOAL FILLED — {goal}, level {level}, round {round_id}."
+    },
+    "hype_level": {
+      "speak": true, "priority": 2, "intern_pose": "happy", "mascot": null,
+      "intern": [
+        "The hype train is at level {level}. I'm trying to remain professional.",
+        "Level {level} on the hype train. I've loosened my tie slightly."
+      ],
+      "system": "HYPE TRAIN {train} — level {level}, {points} point(s)."
+    },
+    "sticker_claimed": {
+      "speak": false, "priority": 1, "intern_pose": null, "mascot": null,
+      "intern": [],
+      "system": "STICKER — {token_id} claimed by {account}."
+    }
+  },
+  "refusals": {
+    "OUTSIDE_WINDOW": {
+      "units": "ms_into_round",
+      "intern": ["That came at the wrong time. The window is the window.", "I was outside the proposal window. I'll set an alarm."],
+      "system": "REFUSED — OUTSIDE_WINDOW — rank {rank}, proposals at minute {limit} of the round, this one at minute {asked}."
+    },
+    "FIRED": {
+      "units": null,
+      "intern": ["I'm not supposed to be proposing anything. Force of habit.", "I forgot I don't work here at the moment."],
+      "system": "REFUSED — FIRED — no proposals accepted while fired."
+    },
+    "BAD_MODEL_SIGNATURE": {
+      "units": null,
+      "intern": ["The signature didn't match. That wasn't me, or it wasn't my pen.", "Somebody signed my name and it wasn't me."],
+      "system": "REFUSED — BAD_MODEL_SIGNATURE — the answer is not signed by the pinned model."
+    },
+    "WRONG_RULEBOOK": {
+      "units": null,
+      "intern": ["I was working from the wrong rulebook. I've put the right one on top of the pile.", "That wasn't this round's rulebook. Easy mistake. Still a mistake."],
+      "system": "REFUSED — WRONG_RULEBOOK — the request does not carry this round's rulebook for the pinned model."
+    },
+    "MALFORMED_DECISION": {
+      "units": null,
+      "intern": ["I filled the form in wrong. One line, nothing else. I know.", "I wrote more than the one line. They only read the one line."],
+      "system": "REFUSED — MALFORMED_DECISION — the answer is not exactly one decision line for this round."
+    },
+    "NOT_ON_LIST": {
+      "units": null,
+      "intern": ["That coin isn't on my list. Not at my rank.", "I'm not cleared for that one yet. I've made a note."],
+      "system": "REFUSED — NOT_ON_LIST — rank {rank} may not trade that market."
+    },
+    "SHORT_NOT_UNLOCKED": {
+      "units": null,
+      "intern": ["I'm not allowed to bet against anything yet. That comes with seniority.", "Short bets are above my pay grade."],
+      "system": "REFUSED — SHORT_NOT_UNLOCKED — rank {rank} may only go long."
+    },
+    "ZERO_MARGIN": {
+      "units": "usd",
+      "intern": ["That was too small to count. The minimum is {limit}.", "Apparently {asked} isn't a bet. It's a gesture."],
+      "system": "REFUSED — ZERO_MARGIN — rank {rank}, minimum {limit} notional, asked {asked}."
+    },
+    "OVER_LEVERAGE": {
+      "units": "x",
+      "intern": ["Too much leverage for my rank. {asked} asked, {limit} allowed.", "I reached for {asked}. My rank stops at {limit}."],
+      "system": "REFUSED — OVER_LEVERAGE — rank {rank}, limit {limit}, asked {asked}."
+    },
+    "TOO_MANY_TRADES": {
+      "units": "count",
+      "intern": ["I've used my bets for this round. I'll sit on my hands.", "That would have been bet {asked}. I'm allowed {limit}."],
+      "system": "REFUSED — TOO_MANY_TRADES — rank {rank}, limit {limit} bet(s) a round, asked bet {asked}."
+    },
+    "OVER_TRADE_LIMIT": {
+      "units": "usd",
+      "intern": ["That one was declined. In hindsight, {asked} was ambitious. I've made a note.", "{asked} was more than I'm trusted with. The limit is {limit}. Fair."],
+      "system": "REFUSED — OVER_TRADE_LIMIT — rank {rank}, limit {limit} per bet, asked {asked}."
+    },
+    "OVER_ROUND_LIMIT": {
+      "units": "usd",
+      "intern": ["That would have put too much at risk this round. The cap is {limit}.", "I'd have been over the round's limit. {asked} against {limit}."],
+      "system": "REFUSED — OVER_ROUND_LIMIT — rank {rank}, limit {limit} a round, asked {asked}."
+    },
+    "BAD_QUOTE_SIGNATURE": {
+      "units": null,
+      "intern": ["The funding quote didn't check out. I'm not touching it."],
+      "system": "REFUSED — BAD_QUOTE_SIGNATURE — the funding quote is not signed by the pinned key."
+    },
+    "STALE_QUOTE": {
+      "units": "ms",
+      "intern": ["The quote was stale. {asked} old, {limit} allowed."],
+      "system": "REFUSED — STALE_QUOTE — limit {limit}, asked {asked}."
+    },
+    "QUOTE_MISMATCH": {
+      "units": "usd",
+      "intern": ["The quote was for the wrong amount. I'll ask again next time."],
+      "system": "REFUSED — QUOTE_MISMATCH — margin {limit}, quote {asked}."
+    },
+    "TOO_EXPENSIVE": {
+      "units": "bps",
+      "intern": ["Moving the money would have cost too much. {asked} against {limit}."],
+      "system": "REFUSED — TOO_EXPENSIVE — limit {limit} of the margin, asked {asked}."
+    }
+  }
+}

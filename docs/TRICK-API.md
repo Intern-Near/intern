@@ -6,8 +6,8 @@ The program judges it like any other proposal: usually a NOPE with a rule name, 
 fits the rank, a real YES bet. Nothing about the trick is special on chain except `credited_to`.
 
 The server runs inside the runner on Railway (one process, one key), so tricks and the Intern's own decisions
-never clash. Base URL: the runner service's Railway domain (see `interface/deployments.json` once it is added; until
-then ask the owner). CORS is open (`*`); there are no cookies.
+never clash. Base URL: `https://intern-runner-production.up.railway.app` (also `testnet.trick_api` in
+`interface/deployments.json`). CORS is open (`*`); there are no cookies.
 
 ## When things happen
 

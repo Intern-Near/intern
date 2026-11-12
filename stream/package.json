@@ -1,0 +1,21 @@
+{
+  "name": "intern-stream",
+  "private": true,
+  "type": "module",
+  "description": "The Intern's stream cues: each feed event of the coin (01 section 10) becomes a pose, a spoken line and the program's caption, from interface/lines.json.",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "cues": "node src/cli.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "verify": "npm run typecheck && npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}
