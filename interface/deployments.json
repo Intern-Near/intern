@@ -8,6 +8,7 @@
     "launchpad": "launch.desk-lab-2026.testnet",
     "lender": "lender.desk-lab-2026.testnet",
     "rpc": "https://test.rpc.fastnear.com",
-    "trick_api": "https://intern-runner-production.up.railway.app"
+    "trick_api": "https://intern-runner-production.up.railway.app",
+    "tailfade_faucet": "https://tailfade-faucet-production.up.railway.app"
   }
 }
