@@ -1,0 +1,23 @@
+{
+  "name": "intern-shadow",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The 3-day shadow run (Engine 2 of $INTERN): four AI models, one paper decision every 15 minutes.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "shadow": "node --env-file-if-exists=.env --env-file-if-exists=../runner/.env src/cli/shadow.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "verify": "npm run typecheck && npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}
