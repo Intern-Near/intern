@@ -1,0 +1,41 @@
+{
+  "contract": "coin.desk-lab-2026.testnet",
+  "round_id": 7,
+  "position_id": 3,
+  "hl_address": "0x46f8eb2a044a826c70e9682fe3bfd65970340132",
+  "bet": {
+    "position_id": 3,
+    "coin": "DOGE",
+    "side": "LONG",
+    "margin_e6": "17997883",
+    "ordered_sz_e8": "26800000000",
+    "open": {
+      "from": 1794483574065,
+      "to": 1794483694065
+    },
+    "close": [
+      {
+        "from": 1794484145160,
+        "to": 1794484265160
+      }
+    ]
+  },
+  "returned_e6": "17960766",
+  "note": "opened and closed DOGE",
+  "detail": {
+    "open_sz": "26800000000",
+    "close_sz": "26800000000",
+    "open_value_e6": "17815490",
+    "close_value_e6": "17794396",
+    "fees_e6": "16023",
+    "funding_e6": "0",
+    "closed_pnl_e6": "-20904",
+    "open_oids": [
+      65161863543
+    ],
+    "close_oids": [
+      65162270187
+    ]
+  },
+  "formula": "returned = margin + trading result - fees + funding (src/result.ts)"
+}

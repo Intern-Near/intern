@@ -1,0 +1,33 @@
+[
+  {
+    "request": {
+      "type": "userFillsByTime",
+      "user": "0x46f8eb2a044a826c70e9682fe3bfd65970340132",
+      "startTime": 1794483550548,
+      "endTime": 1794484153237
+    },
+    "http_status": 200,
+    "reply": "[{\"coin\":\"DOGE\",\"px\":\"0.06647\",\"sz\":\"251.0\",\"side\":\"B\",\"time\":1794483581242,\"startPosition\":\"0.0\",\"dir\":\"Open Long\",\"closedPnl\":\"0.0\",\"hash\":\"0x54fb39d735f00c555674042df5f6db01080051bcd0f32b27f8c3e529f4f3e63f\",\"oid\":65161863543,\"crossed\":true,\"fee\":\"0.007507\",\"tid\":272197548035755,\"feeToken\":\"USDC\",\"twapId\":null},{\"coin\":\"DOGE\",\"px\":\"0.06656\",\"sz\":\"17.0\",\"side\":\"B\",\"time\":1794483581242,\"startPosition\":\"251.0\",\"dir\":\"Open Long\",\"closedPnl\":\"0.0\",\"hash\":\"0x54fb39d735f00c555674042df5f6db01080051bcd0f32b27f8c3e529f4f3e63f\",\"oid\":65161863543,\"crossed\":true,\"fee\":\"0.000509\",\"tid\":598131231512093,\"feeToken\":\"USDC\",\"twapId\":null},{\"coin\":\"DOGE\",\"px\":\"0.066397\",\"sz\":\"268.0\",\"side\":\"A\",\"time\":1794484152152,\"startPosition\":\"268.0\",\"dir\":\"Close Long\",\"closedPnl\":\"-0.020904\",\"hash\":\"0x07ffb15a11c06a7f0979042df61c37010100c93facc38951abc85cacd0c44469\",\"oid\":65162270187,\"crossed\":true,\"fee\":\"0.008007\",\"tid\":966303504477383,\"feeToken\":\"USDC\",\"twapId\":null}]",
+    "fetched_at": "2026-11-12T11:49:13.436Z"
+  },
+  {
+    "request": {
+      "type": "userFunding",
+      "user": "0x46f8eb2a044a826c70e9682fe3bfd65970340132",
+      "startTime": 1794483550548,
+      "endTime": 1794484153237
+    },
+    "http_status": 200,
+    "reply": "[]",
+    "fetched_at": "2026-11-12T11:49:13.897Z"
+  },
+  {
+    "request": {
+      "type": "clearinghouseState",
+      "user": "0x46f8eb2a044a826c70e9682fe3bfd65970340132"
+    },
+    "http_status": 200,
+    "reply": "{\"marginSummary\":{\"accountValue\":\"99.962883\",\"totalNtlPos\":\"0.0\",\"totalRawUsd\":\"99.962883\",\"totalMarginUsed\":\"0.0\"},\"crossMarginSummary\":{\"accountValue\":\"99.962883\",\"totalNtlPos\":\"0.0\",\"totalRawUsd\":\"99.962883\",\"totalMarginUsed\":\"0.0\"},\"crossMaintenanceMarginUsed\":\"0.0\",\"withdrawable\":\"99.962883\",\"assetPositions\":[],\"time\":1794484153736}",
+    "fetched_at": "2026-11-12T11:49:14.138Z"
+  }
+]

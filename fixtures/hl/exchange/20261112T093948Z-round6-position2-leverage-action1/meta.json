@@ -1,0 +1,24 @@
+{
+  "url": "https://api.hyperliquid-testnet.xyz/exchange",
+  "http_status": 200,
+  "ms": 404,
+  "action": {
+    "id": 1,
+    "position_id": 2,
+    "kind": "LEVERAGE",
+    "action": {
+      "type": "updateLeverage",
+      "asset": 12,
+      "isCross": false,
+      "leverage": 1
+    },
+    "nonce": 1794476382866,
+    "expires_after": 1794476502866,
+    "signature": {
+      "r": "0x34259a97b50cac5265a8242b8534ca1010aef90d6052b1363fa2ca28838f6b55",
+      "s": "0x7da461c95c645ac7b552ef179af96c3b1c8cbdaa9cb908b246d1cd28f22d0aa8",
+      "v": 28
+    },
+    "created_at": 1794476387612
+  }
+}

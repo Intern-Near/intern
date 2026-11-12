@@ -1,0 +1,1 @@
+{"action":{"type":"updateLeverage","asset":173,"isCross":false,"leverage":1},"nonce":1794483565315,"signature":{"r":"0xfc3c7280743e49d9b62cafde4842990b5c28f30ef9ec24fd99f850b8a56f3593","s":"0x567d4e725b93ec070ebfd94f19f9814b685f338a9e7c3fd1d1d411229dc22639","v":27},"vaultAddress":null,"expiresAfter":1794483685315}

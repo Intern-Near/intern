@@ -1,0 +1,101 @@
+{
+  "what": "Signing identities read from GET /v1/attestation/report (provider=near). A summary: the full reports (about 300 KB each) were not kept, and their hardware evidence was not verified.",
+  "records": [
+    {
+      "model": "Qwen/Qwen3.8-27B",
+      "signing_algo": "ecdsa",
+      "signing_addresses": [
+        "0x835ab53d20294ef795906dff21ae4c045336aa26"
+      ],
+      "request_nonce": "4c7c03eb5e0a9dcaef5d2649cfd4249b796645b78b61083e748dfcd5dd467b80",
+      "fetched_at": "2026-11-11T14:51:32.711Z",
+      "http_status": 200,
+      "body_bytes": 287631,
+      "body_sha256": "f1d28fe27c921322bd135a22c0915d94dbf639b2d53181729a69d41b5caed0ab"
+    },
+    {
+      "model": "Qwen/Qwen3.8-27B",
+      "signing_algo": "ed25519",
+      "signing_addresses": [
+        "89154a43a47684742c3d1753252bb6f49f61da9d8c84fc9b1def2df130cb2d93"
+      ],
+      "request_nonce": "85d827960cb39280f33cd391bc532ec6f66f3d1e8589ad02f3d0be349ae706e5",
+      "fetched_at": "2026-11-11T14:51:33.373Z",
+      "http_status": 200,
+      "body_bytes": 287615,
+      "body_sha256": "09c37a6c3c393347c58e1f8ab4d7bd3c5a1caebf7877ba40f61a359d726b37fd"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "signing_algo": "ecdsa",
+      "signing_addresses": [
+        "0x3b753b4406613c5e70ae640508632b600424fa0c"
+      ],
+      "request_nonce": "b8876e2e44566f46064a702821ec673c920e10857565e0b6dbf108dcdff23bb0",
+      "fetched_at": "2026-11-11T14:51:33.825Z",
+      "http_status": 200,
+      "body_bytes": 332490,
+      "body_sha256": "a0aaf95356ffd6428f1784b1bc7ef26fd01dc256579332e7b0b825fec920ea2e"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "signing_algo": "ed25519",
+      "signing_addresses": [
+        "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff"
+      ],
+      "request_nonce": "204b522b93523abc975792225c7068a25424a77cc25b4f2e82cfd3b267d431b9",
+      "fetched_at": "2026-11-11T14:51:34.337Z",
+      "http_status": 200,
+      "body_bytes": 332474,
+      "body_sha256": "9469dd5ce2aa6b746c468d529f3ecfc46671375055bf80836f9f6985ec70dcfa"
+    },
+    {
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "signing_algo": "ecdsa",
+      "signing_addresses": [
+        "0xfdbd7952498b333206f360d71d97a1e0961e8ddf"
+      ],
+      "request_nonce": "577ed1ea313a13be558abe675746ceb11ddbc9e1ce8a4d65eb0365f3fa5795fd",
+      "fetched_at": "2026-11-11T14:51:34.842Z",
+      "http_status": 200,
+      "body_bytes": 287639,
+      "body_sha256": "686aa0825950ec8673f807f2ffddadc2afd3d416528fb321bd33e681549c3a9b"
+    },
+    {
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "signing_algo": "ed25519",
+      "signing_addresses": [
+        "89fb781a9530473a6d3bddd6bb0a0536c8d155058798edae88b19153bd8f4350"
+      ],
+      "request_nonce": "3916daa3b3235192e917756963d364c6fe8f31efd208fb23fef5d3085665f563",
+      "fetched_at": "2026-11-11T14:51:35.351Z",
+      "http_status": 200,
+      "body_bytes": 287623,
+      "body_sha256": "6262c9895bfdfe3090ddda0cb940e760a9bc7f6c1e6167bc22dc896ab6b8bed3"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "signing_algo": "ecdsa",
+      "signing_addresses": [
+        "0xfe0071895500a9755c18044948ab4f4e1a7f337e"
+      ],
+      "request_nonce": "c85eafdaf5b704764fcb8651f27eafb1567bf2b41a73d680862e8b37f6a7fce2",
+      "fetched_at": "2026-11-11T14:51:36.188Z",
+      "http_status": 200,
+      "body_bytes": 304170,
+      "body_sha256": "1abde4be2c8bd5ddc379ac831ade1f40363d819bdc27649ed002d840c006cd4f"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "signing_algo": "ed25519",
+      "signing_addresses": [
+        "236f5a6b91dd47dc3b7b36e43d4eb531a042ffb8f8fbf3a1555b78cef4fdda4c"
+      ],
+      "request_nonce": "7f88657984101121340af1659eb74c92a2429f1c11731ba5a92668b371a48121",
+      "fetched_at": "2026-11-11T14:51:36.653Z",
+      "http_status": 200,
+      "body_bytes": 304154,
+      "body_sha256": "0b831451fdba46ee13902909ac3c6a236b380a1debd82e51b1c2480939124e86"
+    }
+  ]
+}

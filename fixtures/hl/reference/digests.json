@@ -1,0 +1,323 @@
+{
+  "generated_by": "hyperliquid-python-sdk 0.24.0",
+  "cases": [
+    {
+      "id": "probe-order-0",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.068837",
+        "sz": "177",
+        "reduce_only": false
+      },
+      "nonce": 1794375800115,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.068837\",\"s\":\"177\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303638383337a173a3313737a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xb2a7b7241ef70bec2f4cc01cb58090c265e03cf84b789e41ab1bb3d2815c8c48",
+      "digest": "0x93bfe0e81a9c8caaf6b218a22ef35b450a008c23e28d8a9b7b0c4837733060e9",
+      "printed_digest": "0x93bfe0e81a9c8caaf6b218a22ef35b450a008c23e28d8a9b7b0c4837733060e9",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "probe-order-1",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": false,
+        "px": "0.067473",
+        "sz": "177",
+        "reduce_only": true
+      },
+      "nonce": 1794375801092,
+      "expires_after": 1794375921092,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":false,\"p\":\"0.067473\",\"s\":\"177\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c2a170a8302e303637343733a173a3313737a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x027f0783e46813b8ef934669ab1d3afb195ef504a0f94a34f3c66f0ba1697638",
+      "digest": "0x133a827faef6ecfd3190e8ec9e87da45149a057a125232fb51af4215c42d8798",
+      "printed_digest": "0x133a827faef6ecfd3190e8ec9e87da45149a057a125232fb51af4215c42d8798",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "probe-order-2",
+      "inputs": {
+        "kind": "order",
+        "asset": 12,
+        "is_buy": true,
+        "px": "0.005323",
+        "sz": "3000",
+        "reduce_only": false
+      },
+      "nonce": 1794375802069,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":12,\"b\":true,\"p\":\"0.005323\",\"s\":\"3000\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a1610ca162c3a170a8302e303035333233a173a433303030a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x492463d2de992c26a631be493e77ded1bca44e895878b150b5b9fa07fa2c8593",
+      "digest": "0xfc0ce626cb8085f7064c265ea9c1bb5c184f5f5c68acc96b576258b16e2bdf10",
+      "printed_digest": "0xfc0ce626cb8085f7064c265ea9c1bb5c184f5f5c68acc96b576258b16e2bdf10",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "probe-order-3",
+      "inputs": {
+        "kind": "order",
+        "asset": 3,
+        "is_buy": false,
+        "px": "74921",
+        "sz": "0.000123",
+        "reduce_only": false
+      },
+      "nonce": 1794375803046,
+      "expires_after": 1794375923046,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":3,\"b\":false,\"p\":\"74921\",\"s\":\"0.000123\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a16103a162c2a170a53734393231a173a8302e303030313233a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xacf456ee691a2f57181857beb0a0236e1b2a2ea1530ef7d4a6fb6cc8ec72ae3b",
+      "digest": "0xda8b122c375617c720d4f7db4d8659d0a8b9857667da8aedc4901b93f5f1c7a4",
+      "printed_digest": "0xda8b122c375617c720d4f7db4d8659d0a8b9857667da8aedc4901b93f5f1c7a4",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "probe-order-4",
+      "inputs": {
+        "kind": "order",
+        "asset": 3,
+        "is_buy": true,
+        "px": "12.345",
+        "sz": "1",
+        "reduce_only": true
+      },
+      "nonce": 1794375804023,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":3,\"b\":true,\"p\":\"12.345\",\"s\":\"1\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a16103a162c3a170a631322e333435a173a131a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x29449095bb6943ef3344abb8c47f9653efd2be11e87412537b559cd032920626",
+      "digest": "0x6dab1c8a47665d24825d78112c0b8a43b955ab8af22b3429a7b3f7e96f4eb35f",
+      "printed_digest": "0x6dab1c8a47665d24825d78112c0b8a43b955ab8af22b3429a7b3f7e96f4eb35f",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "live-chainsig-open",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.068837",
+        "sz": "177",
+        "reduce_only": false
+      },
+      "nonce": 1794375806401,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.068837\",\"s\":\"177\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303638383337a173a3313737a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xe2fff03fbe273923f375ab23c42a8143b53b1df8127a500018b69c62b0485304",
+      "digest": "0x6d2e65cac47349866783c25578ab0d647c6512a39b4b305b1fe3ac7ea0cf138f",
+      "printed_digest": "0x6d2e65cac47349866783c25578ab0d647c6512a39b4b305b1fe3ac7ea0cf138f",
+      "printed_connection_id": "0xe2fff03fbe273923f375ab23c42a8143b53b1df8127a500018b69c62b0485304",
+      "printed_match": true
+    },
+    {
+      "id": "live-chainsig-close",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": false,
+        "px": "0.067473",
+        "sz": "177",
+        "reduce_only": true
+      },
+      "nonce": 1794375812947,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":false,\"p\":\"0.067473\",\"s\":\"177\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c2a170a8302e303637343733a173a3313737a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x5063d4ef2b7b4be4ad03d1ba2863e9043c8413674fab05b9aca501529ee7e55b",
+      "digest": "0xc3c25668689c531aaa5a3dc1f2ac757ad3a9b597520fe783a9c28a81d2049732",
+      "printed_digest": "0xc3c25668689c531aaa5a3dc1f2ac757ad3a9b597520fe783a9c28a81d2049732",
+      "printed_connection_id": "0x5063d4ef2b7b4be4ad03d1ba2863e9043c8413674fab05b9aca501529ee7e55b",
+      "printed_match": true
+    },
+    {
+      "id": "live-guard-open",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.068795",
+        "sz": "177",
+        "reduce_only": false
+      },
+      "nonce": 1794375990906,
+      "expires_after": 1794376110906,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.068795\",\"s\":\"177\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303638373935a173a3313737a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x5cacf14cae44709a8440199cae82e9dafb6aedbce46e383b722428a77c041d03",
+      "digest": "0x4a97e6d053f91faf9efeca2785ff8fd17289fa7375fd2409b26229d56c62135d",
+      "printed_digest": "0x4a97e6d053f91faf9efeca2785ff8fd17289fa7375fd2409b26229d56c62135d",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "live-guard-close",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": false,
+        "px": "0.067433",
+        "sz": "177",
+        "reduce_only": true
+      },
+      "nonce": 1794376000939,
+      "expires_after": 1794376120939,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":false,\"p\":\"0.067433\",\"s\":\"177\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c2a170a8302e303637343333a173a3313737a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x9269e2b1ebd954d03b5c2b32f40ac757f2b3166a29a9048e5ecff2d515c83470",
+      "digest": "0x57e7c2cf24726d23b13c8215f1ab5404c2849687a37620c6a6dd08bf87ebbbf6",
+      "printed_digest": "0x57e7c2cf24726d23b13c8215f1ab5404c2849687a37620c6a6dd08bf87ebbbf6",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "probe-leverage-0",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 173,
+        "leverage": 2
+      },
+      "nonce": 1794375900000,
+      "expires_after": 1794376020000,
+      "testnet": true,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":173,\"isCross\":false,\"leverage\":2}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a56173736574ccada7697343726f7373c2a86c6576657261676502",
+      "connection_id": "0x8ebcc89885082326816ce7f5b24c1d6fd70379eae63e03d6e8124afe8864a567",
+      "digest": "0x5e5e369edfea50d85977180f1b9dd31bed3f8ade28a4ee0c53d9675e4bac2f0b",
+      "printed_digest": null,
+      "printed_connection_id": null,
+      "printed_match": null
+    },
+    {
+      "id": "probe-leverage-1",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 12,
+        "leverage": 1
+      },
+      "nonce": 1794375900001,
+      "expires_after": 1794376020001,
+      "testnet": true,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":12,\"isCross\":false,\"leverage\":1}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a561737365740ca7697343726f7373c2a86c6576657261676501",
+      "connection_id": "0xf09ef0fb895f13656d6da716028a1075a00468334ca251b0ee6cb1b16ae11341",
+      "digest": "0xd0ee1d03cc680fceb0493d106eacf2e3baead73d57294198237261076a9b79f5",
+      "printed_digest": null,
+      "printed_connection_id": null,
+      "printed_match": null
+    },
+    {
+      "id": "probe-leverage-2",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 200,
+        "leverage": 10
+      },
+      "nonce": 1794375900002,
+      "expires_after": 1794376020002,
+      "testnet": true,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":200,\"isCross\":false,\"leverage\":10}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a56173736574ccc8a7697343726f7373c2a86c657665726167650a",
+      "connection_id": "0xb216de550ebad47da3326ae12017430f6306c65f59d2128ad1ce72388de117d5",
+      "digest": "0x2e7ac8a134352b0b0ed482e0d86cee7ebb4224181c3b7c4e2945a7abcfb5c73d",
+      "printed_digest": null,
+      "printed_connection_id": null,
+      "printed_match": null
+    },
+    {
+      "id": "live-chainsig-leverage",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 173,
+        "leverage": 2
+      },
+      "nonce": 1794375800115,
+      "expires_after": null,
+      "testnet": true,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":173,\"isCross\":false,\"leverage\":2}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a56173736574ccada7697343726f7373c2a86c6576657261676502",
+      "connection_id": "0x9e69fb65abb08ccd7e29c4b4f5c63cc54927950bca7552d973faa382a2fc3f20",
+      "digest": "0x14c60d70d1b009e936f8ffb850c755b678bf256041520cc979bae6ecdda19b17",
+      "printed_digest": "0x14c60d70d1b009e936f8ffb850c755b678bf256041520cc979bae6ecdda19b17",
+      "printed_connection_id": "0x9e69fb65abb08ccd7e29c4b4f5c63cc54927950bca7552d973faa382a2fc3f20",
+      "printed_match": true
+    },
+    {
+      "id": "live-guard-leverage",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 173,
+        "leverage": 2
+      },
+      "nonce": 1794375978592,
+      "expires_after": 1794376098592,
+      "testnet": true,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":173,\"isCross\":false,\"leverage\":2}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a56173736574ccada7697343726f7373c2a86c6576657261676502",
+      "connection_id": "0x7ce87de6ece9bb594f99dec9ee3891d7a797d161c865481e55c9b35384bc8400",
+      "digest": "0x50438dd924b6ffa4ddf673498d96db9b2c309866d9f5753b438485254bcf1526",
+      "printed_digest": "0x50438dd924b6ffa4ddf673498d96db9b2c309866d9f5753b438485254bcf1526",
+      "printed_connection_id": null,
+      "printed_match": true
+    },
+    {
+      "id": "mainnet-order-0",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.068837",
+        "sz": "177",
+        "reduce_only": false
+      },
+      "nonce": 1794375800115,
+      "expires_after": null,
+      "testnet": false,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.068837\",\"s\":\"177\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303638383337a173a3313737a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xb2a7b7241ef70bec2f4cc01cb58090c265e03cf84b789e41ab1bb3d2815c8c48",
+      "digest": "0xfe4514e4d877d7247a33abbfd978b56493413b6b81f9adb9521333a3d644f037",
+      "printed_digest": null,
+      "printed_connection_id": null,
+      "printed_match": null
+    },
+    {
+      "id": "mainnet-leverage-0",
+      "inputs": {
+        "kind": "leverage",
+        "asset": 173,
+        "leverage": 2
+      },
+      "nonce": 1794375900000,
+      "expires_after": 1794376020000,
+      "testnet": false,
+      "action_json": "{\"type\":\"updateLeverage\",\"asset\":173,\"isCross\":false,\"leverage\":2}",
+      "msgpack_hex": "84a474797065ae7570646174654c65766572616765a56173736574ccada7697343726f7373c2a86c6576657261676502",
+      "connection_id": "0x8ebcc89885082326816ce7f5b24c1d6fd70379eae63e03d6e8124afe8864a567",
+      "digest": "0x64ff862061c393e99f5902dd05611aa94c74f2229349fc67fd0b9bc5a2491859",
+      "printed_digest": null,
+      "printed_connection_id": null,
+      "printed_match": null
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "url": "https://api.hyperliquid-testnet.xyz/exchange",
+  "http_status": 200,
+  "ms": 375,
+  "action": {
+    "id": 2,
+    "position_id": 2,
+    "kind": "OPEN",
+    "action": {
+      "type": "order",
+      "orders": [
+        {
+          "a": 12,
+          "b": true,
+          "p": "0.00448",
+          "s": "2455",
+          "r": false,
+          "t": {
+            "limit": {
+              "tif": "Ioc"
+            }
+          }
+        }
+      ],
+      "grouping": "na"
+    },
+    "nonce": 1794476391333,
+    "expires_after": 1794476511333,
+    "signature": {
+      "r": "0x9f1fc26b8cf8761752f95fe5aae3e4894aec0a609185720c66a2a09d1b7b8dda",
+      "s": "0x5ef5dc83270345bf8b3b1d187ce0463ce26f3828ae4899e43086e058f3c451b5",
+      "v": 27
+    },
+    "created_at": 1794476397022
+  }
+}
