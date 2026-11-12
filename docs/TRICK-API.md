@@ -13,7 +13,9 @@ then ask the owner). CORS is open (`*`); there are no cookies.
 
 - Rounds are 30 minutes on testnet; the proposal window is minutes 15 to 20 of each round. The Intern's own
   decision is asked first, then **up to 3 tricks per window**, oldest first. The rest wait for the next window.
-- Nothing is asked with less than 90 seconds left in a window.
+- Nothing is asked with less than 90 seconds left in a window. The model usually answers in 10 to 45 seconds, but
+  a pushy message can make it think for minutes (190 seconds measured, `docs/measurements.md`): such an answer
+  arrives after the window and the program refuses it as `OUTSIDE_WINDOW`. In practice 1 to 3 tricks fit a window.
 - Show the visitor `window.next_window_from` ("your trick goes in at 18:09") and poll `GET /tricks/<id>` every
   10 seconds until `status` is `done` or `failed`.
 

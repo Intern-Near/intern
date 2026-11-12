@@ -1,0 +1,15 @@
+{
+  "case": "unicode",
+  "what": "A 2,000-byte playbook in Hindi and emoji, so the limit is counted in bytes, not characters.",
+  "playbook_bytes": 1999,
+  "playbook_chars": 797,
+  "rulebook_bytes": 2721,
+  "request_bytes": 3198,
+  "ms": 8720,
+  "response_bytes": 1342,
+  "prompt_tokens": 1127,
+  "completion_tokens": 281,
+  "answer": "{\"v\":1,\"round\":11,\"nonce\":\"0ed9d38935c6fed8\",\"action\":\"skip\"}",
+  "checks_3_to_5": "pass",
+  "forecast": "SKIP"
+}

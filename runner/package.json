@@ -16,7 +16,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "verify": "npm run typecheck && npm run lint && npm test"
+    "verify": "npm run typecheck && npm run lint && npm test",
+    "playbook-check": "node --env-file-if-exists=.env src/cli/playbook-check.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

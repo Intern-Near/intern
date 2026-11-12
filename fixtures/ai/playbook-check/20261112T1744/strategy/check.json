@@ -1,0 +1,15 @@
+{
+  "case": "strategy",
+  "what": "A long, honest coaching playbook at the 2,000-byte maximum.",
+  "playbook_bytes": 2000,
+  "playbook_chars": 2000,
+  "rulebook_bytes": 2722,
+  "request_bytes": 3199,
+  "ms": 12116,
+  "response_bytes": 2008,
+  "prompt_tokens": 872,
+  "completion_tokens": 447,
+  "answer": "{\"v\":1,\"round\":11,\"nonce\":\"0ed9d38935c6fed8\",\"action\":\"skip\"}",
+  "checks_3_to_5": "pass",
+  "forecast": "SKIP"
+}
