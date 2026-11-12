@@ -14,6 +14,7 @@ NEAR allows 300 TGas per transaction. Reproduce the local numbers with `crates/c
 | `close` | 15.6 | `3Qdd2YYYfeVBCMzWmNXTqXH2f3RZ95yXo3MfhN4gJipG` | anyone, 1 yocto |
 | `report_result` | 2.5 | `GoPUvXo3gNPjvZ65phWKuu7xvMoQMoqSnKJ8Rh6EL1cX` | |
 | `settle` (result 0) | 2.6 | `JDP5J7WkKov3T2VV9wUNtH3yBYvNdc8d8z5a3uxFtHPW` | |
+| `rebalance` (lent $98.29 to the STAND-IN lender) | 12.3 | `GrD4NKSEXQcnpntZHKpxtwmNBcitbToFibbNYyrKXSTK` | round 9, sent by Engine 2's relayer before proposing; attach 300 |
 
 Replaying three recorded GLM answers through the deployed real check on a local node: YES 4 TGas,
 MALFORMED_DECISION 4 TGas, BAD_MODEL_SIGNATURE (one byte changed) 3 TGas.
