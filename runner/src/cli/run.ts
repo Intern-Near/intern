@@ -10,7 +10,8 @@
 //   once              One whole round from wherever it is now: also sign, deliver, close, report, settle. Calls
 //                     rebalance once, before proposing (01 1.3 §9.6). Needs NEARAI_API_KEY, the runner account
 //                     (propose, sign_next, report_result) and the relayer account (rebalance, close, settle).
-//   loop              `once`, round after round, until stopped (Ctrl-C) or it gives up.
+//   loop              `once`, round after round, until stopped (Ctrl-C) or it gives up. With PORT set, it also serves
+//                     the trick page's queue on that port (docs/TRICK-API.md); TRICKS=off turns the queue off.
 //   trick --message <text> [--credited-to <account>]
 //                     The challenge-page entry point: steps 3 to 8 with a visitor's message as the last line of the
 //                     user message. The rulebook is still the program's. --credited-to names the visitor's NEAR
@@ -25,9 +26,11 @@
 // Environment (from .env): NEARAI_API_KEY, RUNNER_ACCOUNT_ID, RUNNER_PRIVATE_KEY, RELAYER_ACCOUNT_ID,
 // RELAYER_PRIVATE_KEY, NEAR_RPC_URL (default https://test.rpc.fastnear.com). Testnet only: the runner refuses to
 // start on any other network.
+import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
+import { verifyMessage } from "near-api-js/nep413";
 import { type Chain, NearChain } from "../chain.ts";
 import type { Constants } from "../contract.ts";
 import { isRecord } from "../json.ts";
@@ -37,6 +40,8 @@ import { FIXTURES_DIR } from "../paths.ts";
 import { checkKey, preflight } from "../preflight.ts";
 import { checkConstants, DEFAULT_SETTINGS, isAccountId, Runner, type Settings } from "../round.ts";
 import { readSecret } from "../secret.ts";
+import { TrickDesk } from "../trick-desk.ts";
+import { startTrickServer, TRICK_RECIPIENT, type WindowInfo } from "../trick-server.ts";
 
 const RUNNER_DIR = new URL("../../", import.meta.url).pathname;
 const DEPLOYMENTS = new URL("../../../interface/deployments.json", import.meta.url).pathname;
@@ -192,7 +197,9 @@ async function main(): Promise<void> {
     } catch {
       alive = false;
     }
-    if (alive) fail(`another runner (pid ${pid}) is working on ${contract}; stop it first`);
+    // In a container this process is often pid 1 again: a lock left by a hard stop names our own pid then.
+    if (alive && pid !== process.pid)
+      fail(`another runner (pid ${pid}) is working on ${contract}; stop it first`);
   }
   const log = fileLog(join(dataDir, "runner.jsonl"), (text) => console.log(text));
   writeFileSync(lock, String(process.pid));
@@ -205,8 +212,15 @@ async function main(): Promise<void> {
     });
   }
 
+  // The trick page's queue: `loop` only, so every proposal still goes out from this one process and key.
+  const tricks =
+    command === "loop" && process.env.TRICKS !== "off"
+      ? new TrickDesk(join(dataDir, "tricks.jsonl"), () => Date.now())
+      : undefined;
+
   const runner = new Runner(
     {
+      ...(tricks ? { tricks } : {}),
       chain,
       apiKey,
       fetchFn: fetch,
@@ -214,12 +228,56 @@ async function main(): Promise<void> {
       now: () => Date.now(),
       sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
       dataDir,
-      hlSaveDir: join(FIXTURES_DIR, "hl", "exchange"),
+      // HL_SAVE_DIR puts the order evidence on the host's volume (Railway: /app/logs/hl-exchange).
+      hlSaveDir: process.env.HL_SAVE_DIR || join(FIXTURES_DIR, "hl", "exchange"),
     },
     settings,
     c,
   );
-  log({ step: "start", command, contract, rpc: rpcUrl, settings });
+  log({ step: "start", command, contract, rpc: rpcUrl, settings, tricks: tricks !== undefined });
+
+  const port = Number(process.env.PORT);
+  if (tricks && Number.isInteger(port) && port > 0) {
+    let cached: { at: number; w: WindowInfo } | null = null;
+    startTrickServer(
+      {
+        desk: tricks,
+        verify: async (accountId, publicKey, message, nonce, signature) => {
+          try {
+            await verifyMessage({
+              signerAccountId: accountId,
+              signerPublicKey: publicKey,
+              payload: { message, recipient: TRICK_RECIPIENT, nonce },
+              signature,
+              provider: rpc,
+            });
+            return null;
+          } catch (e) {
+            return e instanceof Error ? e.message : String(e);
+          }
+        },
+        window: async () => {
+          const now = Date.now();
+          if (cached && now - cached.at < 10_000) return cached.w;
+          const r = await readOnly.round();
+          const open = r.phase === "PROPOSE" && r.propose_until - now >= 90_000;
+          const next = r.phase === "OPEN" ? r.propose_from : open ? now : r.ends_at + c.round.propose_from_ms;
+          const w: WindowInfo = {
+            round_id: r.id,
+            phase: r.phase,
+            propose_from: r.propose_from,
+            propose_until: r.propose_until,
+            next_window_from: next,
+          };
+          cached = { at: now, w };
+          return w;
+        },
+        salt: process.env.TRICK_SALT || randomBytes(16).toString("hex"),
+        log,
+      },
+      port,
+    );
+  }
 
   if (command === "trick") {
     const message = values.message;

@@ -5,5 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 COPY src ./src
-# Round logs and the raw AI exchanges go to /app/logs: mount a volume there so they survive restarts.
+# Round logs, the raw AI exchanges, the trick queue and the Hyperliquid order evidence go to /app/logs: mount a
+# volume there so they survive restarts. With PORT set (Railway sets it), `loop` also serves the trick page.
+ENV HL_SAVE_DIR=/app/logs/hl-exchange
 CMD ["node", "src/cli/run.ts", "loop", "--contract", "coin.desk-lab-2026.testnet"]

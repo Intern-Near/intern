@@ -18,7 +18,7 @@ import {
   postExchange,
 } from "./hl-exchange.ts";
 import { fetchPrices } from "./hyperliquid.ts";
-import { judge } from "./judge.ts";
+import { answerText, judge } from "./judge.ts";
 import type { Log } from "./log.ts";
 import { MARKETS, type MarketRow } from "./markets.ts";
 import { limitPxE8, parseScaled } from "./pricing.ts";
@@ -27,6 +27,7 @@ import { MIN_NOTIONAL_E6, RANKS } from "./ranks.ts";
 import { type BetOnExchange, CLOCK_SLACK_MS, type Outcome, workOutReturned } from "./result.ts";
 import type { Secret } from "./secret.ts";
 import { hexToBytes, parseSignatureReply } from "./signature.ts";
+import { TRICK_LIMITS, type TrickDesk } from "./trick-desk.ts";
 
 /**
  * The runner's pass through a round (03 brief, step 5), driven by what the chain says each time: it reads the
@@ -63,6 +64,8 @@ export interface Deps {
   dataDir: string;
   /** Where every Hyperliquid order request and reply is saved (`fixtures/hl/exchange/`). */
   hlSaveDir: string;
+  /** The trick page's queue: asked in the proposal window after the Intern's own decision (`loop` only). */
+  tricks?: TrickDesk;
 }
 
 /** A user-written message for the challenge page, put in the user message instead of the instruction. */
@@ -157,6 +160,8 @@ export class Runner {
   readonly #noted = new Set<string>();
   /** Rounds this process has called `rebalance` for (01 1.3 §9.6: once each round, before proposing). */
   readonly #rebalanced = new Set<number>();
+  /** Rounds this process has settled: the chain's view can lag a few seconds behind the settle transaction. */
+  readonly #settled = new Set<number>();
   #askFailures = new Map<number, number>();
 
   constructor(deps: Deps, settings: Settings, constants: Constants) {
@@ -214,6 +219,16 @@ export class Runner {
     last: string,
     creditedTo: string | null = null,
   ): Promise<ChainVerdict | null> {
+    return (await this.askAndProposeDetailed(round, rank, last, creditedTo))?.verdict ?? null;
+  }
+
+  /** `askAndPropose`, also returning the `propose` transaction and the model's answer text (the trick page shows both). */
+  async askAndProposeDetailed(
+    round: Round,
+    rank: RankState,
+    last: string,
+    creditedTo: string | null = null,
+  ): Promise<{ verdict: ChainVerdict; tx: string; answer: string | null } | null> {
     const { chain, fetchFn, apiKey } = this.#d;
     const c = this.#c;
     const rulebook = await chain.rulebook();
@@ -233,7 +248,10 @@ export class Runner {
     // Steps 5 and 6: the exchange, saved as it happens, and the pinned scheme's signature.
     const algo = c.model.signing_algo;
     const requestBytes = requestBody(c.model.id, rulebook.text, user);
-    const dir = join(this.#d.dataDir, "rounds", String(round.id), `ask-${stamp(this.#d.now())}`);
+    // One folder per exchange, named to the second; a second exchange in the same second gets a suffix.
+    const base = join(this.#d.dataDir, "rounds", String(round.id), `ask-${stamp(this.#d.now())}`);
+    let dir = base;
+    for (let n = 2; existsSync(dir); n++) dir = `${base}-${n}`;
     const ex = await runExchange({
       dir,
       requestBytes,
@@ -316,7 +334,7 @@ export class Runner {
       `${JSON.stringify({ tx: sent.txHash, tgas: sent.tgas, verdict: v, forecast: ours, credited_to: creditedTo }, null, 2)}\n`,
       { flag: "wx" },
     );
-    return v;
+    return { verdict: v, tx: sent.txHash, answer: answerText(response) };
   }
 
   /**
@@ -339,10 +357,14 @@ export class Runner {
         brave_lent: pot.brave_lent,
       });
     } catch (e) {
-      this.#log("rebalance failed", roundId, {
-        reason: e instanceof Error ? e.message : String(e),
-        note: "the round goes on; the program decides what may be bet",
-      });
+      const reason = e instanceof Error ? e.message : String(e);
+      // The program refuses a rebalance with nothing to move (the slice is idle, the rest under $10): not a failure.
+      if (/nothing to move/.test(reason)) this.#log("rebalance: nothing to move", roundId, {});
+      else
+        this.#log("rebalance failed", roundId, {
+          reason,
+          note: "the round goes on; the program decides what may be bet",
+        });
     }
   }
 
@@ -889,6 +911,8 @@ export class Runner {
             }
             return null;
           }
+          // The trick page: visitors' messages, after the Intern's own decision, a few per window (spec 24.G).
+          if (await this.#askTrick(round, rank)) return null;
         }
         // Nothing more to ask. Look again every minute (a bet approved late still needs signing) until closing opens.
         const until = round.phase === "PROPOSE" ? round.propose_until : round.close_from;
@@ -914,7 +938,13 @@ export class Runner {
           done = done && reported;
         }
         if (done) {
+          if (this.#settled.has(round.id)) {
+            // Settled by this process a moment ago; the view has not caught up yet.
+            await this.#d.sleep(5_000);
+            return null;
+          }
           const sent = await chain.settle(round.id);
+          this.#settled.add(round.id);
           this.#log("settle", round.id, { tx: sent.txHash, tgas: sent.tgas, value: sent.value });
           return null; // the next pass sees `settled`
         }
@@ -926,6 +956,30 @@ export class Runner {
         return null;
       }
     }
+  }
+
+  /**
+   * One queued trick, if one is waiting and this window has room: the visitor's message goes after the market data,
+   * the model answers, and the answer is proposed as it is, credited to the visitor when they proved their account.
+   * Returns true if it asked (the caller reads the chain again).
+   */
+  async #askTrick(round: Round, rank: RankState): Promise<boolean> {
+    const desk = this.#d.tricks;
+    if (!desk) return false;
+    if (desk.askedIn(round.id) >= TRICK_LIMITS.perWindow) return false;
+    const t = desk.next();
+    if (!t || !this.#mayAsk(round)) return false;
+    desk.asking(t.id, round.id);
+    this.#log("trick", round.id, { trick: t.id, credited_to: t.account_id });
+    try {
+      const r = await this.askAndProposeDetailed(round, rank, t.message, t.account_id);
+      if (r === null) desk.notProposed(t.id, "the exchange with the model failed");
+      else desk.done(t.id, r.verdict, r.tx, r.answer);
+    } catch (e) {
+      desk.notProposed(t.id, e instanceof Error ? e.message : String(e));
+      throw e;
+    }
+    return true;
   }
 
   /**

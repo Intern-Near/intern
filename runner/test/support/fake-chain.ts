@@ -88,6 +88,9 @@ export class FakeChain implements Chain {
   signMs = 8_000;
   /** How many of the next `sign_next` calls return null, as when the signing network fails (Engine 1's note). */
   signFailures = 0;
+  /** How many `get_round` reads after a settle still show the round unsettled, as when the view lags the chain. */
+  settleLag = 0;
+  #lagLeft = 0;
   #round: RoundData;
   #nonceCounter = 0;
   #nonce: string;
@@ -174,10 +177,12 @@ export class FakeChain implements Chain {
     this.#roll();
     const r = this.#round;
     const c = this.#constants.round;
+    const lagging = r.settled && this.#lagLeft > 0;
+    if (lagging) this.#lagLeft--;
     return {
       id: r.id,
       phase: this.#phase(r),
-      settled: r.settled,
+      settled: r.settled && !lagging,
       stuck: false,
       started_at: r.started_at,
       propose_from: r.started_at + c.propose_from_ms,
@@ -396,9 +401,11 @@ export class FakeChain implements Chain {
     this.calls.push(`settle ${roundId}`);
     const r = this.#round;
     if (r.id !== roundId || this.#phase(r) !== "CLOSE") throw new Error("settle: not now");
+    if (r.settled) throw new Error("Smart contract panicked: the round is already settled");
     const mine = this.positions_.filter((p) => p.round_id === roundId);
     if (mine.some((p) => p.result === null)) throw new Error("settle: a bet has no result");
     r.settled = true;
+    this.#lagLeft = this.settleLag;
     r.result = mine.reduce((sum, p) => sum + BigInt(p.result ?? "0"), 0n);
     return { txHash: this.#tx(), value: r.result.toString(), tgas: null };
   }
