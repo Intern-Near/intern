@@ -25,6 +25,8 @@ export interface Constants {
     propose_from_ms: number;
     propose_until_ms: number;
     close_from_ms: number;
+    /** When guessing closes, after the round's start (01 §5), when the contract says. */
+    guess_close_ms?: number;
   };
   hl: { testnet: boolean; address: string; signer_contract: string; path: string; order_expiry_ms: number };
   runner: string;
@@ -204,6 +206,7 @@ export function readConstants(v: unknown): Constants {
       propose_from_ms: num(round, "propose_from_ms", `${p}.round`),
       propose_until_ms: num(round, "propose_until_ms", `${p}.round`),
       close_from_ms: num(round, "close_from_ms", `${p}.round`),
+      ...(typeof round.guess_close_ms === "number" ? { guess_close_ms: round.guess_close_ms } : {}),
     },
     hl: {
       testnet: bool(hl, "testnet", `${p}.hl`),

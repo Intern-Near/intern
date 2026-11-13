@@ -41,11 +41,12 @@ import type { Constants } from "../contract.ts";
 import { isRecord } from "../json.ts";
 import { type StartupAccount, startupKeyScope } from "../key-scope.ts";
 import { fileLog } from "../log.ts";
-import { view as chainView, DEFAULT_TESTNET_RPC, provider, signingAccount } from "../near.ts";
+import { call, view as chainView, DEFAULT_TESTNET_RPC, provider, signingAccount } from "../near.ts";
 import { FIXTURES_DIR } from "../paths.ts";
 import { checkKey, preflight } from "../preflight.ts";
+import { parseRivals, type Rival } from "../rivals.ts";
 import { checkConstants, DEFAULT_SETTINGS, isAccountId, Runner, type Settings } from "../round.ts";
-import { readSecret } from "../secret.ts";
+import { readSecret, Secret } from "../secret.ts";
 import { statusChecks } from "../status-checks.ts";
 import { TrickDesk } from "../trick-desk.ts";
 import { startTrickServer, TRICK_RECIPIENT, type WindowInfo } from "../trick-server.ts";
@@ -234,9 +235,19 @@ async function main(): Promise<void> {
       ? new TrickDesk(join(dataDir, "tricks.jsonl"), () => Date.now())
       : undefined;
 
+  // 01 1.7: rival players (RIVALS: [{ account, strategy, key }]), each with a key limited to the coin's `guess`.
+  const rivals: Rival[] = parseRivals(process.env.RIVALS).map((r) => {
+    const acct = signingAccount(r.account, new Secret(r.key), rpc);
+    return {
+      account: r.account,
+      strategy: r.strategy,
+      guess: async (verdict) => (await call(acct, contract, "guess", { verdict }, { teraGas: 30 })).txHash,
+    };
+  });
   const runner = new Runner(
     {
       ...(tricks ? { tricks } : {}),
+      ...(rivals.length > 0 ? { rivals } : {}),
       chain,
       apiKey,
       fetchFn: fetch,

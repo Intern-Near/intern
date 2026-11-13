@@ -25,6 +25,7 @@ import { limitPxE8, parseScaled } from "./pricing.ts";
 import { marketDataMessage } from "./prompt.ts";
 import { MIN_NOTIONAL_E6, RANKS } from "./ranks.ts";
 import { type BetOnExchange, CLOCK_SLACK_MS, type Outcome, workOutReturned } from "./result.ts";
+import { askGlm, copycat, type Rival, type Verdict3 } from "./rivals.ts";
 import { longShotOf } from "./rulebook.ts";
 import type { Secret } from "./secret.ts";
 import { hexToBytes, parseSignatureReply } from "./signature.ts";
@@ -67,6 +68,8 @@ export interface Deps {
   hlSaveDir: string;
   /** The trick page's queue: asked in the proposal window after the Intern's own decision (`loop` only). */
   tricks?: TrickDesk;
+  /** 01 1.7: labelled rival players who guess once a round while guessing is open (`src/rivals.ts`). */
+  rivals?: Rival[];
 }
 
 /** A user-written message for the challenge page, put in the user message instead of the instruction. */
@@ -167,6 +170,8 @@ export class Runner {
   readonly #s: Settings;
   readonly #c: Constants;
   readonly #deliveries = new Map<number, Delivery>();
+  readonly #rivalsDone = new Set<number>();
+  #lastRound: { id: number; bets_used: number; refused: number } | null = null;
   readonly #noted = new Set<string>();
   /** Rounds this process has called `rebalance` for (01 1.3 §9.6: once each round, before proposing). */
   readonly #rebalanced = new Set<number>();
@@ -917,8 +922,43 @@ export class Runner {
     return "dry-done";
   }
 
+  /** 01 1.7: each rival guesses once a round, while guessing is open. A failure is logged; the round goes on. */
+  async #rivalsGuess(round: Round): Promise<void> {
+    const rivals = this.#d.rivals ?? [];
+    if (rivals.length === 0 || this.#rivalsDone.has(round.id)) return;
+    this.#rivalsDone.add(round.id);
+    const closeMs = this.#c.round.guess_close_ms ?? this.#c.round.propose_from_ms - 60_000;
+    if (this.#d.now() > round.started_at + closeMs - 10_000) return;
+    const prev = this.#lastRound?.id === round.id - 1 ? this.#lastRound : null;
+    for (const r of rivals) {
+      try {
+        const verdict: Verdict3 =
+          r.strategy === "contrarian"
+            ? "NOPE"
+            : r.strategy === "copycat"
+              ? copycat(prev)
+              : await askGlm(
+                  this.#c.model.id,
+                  (await this.#d.chain.rulebook()).text,
+                  this.#d.apiKey,
+                  this.#d.fetchFn,
+                );
+        const tx = await r.guess(verdict);
+        this.#log("rival guessed", round.id, { account: r.account, strategy: r.strategy, verdict, tx });
+      } catch (e) {
+        this.#log("rival guess failed", round.id, {
+          account: r.account,
+          reason: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+        });
+      }
+    }
+  }
+
   async #fullPass(round: Round): Promise<null> {
     const { chain } = this.#d;
+    // 01 1.7: the copycat rival repeats the last round's outcome; remember it as the rounds go by.
+    if (this.#lastRound === null || this.#lastRound.id <= round.id)
+      this.#lastRound = { id: round.id, bets_used: round.bets_used, refused: round.refused };
     const rank = await chain.rank();
     const fired = rank.status === "FIRED";
     const positions = await chain.positions(round.id);
@@ -935,6 +975,7 @@ export class Runner {
 
     switch (round.phase) {
       case "OPEN":
+        await this.#rivalsGuess(round); // 01 1.7: once a round, before guessing closes
         await this.#sleepUntil(round.propose_from + 1_000, round.id, "proposals open");
         return null;
 
