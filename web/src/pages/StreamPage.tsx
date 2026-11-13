@@ -180,7 +180,7 @@ export function StreamPage() {
     <main id="main" className={`stream${stamped === "nope" ? " is-nope" : ""}`}>
       <header className="stream-top">
         <a className="stream-home" href={href("desk")}>
-          <img src="/cast/face-intern.webp" alt="" width={36} height={36} />
+          <img src="/cast/logo-intern.webp" alt="" width={40} height={40} />
           $INTERN
         </a>
         <span className="pill pill-live">Live from the contract</span>

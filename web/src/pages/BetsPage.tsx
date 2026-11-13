@@ -7,6 +7,8 @@ import { dollarLimit, limitsOf } from "../home/Home";
 import { clock, pct, signedUsd, titleCase, usd, when } from "../lib/format";
 import { day, href } from "../lib/nav";
 import { useBetWindow } from "./TailFadePage";
+import { useRewards } from "../lib/useRewards";
+import { WouldPass } from "../ui/WhyNope";
 import { phaseAt } from "../lib/round";
 import { useAsync } from "../lib/useAsync";
 import { price, useMarks, type Marks } from "../lib/useMarks";
@@ -249,6 +251,7 @@ export function BetsPage() {
   const snap = useDesk();
   const now = useNow();
   const tf = useBetWindow(snap.desk?.feed, now);
+  const rewards = useRewards();
   const { desk } = snap;
   const { marks, error: marksDown } = useMarks(desk?.constants.hl.testnet ?? true);
   const outbox = useAsync(() => getChain().getOutbox(undefined, 50), `outbox-${desk?.feed[desk.feed.length - 1]?.seq ?? 0}`);
@@ -347,6 +350,8 @@ export function BetsPage() {
         </p>
 
         <History desk={desk} />
+
+        <WouldPass desk={desk} now={now} rewards={rewards} />
       </main>
     </div>
   );

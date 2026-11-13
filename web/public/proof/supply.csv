@@ -1,0 +1,16 @@
+seq,at_utc,round,event,kind,account,dollars,coins,supply_change,supply_after,note
+2,2026-11-11T18:19:10.893Z,1,paid_in,WAIT,boss1.desk-lab-2026.testnet,100.000000,,0.000000,0.000000,paid in to BRAVE; becomes coins at the next opening
+4,2026-11-11T18:24:30.328Z,2,round_opened,MINT,,100.000000,100.000000,100.000000,100.000000,round 2 opened: $100.000000 became 100.000000 coins: 99.999000 for those who paid in ($1.000010 a coin) and 0.001000 locked for ever in the coin contract's own balance.
+5,2026-11-11T18:24:30.328Z,2,coins_minted,WRITE,boss1.desk-lab-2026.testnet,,99.999000,0.000000,100.000000,round 2's coins written to the account; the rule gives the same
+6,2026-11-11T18:24:31.657Z,2,cashed_out,BURN,boss1.desk-lab-2026.testnet,49.999500,49.999500,-49.999500,50.000500,cashed out for $49.999500
+8,2026-11-11T18:43:32.276Z,2,paid_in,WAIT,boss1.desk-lab-2026.testnet,900.000000,,0.000000,50.000500,paid in to BRAVE; becomes coins at the next opening
+10,2026-11-11T19:09:34.466Z,3,round_opened,MINT,,900.000000,900.000000,900.000000,950.000500,round 3 opened: $900.000000 became 900.000000 coins at $1.000000 a coin.
+16,2026-11-12T06:50:27.126Z,4,coins_minted,WRITE,boss1.desk-lab-2026.testnet,,900.000000,0.000000,950.000500,round 3's coins written to the account; the rule gives the same
+17,2026-11-12T06:50:27.126Z,4,dial_turned,BURN,boss1.desk-lab-2026.testnet,,100.000000,-100.000000,850.000500,turned the dial to SAFE
+18,2026-11-12T06:50:34.394Z,4,dial_turned,WAIT,boss2.desk-lab-2026.testnet,50.000000,,0.000000,850.000500,dollars from SAFE to BRAVE; becomes coins at the next opening
+21,2026-11-12T06:54:16.776Z,5,round_opened,MINT,,50.000000,49.947423,49.947423,899.947923,round 5 opened: $50.000000 became 49.947423 coins at $1.001052 a coin.
+22,2026-11-12T06:54:16.776Z,5,coins_minted,WRITE,boss2.desk-lab-2026.testnet,,49.947423,0.000000,899.947923,round 5's coins written to the account; the rule gives the same
+23,2026-11-12T06:54:16.776Z,5,dial_turned,BURN,boss2.desk-lab-2026.testnet,,1.000000,-1.000000,898.947923,turned the dial to SAFE
+46,2026-11-12T11:58:14.662Z,8,cashed_out,BURN,boss1.desk-lab-2026.testnet,425.429570,424.999750,-424.999750,473.948173,cashed out for $425.429570
+55,2026-11-12T17:25:50.703Z,11,paid_in,WAIT,boss1.desk-lab-2026.testnet,1000.000000,,0.000000,473.948173,paid in to BRAVE; becomes coins at the next opening
+62,2026-11-12T18:09:02.649Z,12,round_opened,MINT,,1000.000000,824.695144,824.695144,1298.643317,round 12 opened: $1000.000000 became 824.695144 coins at $1.212569 a coin.

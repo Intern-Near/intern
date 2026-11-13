@@ -1,5 +1,5 @@
 /** Links between pages. Keeps the data source and scene chosen in the address bar. */
-export function href(page: "landing" | "desk" | "bets" | "intern" | "nope" | "judge" | "vote" | "money" | "feed" | "coach" | "goals" | "launch" | "trick" | "tailfade" | "stream" | "rewards", extra: Record<string, string | number> = {}): string {
+export function href(page: "landing" | "desk" | "bets" | "intern" | "nope" | "judge" | "vote" | "money" | "feed" | "coach" | "goals" | "launch" | "trick" | "tailfade" | "stream" | "rewards" | "week" | "proof", extra: Record<string, string | number> = {}): string {
   const now = new URLSearchParams(window.location.search);
   const q = new URLSearchParams();
   for (const keep of ["source", "scene", "contract"]) {

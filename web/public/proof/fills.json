@@ -1,0 +1,3843 @@
+{
+  "tool": "fills-check",
+  "checked_at": "2026-11-13T16:47:33.010Z",
+  "checked_at_ms": 1794588453010,
+  "contract": "coin.desk-lab-2026.testnet",
+  "rpc": "https://test.rpc.fastnear.com",
+  "hl": {
+    "info_url": "https://api.hyperliquid-testnet.xyz/info",
+    "address": "0x46f8eb2a044a826c70e9682fe3bfd65970340132"
+  },
+  "result_source": "REPORTED",
+  "rounds": {
+    "from": 1,
+    "to": 57,
+    "current": 57,
+    "missing": []
+  },
+  "matching": "Matching is approximate until orders carry a client order id: a fill is tied to a signed order by coin, side, size (at most the order's) and time (from the order's nonce to its expiry, 10 s slack).",
+  "rule": "returned = margin + trading result - fees + funding (runner/src/result.ts)",
+  "sources": {
+    "outbox_actions": 110,
+    "outbox_first_id": 1,
+    "feed_items": 342,
+    "feed_first_seq": 1,
+    "fills": 73,
+    "funding_records": 0,
+    "fills_from": 1794419630000,
+    "fills_to": 1794588453010
+  },
+  "round_rows": [
+    {
+      "round_id": 1,
+      "started_at": 1794419640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 2,
+      "started_at": 1794421440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 1,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 3,
+      "started_at": 1794423240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "1000000",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 4,
+      "started_at": 1794464640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 5,
+      "started_at": 1794466440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 6,
+      "started_at": 1794475440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 7,
+      "started_at": 1794482640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-37117",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 8,
+      "started_at": 1794484440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 9,
+      "started_at": 1794486240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 10,
+      "started_at": 1794502440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 11,
+      "started_at": 1794504240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-32582",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 12,
+      "started_at": 1794506040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-112298",
+      "bets": 1,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 13,
+      "started_at": 1794507840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 14,
+      "started_at": 1794509640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 15,
+      "started_at": 1794511440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-14866",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 16,
+      "started_at": 1794513240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 17,
+      "started_at": 1794515040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 18,
+      "started_at": 1794516840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 19,
+      "started_at": 1794518640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-23808",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 20,
+      "started_at": 1794520440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 21,
+      "started_at": 1794522240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 22,
+      "started_at": 1794524040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-39761",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 23,
+      "started_at": 1794525840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 24,
+      "started_at": 1794527640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-34763",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 25,
+      "started_at": 1794529440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "20796",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 26,
+      "started_at": 1794531240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-61122",
+      "bets": 1,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 27,
+      "started_at": 1794533040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-78391",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 28,
+      "started_at": 1794534840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-375489",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 29,
+      "started_at": 1794536640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 30,
+      "started_at": 1794538440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 31,
+      "started_at": 1794540240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-33615",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 32,
+      "started_at": 1794542040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-52817",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 33,
+      "started_at": 1794543840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "7258",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 34,
+      "started_at": 1794545640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 35,
+      "started_at": 1794547440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "0",
+      "bets": 0,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 36,
+      "started_at": 1794549240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "14157",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 37,
+      "started_at": 1794551040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-136331",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 38,
+      "started_at": 1794552840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "38146",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 39,
+      "started_at": 1794554640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-412",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 40,
+      "started_at": 1794556440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-199103",
+      "bets": 1,
+      "skipped": 1,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 41,
+      "started_at": 1794558240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "26124",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 42,
+      "started_at": 1794560040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-10057",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 43,
+      "started_at": 1794561840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-153454",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 44,
+      "started_at": 1794563640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "9423",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 45,
+      "started_at": 1794565440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-33845",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 46,
+      "started_at": 1794567240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-31461",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 47,
+      "started_at": 1794569040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-117977",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 48,
+      "started_at": 1794570840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-39727",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 49,
+      "started_at": 1794572640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-88146",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 50,
+      "started_at": 1794574440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-28930",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 51,
+      "started_at": 1794576240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-48025",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 52,
+      "started_at": 1794578040000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-38429",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 53,
+      "started_at": 1794579840000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-72416",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 54,
+      "started_at": 1794581640000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-3462",
+      "bets": 1,
+      "skipped": 2,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 55,
+      "started_at": 1794583440000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "53136",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 1,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 56,
+      "started_at": 1794585240000,
+      "phase": "CLOSE",
+      "settled": true,
+      "result_e6": "-154641",
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    },
+    {
+      "round_id": 57,
+      "started_at": 1794587040000,
+      "phase": "HOLD",
+      "settled": false,
+      "result_e6": null,
+      "bets": 1,
+      "skipped": 0,
+      "refused": 0,
+      "unmatched_fill_groups": 0
+    }
+  ],
+  "bets": [
+    {
+      "round_id": 3,
+      "position_id": 1,
+      "market": "DOGE",
+      "coin": "DOGE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 0,
+      "fills_matched": 0,
+      "orders": [],
+      "reported": {
+        "returned_e6": "16000000",
+        "result_e6": "1000000"
+      },
+      "feed_reported": {
+        "returned_e6": "16000000",
+        "result_e6": "1000000",
+        "seq": 12
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "15000000",
+        "result_e6": "0",
+        "note": "no opening order was signed: the margin is reported back in full",
+        "detail": null
+      },
+      "status": "MISMATCH",
+      "reason": "the fills give 15.000000 back, the runner reported 16.000000 (off by 1.000000)"
+    },
+    {
+      "round_id": 6,
+      "position_id": 2,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 0,
+      "orders": [
+        {
+          "action_id": 2,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2455",
+          "px": "0.00448",
+          "nonce": 1794476391333,
+          "expires_after": 1794476511333,
+          "matched": null
+        },
+        {
+          "action_id": 3,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2455",
+          "px": "0.004393",
+          "nonce": 1794476944677,
+          "expires_after": 1794477064677,
+          "matched": null
+        }
+      ],
+      "reported": {
+        "returned_e6": "11000000",
+        "result_e6": "0"
+      },
+      "feed_reported": {
+        "returned_e6": "11000000",
+        "result_e6": "0",
+        "seq": 30
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "11000000",
+        "result_e6": "0",
+        "note": "the opening order did not fill: the margin is reported back in full",
+        "detail": {
+          "open_sz": "0",
+          "close_sz": "0",
+          "open_value_e6": "0",
+          "close_value_e6": "0",
+          "fees_e6": "0",
+          "funding_e6": "0",
+          "closed_pnl_e6": "0",
+          "open_oids": [],
+          "close_oids": []
+        }
+      },
+      "status": "NO FILLS",
+      "reason": "the opening order did not fill: the margin is reported back in full"
+    },
+    {
+      "round_id": 7,
+      "position_id": 3,
+      "market": "DOGE",
+      "coin": "DOGE",
+      "side": "LONG",
+      "margin_e6": "17997883",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 3,
+      "orders": [
+        {
+          "action_id": 5,
+          "kind": "OPEN",
+          "coin": "DOGE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "268",
+          "px": "0.067076",
+          "nonce": 1794483574065,
+          "expires_after": 1794483694065,
+          "matched": {
+            "oid": 65161863543,
+            "fills": 2,
+            "filled_sz": "268",
+            "first_fill_at": 1794483581242,
+            "tids": [
+              272197548035755,
+              598131231512093
+            ]
+          }
+        },
+        {
+          "action_id": 6,
+          "kind": "CLOSE",
+          "coin": "DOGE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "268",
+          "px": "0.065767",
+          "nonce": 1794484145160,
+          "expires_after": 1794484265160,
+          "matched": {
+            "oid": 65162270187,
+            "fills": 1,
+            "filled_sz": "268",
+            "first_fill_at": 1794484152152,
+            "tids": [
+              966303504477383
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "17960766",
+        "result_e6": "-37117"
+      },
+      "feed_reported": {
+        "returned_e6": "17960766",
+        "result_e6": "-37117",
+        "seq": 37
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "17960766",
+        "result_e6": "-37117",
+        "note": "opened and closed DOGE",
+        "detail": {
+          "open_sz": "268",
+          "close_sz": "268",
+          "open_value_e6": "17815490",
+          "close_value_e6": "17794396",
+          "fees_e6": "16023",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-20904",
+          "open_oids": [
+            65161863543
+          ],
+          "close_oids": [
+            65162270187
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed DOGE"
+    },
+    {
+      "round_id": 11,
+      "position_id": 4,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 8,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2532",
+          "px": "0.004343",
+          "nonce": 1794505204101,
+          "expires_after": 1794505324101,
+          "matched": {
+            "oid": 65178577417,
+            "fills": 1,
+            "filled_sz": "2532",
+            "first_fill_at": 1794505210826,
+            "tids": [
+              908831161633860
+            ]
+          }
+        },
+        {
+          "action_id": 9,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2532",
+          "px": "0.004257",
+          "nonce": 1794505743000,
+          "expires_after": 1794505863000,
+          "matched": {
+            "oid": 65178948410,
+            "fills": 1,
+            "filled_sz": "2532",
+            "first_fill_at": 1794505749308,
+            "tids": [
+              482879931838101
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10967418",
+        "result_e6": "-32582"
+      },
+      "feed_reported": {
+        "returned_e6": "10967418",
+        "result_e6": "-32582",
+        "seq": 60
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10967418",
+        "result_e6": "-32582",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "2532",
+          "close_sz": "2532",
+          "open_value_e6": "10895196",
+          "close_value_e6": "10872408",
+          "fees_e6": "9794",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-22788",
+          "open_oids": [
+            65178577417
+          ],
+          "close_oids": [
+            65178948410
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 12,
+      "position_id": 5,
+      "market": "DOGE",
+      "coin": "DOGE",
+      "side": "LONG",
+      "margin_e6": "31493899",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 3,
+      "orders": [
+        {
+          "action_id": 11,
+          "kind": "OPEN",
+          "coin": "DOGE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "472",
+          "px": "0.066628",
+          "nonce": 1794506997956,
+          "expires_after": 1794507117956,
+          "matched": {
+            "oid": 65179809913,
+            "fills": 1,
+            "filled_sz": "472",
+            "first_fill_at": 1794507004074,
+            "tids": [
+              730957638121664
+            ]
+          }
+        },
+        {
+          "action_id": 12,
+          "kind": "CLOSE",
+          "coin": "DOGE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "472",
+          "px": "0.06524",
+          "nonce": 1794507543133,
+          "expires_after": 1794507663133,
+          "matched": {
+            "oid": 65180182901,
+            "fills": 2,
+            "filled_sz": "472",
+            "first_fill_at": 1794507549177,
+            "tids": [
+              969642701582336,
+              252751535609497
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "31381601",
+        "result_e6": "-112298"
+      },
+      "feed_reported": {
+        "returned_e6": "31381601",
+        "result_e6": "-112298",
+        "seq": 68
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "31381601",
+        "result_e6": "-112298",
+        "note": "opened and closed DOGE",
+        "detail": {
+          "open_sz": "472",
+          "close_sz": "472",
+          "open_value_e6": "31158136",
+          "close_value_e6": "31073842",
+          "fees_e6": "28004",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-84294",
+          "open_oids": [
+            65179809913
+          ],
+          "close_oids": [
+            65180182901
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed DOGE"
+    },
+    {
+      "round_id": 15,
+      "position_id": 6,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 14,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2528",
+          "px": "0.004351",
+          "nonce": 1794512515566,
+          "expires_after": 1794512635566,
+          "matched": {
+            "oid": 65183452073,
+            "fills": 1,
+            "filled_sz": "2528",
+            "first_fill_at": 1794512521332,
+            "tids": [
+              417668775626295
+            ]
+          }
+        },
+        {
+          "action_id": 15,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2528",
+          "px": "0.004272",
+          "nonce": 1794512943249,
+          "expires_after": 1794513063249,
+          "matched": {
+            "oid": 65183724667,
+            "fills": 1,
+            "filled_sz": "2528",
+            "first_fill_at": 1794512948888,
+            "tids": [
+              63133816570123
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10985134",
+        "result_e6": "-14866"
+      },
+      "feed_reported": {
+        "returned_e6": "10985134",
+        "result_e6": "-14866",
+        "seq": 80
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10985134",
+        "result_e6": "-14866",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "2528",
+          "close_sz": "2528",
+          "open_value_e6": "10903264",
+          "close_value_e6": "10898208",
+          "fees_e6": "9810",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-5056",
+          "open_oids": [
+            65183452073
+          ],
+          "close_oids": [
+            65183724667
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 19,
+      "position_id": 7,
+      "market": "PENGU",
+      "coin": "PENGU",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 17,
+          "kind": "OPEN",
+          "coin": "PENGU",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "1753",
+          "px": "0.006272",
+          "nonce": 1794519600177,
+          "expires_after": 1794519720177,
+          "matched": {
+            "oid": 65188024095,
+            "fills": 1,
+            "filled_sz": "1753",
+            "first_fill_at": 1794519605682,
+            "tids": [
+              863253488058789
+            ]
+          }
+        },
+        {
+          "action_id": 18,
+          "kind": "CLOSE",
+          "coin": "PENGU",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "1753",
+          "px": "0.00614",
+          "nonce": 1794520143685,
+          "expires_after": 1794520263685,
+          "matched": {
+            "oid": 65188273830,
+            "fills": 1,
+            "filled_sz": "1753",
+            "first_fill_at": 1794520149870,
+            "tids": [
+              480508674080447
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10976192",
+        "result_e6": "-23808"
+      },
+      "feed_reported": {
+        "returned_e6": "10976192",
+        "result_e6": "-23808",
+        "seq": 96
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10976192",
+        "result_e6": "-23808",
+        "note": "opened and closed PENGU",
+        "detail": {
+          "open_sz": "1753",
+          "close_sz": "1753",
+          "open_value_e6": "10879118",
+          "close_value_e6": "10865094",
+          "fees_e6": "9784",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-14024",
+          "open_oids": [
+            65188024095
+          ],
+          "close_oids": [
+            65188273830
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed PENGU"
+    },
+    {
+      "round_id": 22,
+      "position_id": 8,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 20,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2497",
+          "px": "0.004405",
+          "nonce": 1794524982083,
+          "expires_after": 1794525102083,
+          "matched": {
+            "oid": 65191286165,
+            "fills": 1,
+            "filled_sz": "2497",
+            "first_fill_at": 1794524988048,
+            "tids": [
+              909536705280118
+            ]
+          }
+        },
+        {
+          "action_id": 21,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2497",
+          "px": "0.004315",
+          "nonce": 1794525543112,
+          "expires_after": 1794525663112,
+          "matched": {
+            "oid": 65191624561,
+            "fills": 1,
+            "filled_sz": "2497",
+            "first_fill_at": 1794525549043,
+            "tids": [
+              510058147627370
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10960239",
+        "result_e6": "-39761"
+      },
+      "feed_reported": {
+        "returned_e6": "10960239",
+        "result_e6": "-39761",
+        "seq": 109
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10960239",
+        "result_e6": "-39761",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "2497",
+          "close_sz": "2497",
+          "open_value_e6": "10901902",
+          "close_value_e6": "10871938",
+          "fees_e6": "9797",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-29964",
+          "open_oids": [
+            65191286165
+          ],
+          "close_oids": [
+            65191624561
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 24,
+      "position_id": 9,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 23,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2496",
+          "px": "0.004407",
+          "nonce": 1794528571915,
+          "expires_after": 1794528691915,
+          "matched": {
+            "oid": 65193519129,
+            "fills": 1,
+            "filled_sz": "2496",
+            "first_fill_at": 1794528578013,
+            "tids": [
+              766559452536805
+            ]
+          }
+        },
+        {
+          "action_id": 24,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2496",
+          "px": "0.00432",
+          "nonce": 1794529143684,
+          "expires_after": 1794529263684,
+          "matched": {
+            "oid": 65193887833,
+            "fills": 1,
+            "filled_sz": "2496",
+            "first_fill_at": 1794529150114,
+            "tids": [
+              186722908327379
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10965237",
+        "result_e6": "-34763"
+      },
+      "feed_reported": {
+        "returned_e6": "10965237",
+        "result_e6": "-34763",
+        "seq": 119
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10965237",
+        "result_e6": "-34763",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "2496",
+          "close_sz": "2496",
+          "open_value_e6": "10905024",
+          "close_value_e6": "10880064",
+          "fees_e6": "9803",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-24960",
+          "open_oids": [
+            65193519129
+          ],
+          "close_oids": [
+            65193887833
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 25,
+      "position_id": 10,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 26,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3419",
+          "px": "0.004387",
+          "nonce": 1794530371304,
+          "expires_after": 1794530491304,
+          "matched": {
+            "oid": 65194761299,
+            "fills": 1,
+            "filled_sz": "3419",
+            "first_fill_at": 1794530377679,
+            "tids": [
+              977305864663403
+            ]
+          }
+        },
+        {
+          "action_id": 27,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3419",
+          "px": "0.004317",
+          "nonce": 1794530949923,
+          "expires_after": 1794531069923,
+          "matched": {
+            "oid": 65195212413,
+            "fills": 1,
+            "filled_sz": "3419",
+            "first_fill_at": 1794530955780,
+            "tids": [
+              496468581045611
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "15020796",
+        "result_e6": "20796"
+      },
+      "feed_reported": {
+        "returned_e6": "15020796",
+        "result_e6": "20796",
+        "seq": 126
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "15020796",
+        "result_e6": "20796",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "3419",
+          "close_sz": "3419",
+          "open_value_e6": "14865812",
+          "close_value_e6": "14900002",
+          "fees_e6": "13394",
+          "funding_e6": "0",
+          "closed_pnl_e6": "34190",
+          "open_oids": [
+            65194761299
+          ],
+          "close_oids": [
+            65195212413
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 26,
+      "position_id": 11,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 29,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3412",
+          "px": "0.004395",
+          "nonce": 1794532187365,
+          "expires_after": 1794532307365,
+          "matched": {
+            "oid": 65196111073,
+            "fills": 1,
+            "filled_sz": "3412",
+            "first_fill_at": 1794532193583,
+            "tids": [
+              806047877544098
+            ]
+          }
+        },
+        {
+          "action_id": 30,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3412",
+          "px": "0.004305",
+          "nonce": 1794532749403,
+          "expires_after": 1794532869403,
+          "matched": {
+            "oid": 65196531212,
+            "fills": 1,
+            "filled_sz": "3412",
+            "first_fill_at": 1794532755265,
+            "tids": [
+              917051774175496
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14938878",
+        "result_e6": "-61122"
+      },
+      "feed_reported": {
+        "returned_e6": "14938878",
+        "result_e6": "-61122",
+        "seq": 134
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14938878",
+        "result_e6": "-61122",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "3412",
+          "close_sz": "3412",
+          "open_value_e6": "14862672",
+          "close_value_e6": "14814904",
+          "fees_e6": "13354",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-47768",
+          "open_oids": [
+            65196111073
+          ],
+          "close_oids": [
+            65196531212
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 27,
+      "position_id": 12,
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "side": "LONG",
+      "margin_e6": "31488583",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 32,
+          "kind": "OPEN",
+          "coin": "kSHIB",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "7190",
+          "px": "0.004379",
+          "nonce": 1794533967210,
+          "expires_after": 1794534087210,
+          "matched": {
+            "oid": 65197379177,
+            "fills": 1,
+            "filled_sz": "7190",
+            "first_fill_at": 1794533974342,
+            "tids": [
+              176513336867682
+            ]
+          }
+        },
+        {
+          "action_id": 33,
+          "kind": "CLOSE",
+          "coin": "kSHIB",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "7190",
+          "px": "0.004294",
+          "nonce": 1794534543287,
+          "expires_after": 1794534663287,
+          "matched": {
+            "oid": 65197769992,
+            "fills": 1,
+            "filled_sz": "7190",
+            "first_fill_at": 1794534549541,
+            "tids": [
+              999712753784350
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "31410192",
+        "result_e6": "-78391"
+      },
+      "feed_reported": {
+        "returned_e6": "31410192",
+        "result_e6": "-78391",
+        "seq": 141
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "31410192",
+        "result_e6": "-78391",
+        "note": "opened and closed kSHIB",
+        "detail": {
+          "open_sz": "7190",
+          "close_sz": "7190",
+          "open_value_e6": "31204600",
+          "close_value_e6": "31154270",
+          "fees_e6": "28061",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-50330",
+          "open_oids": [
+            65197379177
+          ],
+          "close_oids": [
+            65197769992
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kSHIB"
+    },
+    {
+      "round_id": 28,
+      "position_id": 13,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "31487015",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 35,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "6683",
+          "px": "0.004711",
+          "nonce": 1794535774346,
+          "expires_after": 1794535894346,
+          "matched": {
+            "oid": 65198597743,
+            "fills": 1,
+            "filled_sz": "6683",
+            "first_fill_at": 1794535781424,
+            "tids": [
+              10258651730025
+            ]
+          }
+        },
+        {
+          "action_id": 36,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "6683",
+          "px": "0.004576",
+          "nonce": 1794536343749,
+          "expires_after": 1794536463749,
+          "matched": {
+            "oid": 65199063959,
+            "fills": 1,
+            "filled_sz": "6683",
+            "first_fill_at": 1794536349521,
+            "tids": [
+              232465467067679
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "31111526",
+        "result_e6": "-375489"
+      },
+      "feed_reported": {
+        "returned_e6": "31111526",
+        "result_e6": "-375489",
+        "seq": 148
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "31111526",
+        "result_e6": "-375489",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "6683",
+          "close_sz": "6683",
+          "open_value_e6": "31256391",
+          "close_value_e6": "30908875",
+          "fees_e6": "27973",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-347516",
+          "open_oids": [
+            65198597743
+          ],
+          "close_oids": [
+            65199063959
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 31,
+      "position_id": 14,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 38,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2383",
+          "px": "0.004616",
+          "nonce": 1794541198866,
+          "expires_after": 1794541318866,
+          "matched": {
+            "oid": 65203601474,
+            "fills": 1,
+            "filled_sz": "2383",
+            "first_fill_at": 1794541205672,
+            "tids": [
+              350085613528889
+            ]
+          }
+        },
+        {
+          "action_id": 39,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2383",
+          "px": "0.004515",
+          "nonce": 1794541749887,
+          "expires_after": 1794541869887,
+          "matched": {
+            "oid": 65204120181,
+            "fills": 1,
+            "filled_sz": "2383",
+            "first_fill_at": 1794541756330,
+            "tids": [
+              973162827400425
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10966385",
+        "result_e6": "-33615"
+      },
+      "feed_reported": {
+        "returned_e6": "10966385",
+        "result_e6": "-33615",
+        "seq": 161
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10966385",
+        "result_e6": "-33615",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2383",
+          "close_sz": "2383",
+          "open_value_e6": "10885544",
+          "close_value_e6": "10861714",
+          "fees_e6": "9785",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-23830",
+          "open_oids": [
+            65203601474
+          ],
+          "close_oids": [
+            65204120181
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 32,
+      "position_id": 15,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 41,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2391",
+          "px": "0.004599",
+          "nonce": 1794543011219,
+          "expires_after": 1794543131219,
+          "matched": {
+            "oid": 65205552538,
+            "fills": 1,
+            "filled_sz": "2391",
+            "first_fill_at": 1794543017082,
+            "tids": [
+              64176532669239
+            ]
+          }
+        },
+        {
+          "action_id": 42,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2391",
+          "px": "0.004497",
+          "nonce": 1794543543822,
+          "expires_after": 1794543663822,
+          "matched": {
+            "oid": 65206028269,
+            "fills": 1,
+            "filled_sz": "2391",
+            "first_fill_at": 1794543550803,
+            "tids": [
+              1091248354104874
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10947183",
+        "result_e6": "-52817"
+      },
+      "feed_reported": {
+        "returned_e6": "10947183",
+        "result_e6": "-52817",
+        "seq": 168
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10947183",
+        "result_e6": "-52817",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2391",
+          "close_sz": "2391",
+          "open_value_e6": "10888614",
+          "close_value_e6": "10845576",
+          "fees_e6": "9779",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-43038",
+          "open_oids": [
+            65205552538
+          ],
+          "close_oids": [
+            65206028269
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 33,
+      "position_id": 16,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 44,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2438",
+          "px": "0.004511",
+          "nonce": 1794544830150,
+          "expires_after": 1794544950150,
+          "matched": {
+            "oid": 65207197135,
+            "fills": 1,
+            "filled_sz": "2438",
+            "first_fill_at": 1794544836784,
+            "tids": [
+              1035373507275576
+            ]
+          }
+        },
+        {
+          "action_id": 45,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2438",
+          "px": "0.004433",
+          "nonce": 1794545343649,
+          "expires_after": 1794545463649,
+          "matched": {
+            "oid": 65207661975,
+            "fills": 1,
+            "filled_sz": "2438",
+            "first_fill_at": 1794545349569,
+            "tids": [
+              674232185456183
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "11007258",
+        "result_e6": "7258"
+      },
+      "feed_reported": {
+        "returned_e6": "11007258",
+        "result_e6": "7258",
+        "seq": 175
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "11007258",
+        "result_e6": "7258",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2438",
+          "close_sz": "2438",
+          "open_value_e6": "10890546",
+          "close_value_e6": "10907612",
+          "fees_e6": "9808",
+          "funding_e6": "0",
+          "closed_pnl_e6": "17066",
+          "open_oids": [
+            65207197135
+          ],
+          "close_oids": [
+            65207661975
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 36,
+      "position_id": 17,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 47,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2398",
+          "px": "0.004586",
+          "nonce": 1794550194010,
+          "expires_after": 1794550314010,
+          "matched": {
+            "oid": 65211786059,
+            "fills": 1,
+            "filled_sz": "2398",
+            "first_fill_at": 1794550200099,
+            "tids": [
+              917480269136495
+            ]
+          }
+        },
+        {
+          "action_id": 48,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2398",
+          "px": "0.004512",
+          "nonce": 1794550749642,
+          "expires_after": 1794550869642,
+          "matched": {
+            "oid": 65212203180,
+            "fills": 1,
+            "filled_sz": "2398",
+            "first_fill_at": 1794550755883,
+            "tids": [
+              778527096083183
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "11014157",
+        "result_e6": "14157"
+      },
+      "feed_reported": {
+        "returned_e6": "11014157",
+        "result_e6": "14157",
+        "seq": 188
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "11014157",
+        "result_e6": "14157",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2398",
+          "close_sz": "2398",
+          "open_value_e6": "10903706",
+          "close_value_e6": "10927686",
+          "fees_e6": "9823",
+          "funding_e6": "0",
+          "closed_pnl_e6": "23980",
+          "open_oids": [
+            65211786059
+          ],
+          "close_oids": [
+            65212203180
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 37,
+      "position_id": 18,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 50,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3237",
+          "px": "0.004633",
+          "nonce": 1794551974130,
+          "expires_after": 1794552094130,
+          "matched": {
+            "oid": 65213058249,
+            "fills": 1,
+            "filled_sz": "3237",
+            "first_fill_at": 1794551980537,
+            "tids": [
+              483726645689633
+            ]
+          }
+        },
+        {
+          "action_id": 51,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3237",
+          "px": "0.004509",
+          "nonce": 1794552550246,
+          "expires_after": 1794552670246,
+          "matched": {
+            "oid": 65213453071,
+            "fills": 1,
+            "filled_sz": "3237",
+            "first_fill_at": 1794552555951,
+            "tids": [
+              812754923962827
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14863669",
+        "result_e6": "-136331"
+      },
+      "feed_reported": {
+        "returned_e6": "14863669",
+        "result_e6": "-136331",
+        "seq": 195
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14863669",
+        "result_e6": "-136331",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3237",
+          "close_sz": "3237",
+          "open_value_e6": "14867541",
+          "close_value_e6": "14744535",
+          "fees_e6": "13325",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-123006",
+          "open_oids": [
+            65213058249
+          ],
+          "close_oids": [
+            65213453071
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 38,
+      "position_id": 19,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "20000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 53,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "4309",
+          "px": "0.004641",
+          "nonce": 1794553816296,
+          "expires_after": 1794553936296,
+          "matched": {
+            "oid": 65214355061,
+            "fills": 1,
+            "filled_sz": "4309",
+            "first_fill_at": 1794553822734,
+            "tids": [
+              174590790425379
+            ]
+          }
+        },
+        {
+          "action_id": 54,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "4309",
+          "px": "0.004572",
+          "nonce": 1794554349547,
+          "expires_after": 1794554469547,
+          "matched": {
+            "oid": 65214725406,
+            "fills": 1,
+            "filled_sz": "4309",
+            "first_fill_at": 1794554355931,
+            "tids": [
+              446537929015397
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "20038146",
+        "result_e6": "38146"
+      },
+      "feed_reported": {
+        "returned_e6": "20038146",
+        "result_e6": "38146",
+        "seq": 203
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "20038146",
+        "result_e6": "38146",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "4309",
+          "close_sz": "4309",
+          "open_value_e6": "19830018",
+          "close_value_e6": "19886035",
+          "fees_e6": "17871",
+          "funding_e6": "0",
+          "closed_pnl_e6": "56017",
+          "open_oids": [
+            65214355061
+          ],
+          "close_oids": [
+            65214725406
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 39,
+      "position_id": 20,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 56,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3240",
+          "px": "0.004629",
+          "nonce": 1794555581280,
+          "expires_after": 1794555701280,
+          "matched": {
+            "oid": 65215592356,
+            "fills": 1,
+            "filled_sz": "3240",
+            "first_fill_at": 1794555587419,
+            "tids": [
+              503446998524672
+            ]
+          }
+        },
+        {
+          "action_id": 57,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3240",
+          "px": "0.004549",
+          "nonce": 1794556143928,
+          "expires_after": 1794556263928,
+          "matched": {
+            "oid": 65215979565,
+            "fills": 1,
+            "filled_sz": "3240",
+            "first_fill_at": 1794556150351,
+            "tids": [
+              720396231196744
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14999588",
+        "result_e6": "-412"
+      },
+      "feed_reported": {
+        "returned_e6": "14999588",
+        "result_e6": "-412",
+        "seq": 210
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14999588",
+        "result_e6": "-412",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3240",
+          "close_sz": "3240",
+          "open_value_e6": "14852160",
+          "close_value_e6": "14865120",
+          "fees_e6": "13372",
+          "funding_e6": "0",
+          "closed_pnl_e6": "12960",
+          "open_oids": [
+            65215592356
+          ],
+          "close_oids": [
+            65215979565
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 40,
+      "position_id": 21,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "31476233",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 59,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "6844",
+          "px": "0.004599",
+          "nonce": 1794557389175,
+          "expires_after": 1794557509175,
+          "matched": {
+            "oid": 65216877524,
+            "fills": 1,
+            "filled_sz": "6844",
+            "first_fill_at": 1794557395644,
+            "tids": [
+              1072915465698516
+            ]
+          }
+        },
+        {
+          "action_id": 60,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "6844",
+          "px": "0.004494",
+          "nonce": 1794557943046,
+          "expires_after": 1794558063046,
+          "matched": {
+            "oid": 65217272954,
+            "fills": 1,
+            "filled_sz": "6844",
+            "first_fill_at": 1794557949967,
+            "tids": [
+              131988062450187
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "31277130",
+        "result_e6": "-199103"
+      },
+      "feed_reported": {
+        "returned_e6": "31277130",
+        "result_e6": "-199103",
+        "seq": 218
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "31277130",
+        "result_e6": "-199103",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "6844",
+          "close_sz": "6844",
+          "open_value_e6": "31201796",
+          "close_value_e6": "31030696",
+          "fees_e6": "28003",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-171100",
+          "open_oids": [
+            65216877524
+          ],
+          "close_oids": [
+            65217272954
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 41,
+      "position_id": 22,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "20000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 62,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "4399",
+          "px": "0.004546",
+          "nonce": 1794559234469,
+          "expires_after": 1794559354469,
+          "matched": {
+            "oid": 65218179707,
+            "fills": 1,
+            "filled_sz": "4399",
+            "first_fill_at": 1794559240207,
+            "tids": [
+              14563788339143
+            ]
+          }
+        },
+        {
+          "action_id": 63,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "4399",
+          "px": "0.004478",
+          "nonce": 1794559749520,
+          "expires_after": 1794559869520,
+          "matched": {
+            "oid": 65218525193,
+            "fills": 1,
+            "filled_sz": "4399",
+            "first_fill_at": 1794559766512,
+            "tids": [
+              1114027085709708
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "20026124",
+        "result_e6": "26124"
+      },
+      "feed_reported": {
+        "returned_e6": "20026124",
+        "result_e6": "26124",
+        "seq": 225
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "20026124",
+        "result_e6": "26124",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "4399",
+          "close_sz": "4399",
+          "open_value_e6": "19830692",
+          "close_value_e6": "19874682",
+          "fees_e6": "17866",
+          "funding_e6": "0",
+          "closed_pnl_e6": "43990",
+          "open_oids": [
+            65218179707
+          ],
+          "close_oids": [
+            65218525193
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 42,
+      "position_id": 23,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 65,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3311",
+          "px": "0.004529",
+          "nonce": 1794560997153,
+          "expires_after": 1794561117153,
+          "matched": {
+            "oid": 65219354258,
+            "fills": 1,
+            "filled_sz": "3311",
+            "first_fill_at": 1794561003335,
+            "tids": [
+              100592499500357
+            ]
+          }
+        },
+        {
+          "action_id": 66,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3311",
+          "px": "0.004445",
+          "nonce": 1794561543657,
+          "expires_after": 1794561663657,
+          "matched": {
+            "oid": 65219716129,
+            "fills": 1,
+            "filled_sz": "3311",
+            "first_fill_at": 1794561552035,
+            "tids": [
+              256238362915685
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14989943",
+        "result_e6": "-10057"
+      },
+      "feed_reported": {
+        "returned_e6": "14989943",
+        "result_e6": "-10057",
+        "seq": 232
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14989943",
+        "result_e6": "-10057",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3311",
+          "close_sz": "3311",
+          "open_value_e6": "14853146",
+          "close_value_e6": "14856457",
+          "fees_e6": "13368",
+          "funding_e6": "0",
+          "closed_pnl_e6": "3311",
+          "open_oids": [
+            65219354258
+          ],
+          "close_oids": [
+            65219716129
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 43,
+      "position_id": 24,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "20000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 68,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "4377",
+          "px": "0.004569",
+          "nonce": 1794562792186,
+          "expires_after": 1794562912186,
+          "matched": {
+            "oid": 65220535548,
+            "fills": 1,
+            "filled_sz": "4377",
+            "first_fill_at": 1794562797852,
+            "tids": [
+              110881705244308
+            ]
+          }
+        },
+        {
+          "action_id": 69,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "4377",
+          "px": "0.004452",
+          "nonce": 1794563343862,
+          "expires_after": 1794563463862,
+          "matched": {
+            "oid": 65220883729,
+            "fills": 1,
+            "filled_sz": "4377",
+            "first_fill_at": 1794563349938,
+            "tids": [
+              947989805304428
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "19846546",
+        "result_e6": "-153454"
+      },
+      "feed_reported": {
+        "returned_e6": "19846546",
+        "result_e6": "-153454",
+        "seq": 240
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "19846546",
+        "result_e6": "-153454",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "4377",
+          "close_sz": "4377",
+          "open_value_e6": "19810302",
+          "close_value_e6": "19674615",
+          "fees_e6": "17767",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-135687",
+          "open_oids": [
+            65220535548
+          ],
+          "close_oids": [
+            65220883729
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 44,
+      "position_id": 25,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 71,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3256",
+          "px": "0.004606",
+          "nonce": 1794564604431,
+          "expires_after": 1794564724431,
+          "matched": {
+            "oid": 65221640866,
+            "fills": 1,
+            "filled_sz": "3256",
+            "first_fill_at": 1794564611467,
+            "tids": [
+              421791127810817
+            ]
+          }
+        },
+        {
+          "action_id": 72,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3256",
+          "px": "0.004526",
+          "nonce": 1794565143446,
+          "expires_after": 1794565263446,
+          "matched": {
+            "oid": 65222026229,
+            "fills": 1,
+            "filled_sz": "3256",
+            "first_fill_at": 1794565149003,
+            "tids": [
+              344516771638414
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "15009423",
+        "result_e6": "9423"
+      },
+      "feed_reported": {
+        "returned_e6": "15009423",
+        "result_e6": "9423",
+        "seq": 247
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "15009423",
+        "result_e6": "9423",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3256",
+          "close_sz": "3256",
+          "open_value_e6": "14844104",
+          "close_value_e6": "14866896",
+          "fees_e6": "13369",
+          "funding_e6": "0",
+          "closed_pnl_e6": "22792",
+          "open_oids": [
+            65221640866
+          ],
+          "close_oids": [
+            65222026229
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 45,
+      "position_id": 26,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 74,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2405",
+          "px": "0.004573",
+          "nonce": 1794566383878,
+          "expires_after": 1794566503878,
+          "matched": {
+            "oid": 65222837181,
+            "fills": 1,
+            "filled_sz": "2405",
+            "first_fill_at": 1794566390383,
+            "tids": [
+              778478386956943
+            ]
+          }
+        },
+        {
+          "action_id": 75,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2405",
+          "px": "0.004478",
+          "nonce": 1794566943804,
+          "expires_after": 1794567063804,
+          "matched": {
+            "oid": 65223209209,
+            "fills": 1,
+            "filled_sz": "2405",
+            "first_fill_at": 1794566949596,
+            "tids": [
+              69573374356995
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10966155",
+        "result_e6": "-33845"
+      },
+      "feed_reported": {
+        "returned_e6": "10966155",
+        "result_e6": "-33845",
+        "seq": 254
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10966155",
+        "result_e6": "-33845",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2405",
+          "close_sz": "2405",
+          "open_value_e6": "10897055",
+          "close_value_e6": "10873005",
+          "fees_e6": "9795",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-24050",
+          "open_oids": [
+            65222837181
+          ],
+          "close_oids": [
+            65223209209
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 46,
+      "position_id": 27,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 77,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2407",
+          "px": "0.004569",
+          "nonce": 1794568177481,
+          "expires_after": 1794568297481,
+          "matched": {
+            "oid": 65224017799,
+            "fills": 1,
+            "filled_sz": "2407",
+            "first_fill_at": 1794568183583,
+            "tids": [
+              434440794815925
+            ]
+          }
+        },
+        {
+          "action_id": 78,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2407",
+          "px": "0.004475",
+          "nonce": 1794568750655,
+          "expires_after": 1794568870655,
+          "matched": {
+            "oid": 65224401589,
+            "fills": 1,
+            "filled_sz": "2407",
+            "first_fill_at": 1794568756255,
+            "tids": [
+              503640420650572
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10968539",
+        "result_e6": "-31461"
+      },
+      "feed_reported": {
+        "returned_e6": "10968539",
+        "result_e6": "-31461",
+        "seq": 261
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10968539",
+        "result_e6": "-31461",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2407",
+          "close_sz": "2407",
+          "open_value_e6": "10898896",
+          "close_value_e6": "10877233",
+          "fees_e6": "9798",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-21663",
+          "open_oids": [
+            65224017799
+          ],
+          "close_oids": [
+            65224401589
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 47,
+      "position_id": 28,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "31468386",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 80,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "6919",
+          "px": "0.004548",
+          "nonce": 1794569995822,
+          "expires_after": 1794570115822,
+          "matched": {
+            "oid": 65225271222,
+            "fills": 1,
+            "filled_sz": "6919",
+            "first_fill_at": 1794570002329,
+            "tids": [
+              98652559946115
+            ]
+          }
+        },
+        {
+          "action_id": 81,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "6919",
+          "px": "0.004456",
+          "nonce": 1794570549314,
+          "expires_after": 1794570669314,
+          "matched": {
+            "oid": 65225642128,
+            "fills": 1,
+            "filled_sz": "6919",
+            "first_fill_at": 1794570555672,
+            "tids": [
+              206735550278458
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "31350409",
+        "result_e6": "-117977"
+      },
+      "feed_reported": {
+        "returned_e6": "31350409",
+        "result_e6": "-117977",
+        "seq": 268
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "31350409",
+        "result_e6": "-117977",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "6919",
+          "close_sz": "6919",
+          "open_value_e6": "31190852",
+          "close_value_e6": "31100905",
+          "fees_e6": "28030",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-89947",
+          "open_oids": [
+            65225271222
+          ],
+          "close_oids": [
+            65225642128
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 48,
+      "position_id": 29,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "20000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 83,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "4377",
+          "px": "0.004569",
+          "nonce": 1794571785299,
+          "expires_after": 1794571905299,
+          "matched": {
+            "oid": 65226458349,
+            "fills": 1,
+            "filled_sz": "4377",
+            "first_fill_at": 1794571791579,
+            "tids": [
+              160964005044785
+            ]
+          }
+        },
+        {
+          "action_id": 84,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "4377",
+          "px": "0.004491",
+          "nonce": 1794572349995,
+          "expires_after": 1794572469995,
+          "matched": {
+            "oid": 65226825227,
+            "fills": 1,
+            "filled_sz": "4377",
+            "first_fill_at": 1794572356424,
+            "tids": [
+              605120631461881
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "19960273",
+        "result_e6": "-39727"
+      },
+      "feed_reported": {
+        "returned_e6": "19960273",
+        "result_e6": "-39727",
+        "seq": 275
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "19960273",
+        "result_e6": "-39727",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "4377",
+          "close_sz": "4377",
+          "open_value_e6": "19836564",
+          "close_value_e6": "19814679",
+          "fees_e6": "17842",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-21885",
+          "open_oids": [
+            65226458349
+          ],
+          "close_oids": [
+            65226825227
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 49,
+      "position_id": 30,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 86,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3252",
+          "px": "0.004612",
+          "nonce": 1794573604032,
+          "expires_after": 1794573724032,
+          "matched": {
+            "oid": 65227637946,
+            "fills": 1,
+            "filled_sz": "3252",
+            "first_fill_at": 1794573609820,
+            "tids": [
+              75062120136623
+            ]
+          }
+        },
+        {
+          "action_id": 87,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3252",
+          "px": "0.004507",
+          "nonce": 1794574143773,
+          "expires_after": 1794574263773,
+          "matched": {
+            "oid": 65227994337,
+            "fills": 1,
+            "filled_sz": "3252",
+            "first_fill_at": 1794574150260,
+            "tids": [
+              299326817142842
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14911854",
+        "result_e6": "-88146"
+      },
+      "feed_reported": {
+        "returned_e6": "14911854",
+        "result_e6": "-88146",
+        "seq": 282
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14911854",
+        "result_e6": "-88146",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3252",
+          "close_sz": "3252",
+          "open_value_e6": "14871396",
+          "close_value_e6": "14796600",
+          "fees_e6": "13350",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-74796",
+          "open_oids": [
+            65227637946
+          ],
+          "close_oids": [
+            65227994337
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 50,
+      "position_id": 31,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 89,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2392",
+          "px": "0.004597",
+          "nonce": 1794575371570,
+          "expires_after": 1794575491570,
+          "matched": {
+            "oid": 65228809895,
+            "fills": 1,
+            "filled_sz": "2392",
+            "first_fill_at": 1794575377917,
+            "tids": [
+              145019401702664
+            ]
+          }
+        },
+        {
+          "action_id": 90,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2392",
+          "px": "0.004503",
+          "nonce": 1794575943149,
+          "expires_after": 1794576063149,
+          "matched": {
+            "oid": 65229188035,
+            "fills": 1,
+            "filled_sz": "2392",
+            "first_fill_at": 1794575948872,
+            "tids": [
+              1031743218853502
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10971070",
+        "result_e6": "-28930"
+      },
+      "feed_reported": {
+        "returned_e6": "10971070",
+        "result_e6": "-28930",
+        "seq": 290
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10971070",
+        "result_e6": "-28930",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2392",
+          "close_sz": "2392",
+          "open_value_e6": "10893168",
+          "close_value_e6": "10874032",
+          "fees_e6": "9794",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-19136",
+          "open_oids": [
+            65228809895
+          ],
+          "close_oids": [
+            65229188035
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 51,
+      "position_id": 32,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "20000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 92,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "4313",
+          "px": "0.004637",
+          "nonce": 1794577180100,
+          "expires_after": 1794577300100,
+          "matched": {
+            "oid": 65230268470,
+            "fills": 1,
+            "filled_sz": "4313",
+            "first_fill_at": 1794577186431,
+            "tids": [
+              639279142048607
+            ]
+          }
+        },
+        {
+          "action_id": 93,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "4313",
+          "px": "0.004544",
+          "nonce": 1794577743445,
+          "expires_after": 1794577863445,
+          "matched": {
+            "oid": 65230705000,
+            "fills": 1,
+            "filled_sz": "4313",
+            "first_fill_at": 1794577748871,
+            "tids": [
+              213406154156660
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "19951975",
+        "result_e6": "-48025"
+      },
+      "feed_reported": {
+        "returned_e6": "19951975",
+        "result_e6": "-48025",
+        "seq": 297
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "19951975",
+        "result_e6": "-48025",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "4313",
+          "close_sz": "4313",
+          "open_value_e6": "19831174",
+          "close_value_e6": "19800983",
+          "fees_e6": "17834",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-30191",
+          "open_oids": [
+            65230268470
+          ],
+          "close_oids": [
+            65230705000
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 52,
+      "position_id": 33,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 95,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2386",
+          "px": "0.00461",
+          "nonce": 1794578986711,
+          "expires_after": 1794579106711,
+          "matched": {
+            "oid": 65231591376,
+            "fills": 1,
+            "filled_sz": "2386",
+            "first_fill_at": 1794578993055,
+            "tids": [
+              366892781968311
+            ]
+          }
+        },
+        {
+          "action_id": 96,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2386",
+          "px": "0.004515",
+          "nonce": 1794579550246,
+          "expires_after": 1794579670246,
+          "matched": {
+            "oid": 65232005919,
+            "fills": 1,
+            "filled_sz": "2386",
+            "first_fill_at": 1794579556035,
+            "tids": [
+              1070462842188943
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10961571",
+        "result_e6": "-38429"
+      },
+      "feed_reported": {
+        "returned_e6": "10961571",
+        "result_e6": "-38429",
+        "seq": 304
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10961571",
+        "result_e6": "-38429",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2386",
+          "close_sz": "2386",
+          "open_value_e6": "10901634",
+          "close_value_e6": "10873002",
+          "fees_e6": "9797",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-28632",
+          "open_oids": [
+            65231591376
+          ],
+          "close_oids": [
+            65232005919
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 53,
+      "position_id": 34,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 98,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2409",
+          "px": "0.004565",
+          "nonce": 1794580843986,
+          "expires_after": 1794580963986,
+          "matched": {
+            "oid": 65233064318,
+            "fills": 1,
+            "filled_sz": "2409",
+            "first_fill_at": 1794580849750,
+            "tids": [
+              494283465136131
+            ]
+          }
+        },
+        {
+          "action_id": 99,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2409",
+          "px": "0.004461",
+          "nonce": 1794581350199,
+          "expires_after": 1794581470199,
+          "matched": {
+            "oid": 65233497112,
+            "fills": 1,
+            "filled_sz": "2409",
+            "first_fill_at": 1794581356554,
+            "tids": [
+              1067464297247531
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10927584",
+        "result_e6": "-72416"
+      },
+      "feed_reported": {
+        "returned_e6": "10927584",
+        "result_e6": "-72416",
+        "seq": 311
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10927584",
+        "result_e6": "-72416",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2409",
+          "close_sz": "2409",
+          "open_value_e6": "10900725",
+          "close_value_e6": "10838091",
+          "fees_e6": "9782",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-62634",
+          "open_oids": [
+            65233064318
+          ],
+          "close_oids": [
+            65233497112
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 54,
+      "position_id": 35,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 101,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3300",
+          "px": "0.004545",
+          "nonce": 1794582632629,
+          "expires_after": 1794582752629,
+          "matched": {
+            "oid": 65234635705,
+            "fills": 1,
+            "filled_sz": "3300",
+            "first_fill_at": 1794582638783,
+            "tids": [
+              746881615576958
+            ]
+          }
+        },
+        {
+          "action_id": 102,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3300",
+          "px": "0.004459",
+          "nonce": 1794583144041,
+          "expires_after": 1794583264041,
+          "matched": {
+            "oid": 65235081724,
+            "fills": 1,
+            "filled_sz": "3300",
+            "first_fill_at": 1794583149348,
+            "tids": [
+              412020894639100
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "14996538",
+        "result_e6": "-3462"
+      },
+      "feed_reported": {
+        "returned_e6": "14996538",
+        "result_e6": "-3462",
+        "seq": 320
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "14996538",
+        "result_e6": "-3462",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3300",
+          "close_sz": "3300",
+          "open_value_e6": "14843400",
+          "close_value_e6": "14853300",
+          "fees_e6": "13362",
+          "funding_e6": "0",
+          "closed_pnl_e6": "9900",
+          "open_oids": [
+            65234635705
+          ],
+          "close_oids": [
+            65235081724
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 55,
+      "position_id": 36,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "15000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 104,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "3327",
+          "px": "0.004508",
+          "nonce": 1794584406221,
+          "expires_after": 1794584526221,
+          "matched": {
+            "oid": 65236293850,
+            "fills": 1,
+            "filled_sz": "3327",
+            "first_fill_at": 1794584412599,
+            "tids": [
+              181664258809523
+            ]
+          }
+        },
+        {
+          "action_id": 105,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "3327",
+          "px": "0.004448",
+          "nonce": 1794584944245,
+          "expires_after": 1794585064245,
+          "matched": {
+            "oid": 65236825053,
+            "fills": 1,
+            "filled_sz": "3327",
+            "first_fill_at": 1794584950907,
+            "tids": [
+              489373490649397
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "15053136",
+        "result_e6": "53136"
+      },
+      "feed_reported": {
+        "returned_e6": "15053136",
+        "result_e6": "53136",
+        "seq": 328
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "15053136",
+        "result_e6": "53136",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "3327",
+          "close_sz": "3327",
+          "open_value_e6": "14861709",
+          "close_value_e6": "14928249",
+          "fees_e6": "13404",
+          "funding_e6": "0",
+          "closed_pnl_e6": "66540",
+          "open_oids": [
+            65236293850
+          ],
+          "close_oids": [
+            65236825053
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 56,
+      "position_id": 37,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "SETTLED",
+      "orders_signed": 2,
+      "fills_matched": 2,
+      "orders": [
+        {
+          "action_id": 107,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2415",
+          "px": "0.004553",
+          "nonce": 1794586184057,
+          "expires_after": 1794586304057,
+          "matched": {
+            "oid": 65237956923,
+            "fills": 1,
+            "filled_sz": "2415",
+            "first_fill_at": 1794586190581,
+            "tids": [
+              31178675181326
+            ]
+          }
+        },
+        {
+          "action_id": 108,
+          "kind": "CLOSE",
+          "coin": "kPEPE",
+          "side": "A",
+          "dir": "Close Long",
+          "sz": "2415",
+          "px": "0.004412",
+          "nonce": 1794586750827,
+          "expires_after": 1794586870827,
+          "matched": {
+            "oid": 65238442945,
+            "fills": 1,
+            "filled_sz": "2415",
+            "first_fill_at": 1794586756969,
+            "tids": [
+              804772495926264
+            ]
+          }
+        }
+      ],
+      "reported": {
+        "returned_e6": "10845359",
+        "result_e6": "-154641"
+      },
+      "feed_reported": {
+        "returned_e6": "10845359",
+        "result_e6": "-154641",
+        "seq": 335
+      },
+      "recomputed": {
+        "kind": "returned",
+        "returned_e6": "10845359",
+        "result_e6": "-154641",
+        "note": "opened and closed kPEPE",
+        "detail": {
+          "open_sz": "2415",
+          "close_sz": "2415",
+          "open_value_e6": "10896480",
+          "close_value_e6": "10751580",
+          "fees_e6": "9741",
+          "funding_e6": "0",
+          "closed_pnl_e6": "-144900",
+          "open_oids": [
+            65237956923
+          ],
+          "close_oids": [
+            65238442945
+          ]
+        }
+      },
+      "status": "OK",
+      "reason": "opened and closed kPEPE"
+    },
+    {
+      "round_id": 57,
+      "position_id": 38,
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "side": "LONG",
+      "margin_e6": "11000000",
+      "leverage": 1,
+      "position_status": "OPEN_SIGNED",
+      "orders_signed": 1,
+      "fills_matched": 1,
+      "orders": [
+        {
+          "action_id": 110,
+          "kind": "OPEN",
+          "coin": "kPEPE",
+          "side": "B",
+          "dir": "Open Long",
+          "sz": "2447",
+          "px": "0.004494",
+          "nonce": 1794588024334,
+          "expires_after": 1794588144334,
+          "matched": {
+            "oid": 65239505516,
+            "fills": 1,
+            "filled_sz": "2447",
+            "first_fill_at": 1794588030667,
+            "tids": [
+              773658948366373
+            ]
+          }
+        }
+      ],
+      "reported": null,
+      "feed_reported": null,
+      "recomputed": {
+        "kind": "waiting",
+        "note": "kPEPE: 0 of 244700000000 (×10^-8) closed so far",
+        "detail": {
+          "open_sz": "2447",
+          "close_sz": "0",
+          "open_value_e6": "10911173",
+          "close_value_e6": "0",
+          "fees_e6": "4910",
+          "funding_e6": "0",
+          "closed_pnl_e6": "0",
+          "open_oids": [
+            65239505516
+          ],
+          "close_oids": []
+        }
+      },
+      "status": "NOT REPORTED",
+      "reason": "no result yet; the runner's rule says waiting: kPEPE: 0 of 244700000000 (×10^-8) closed so far"
+    }
+  ],
+  "unmatched_fills": [],
+  "older_fills": [],
+  "summary": {
+    "rounds": 57,
+    "rounds_without_bet": 19,
+    "bets": 38,
+    "by_status": {
+      "OK": 35,
+      "MISMATCH": 1,
+      "NO FILLS": 1,
+      "UNMATCHED FILLS": 0,
+      "NOT REPORTED": 1,
+      "NOT CHECKED": 0
+    },
+    "unmatched_fill_groups": 0,
+    "older_fill_groups": 0,
+    "ok": false
+  }
+}

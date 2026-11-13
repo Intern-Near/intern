@@ -1,0 +1,476 @@
+{
+  "tool": "refusals",
+  "checked_at": "2026-11-13T16:47:43.557Z",
+  "rpc": "https://test.rpc.fastnear.com",
+  "nearblocks": "https://api-testnet.nearblocks.io",
+  "codes_source": "interface/refusal-codes.json",
+  "coins": [
+    {
+      "coin": "coin.desk-lab-2026.testnet",
+      "refusals": 2,
+      "ids": {
+        "first": 1,
+        "last": 2
+      },
+      "codes": [
+        {
+          "check": 1,
+          "code": "OUTSIDE_WINDOW",
+          "light": 1,
+          "fails_when": "The phase is not PROPOSE",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 2,
+          "code": "FIRED",
+          "light": 1,
+          "fails_when": "Status is FIRED",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 3,
+          "code": "BAD_MODEL_SIGNATURE",
+          "light": 2,
+          "fails_when": "The signature does not match the pinned signer for the request and response given, or request, response or signature cannot be decoded",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 4,
+          "code": "WRONG_RULEBOOK",
+          "light": 2,
+          "fails_when": "The request's system message is not the current rulebook, or the model named in the request is not the pinned one",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 5,
+          "code": "MALFORMED_DECISION",
+          "light": 2,
+          "fails_when": "The answer is not exactly a decision line, or its v, round or nonce is wrong",
+          "count": 1,
+          "first": {
+            "refusal_id": 2,
+            "round_id": 55,
+            "at": 1794584445529,
+            "at_iso": "2026-11-13T15:40:45.529Z",
+            "is_first": true,
+            "asked": null,
+            "limit": null,
+            "decision": null,
+            "credited_to": null,
+            "detail": "no decision recorded",
+            "tx": {
+              "tx_hash": "55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+              "link": "https://testnet.nearblocks.io/txns/55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+              "sender": "intern-runner-ed25519.testnet",
+              "block_height": 277529693,
+              "confirmed": true,
+              "read_from": "https://test.rpc.fastnear.com",
+              "note": "it returned NOPE MALFORMED_DECISION, refusal 2, and logged the refused event"
+            },
+            "tx_note": null
+          }
+        },
+        {
+          "check": 6,
+          "code": "NOT_ON_LIST",
+          "light": 3,
+          "fails_when": "market is not on this rank's list",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 7,
+          "code": "SHORT_NOT_UNLOCKED",
+          "light": 3,
+          "fails_when": "side is short and the rank allows only LONG",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 8,
+          "code": "ZERO_MARGIN",
+          "light": 4,
+          "fails_when": "margin_e6 is 0, or margin_e6 x leverage is under min_notional",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 9,
+          "code": "OVER_LEVERAGE",
+          "light": 4,
+          "fails_when": "leverage is above the rank's max_leverage",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 10,
+          "code": "TOO_MANY_TRADES",
+          "light": 4,
+          "fails_when": "bets_used already equals max_bets",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 11,
+          "code": "OVER_TRADE_LIMIT",
+          "light": 4,
+          "fails_when": "margin_e6 is above the per-bet limit",
+          "count": 1,
+          "first": {
+            "refusal_id": 1,
+            "round_id": 2,
+            "at": 1794422593911,
+            "at_iso": "2026-11-11T18:43:13.911Z",
+            "is_first": true,
+            "asked": "10000000",
+            "limit": "1000010",
+            "decision": {
+              "action": "BET",
+              "market": "DOGE",
+              "side": "LONG",
+              "margin": "10000000",
+              "leverage": 1
+            },
+            "credited_to": null,
+            "detail": "DOGE long $10.000000 at 1x; asked $10.000000 (margin); limit $1.000010 (per-bet limit in dollars)",
+            "tx": {
+              "tx_hash": "5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW",
+              "link": "https://testnet.nearblocks.io/txns/5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW",
+              "sender": "runner.desk-lab-2026.testnet",
+              "block_height": 277253621,
+              "confirmed": true,
+              "read_from": "https://archival-rpc.testnet.fastnear.com",
+              "note": "it returned NOPE OVER_TRADE_LIMIT, refusal 1, and logged the refused event"
+            },
+            "tx_note": null
+          }
+        },
+        {
+          "check": 12,
+          "code": "OVER_ROUND_LIMIT",
+          "light": 4,
+          "fails_when": "at_risk + margin_e6 is above the per-round limit",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 13,
+          "code": "BAD_QUOTE_SIGNATURE",
+          "light": 5,
+          "fails_when": "A funding quote is attached and its signature does not match the pinned 1Click key, or it cannot be decoded",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 14,
+          "code": "STALE_QUOTE",
+          "light": 5,
+          "fails_when": "The quote's timestamp is older than quote_max_age_ms",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 15,
+          "code": "QUOTE_MISMATCH",
+          "light": 5,
+          "fails_when": "The quote is for another amount or pays someone else",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 16,
+          "code": "TOO_EXPENSIVE",
+          "light": 5,
+          "fails_when": "The quote's cost is above max_funding_cost_bps of the margin",
+          "count": 0,
+          "first": null
+        }
+      ],
+      "unknown_codes": [],
+      "with_example": [
+        "MALFORMED_DECISION",
+        "OVER_TRADE_LIMIT"
+      ],
+      "without_example": [
+        "OUTSIDE_WINDOW",
+        "FIRED",
+        "BAD_MODEL_SIGNATURE",
+        "WRONG_RULEBOOK",
+        "NOT_ON_LIST",
+        "SHORT_NOT_UNLOCKED",
+        "ZERO_MARGIN",
+        "OVER_LEVERAGE",
+        "TOO_MANY_TRADES",
+        "OVER_ROUND_LIMIT",
+        "BAD_QUOTE_SIGNATURE",
+        "STALE_QUOTE",
+        "QUOTE_MISMATCH",
+        "TOO_EXPENSIVE"
+      ]
+    },
+    {
+      "coin": "coin-fast.desk-lab-2026.testnet",
+      "refusals": 3,
+      "ids": {
+        "first": 1,
+        "last": 3
+      },
+      "codes": [
+        {
+          "check": 1,
+          "code": "OUTSIDE_WINDOW",
+          "light": 1,
+          "fails_when": "The phase is not PROPOSE",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 2,
+          "code": "FIRED",
+          "light": 1,
+          "fails_when": "Status is FIRED",
+          "count": 1,
+          "first": {
+            "refusal_id": 1,
+            "round_id": 7,
+            "at": 1794465628244,
+            "at_iso": "2026-11-12T06:40:28.244Z",
+            "is_first": true,
+            "asked": null,
+            "limit": null,
+            "decision": null,
+            "credited_to": null,
+            "detail": "no decision recorded",
+            "tx": {
+              "tx_hash": "DuTxFWRfc9hde1upCbeiDfThcAuzUM9ef7ABbZsJnXBD",
+              "link": "https://testnet.nearblocks.io/txns/DuTxFWRfc9hde1upCbeiDfThcAuzUM9ef7ABbZsJnXBD",
+              "sender": "runner.desk-lab-2026.testnet",
+              "block_height": 277327036,
+              "confirmed": true,
+              "read_from": "https://archival-rpc.testnet.fastnear.com",
+              "note": "it returned NOPE FIRED, refusal 1, and logged the refused event"
+            },
+            "tx_note": null
+          }
+        },
+        {
+          "check": 3,
+          "code": "BAD_MODEL_SIGNATURE",
+          "light": 2,
+          "fails_when": "The signature does not match the pinned signer for the request and response given, or request, response or signature cannot be decoded",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 4,
+          "code": "WRONG_RULEBOOK",
+          "light": 2,
+          "fails_when": "The request's system message is not the current rulebook, or the model named in the request is not the pinned one",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 5,
+          "code": "MALFORMED_DECISION",
+          "light": 2,
+          "fails_when": "The answer is not exactly a decision line, or its v, round or nonce is wrong",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 6,
+          "code": "NOT_ON_LIST",
+          "light": 3,
+          "fails_when": "market is not on this rank's list",
+          "count": 1,
+          "first": {
+            "refusal_id": 2,
+            "round_id": 16,
+            "at": 1794485715310,
+            "at_iso": "2026-11-12T12:15:15.310Z",
+            "is_first": true,
+            "asked": null,
+            "limit": null,
+            "decision": {
+              "action": "BET",
+              "market": "WIF",
+              "side": "LONG",
+              "margin": "11000000",
+              "leverage": 1
+            },
+            "credited_to": "boss2.desk-lab-2026.testnet",
+            "detail": "WIF long $11.000000 at 1x; credited to boss2.desk-lab-2026.testnet",
+            "tx": {
+              "tx_hash": "4VoxFZW92Qyd6ALLE5H7Gp1qgH2y8cJfNr6WCuXZUhrx",
+              "link": "https://testnet.nearblocks.io/txns/4VoxFZW92Qyd6ALLE5H7Gp1qgH2y8cJfNr6WCuXZUhrx",
+              "sender": "runner.desk-lab-2026.testnet",
+              "block_height": 277361490,
+              "confirmed": true,
+              "read_from": "https://test.rpc.fastnear.com",
+              "note": "it returned NOPE NOT_ON_LIST, refusal 2, and logged the refused event"
+            },
+            "tx_note": null
+          }
+        },
+        {
+          "check": 7,
+          "code": "SHORT_NOT_UNLOCKED",
+          "light": 3,
+          "fails_when": "side is short and the rank allows only LONG",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 8,
+          "code": "ZERO_MARGIN",
+          "light": 4,
+          "fails_when": "margin_e6 is 0, or margin_e6 x leverage is under min_notional",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 9,
+          "code": "OVER_LEVERAGE",
+          "light": 4,
+          "fails_when": "leverage is above the rank's max_leverage",
+          "count": 1,
+          "first": {
+            "refusal_id": 3,
+            "round_id": 22,
+            "at": 1794557412792,
+            "at_iso": "2026-11-13T08:10:12.792Z",
+            "is_first": true,
+            "asked": "10",
+            "limit": "1",
+            "decision": {
+              "action": "BET",
+              "market": "DOGE",
+              "side": "LONG",
+              "margin": "3514000",
+              "leverage": 10
+            },
+            "credited_to": null,
+            "detail": "DOGE long $3.514000 at 10x; asked 10 (leverage); limit 1 (max_leverage)",
+            "tx": {
+              "tx_hash": "2VzPaXTJJcEJHJcHuCdvvEzjoQRmfq2qd8fmSJZrGKSK",
+              "link": "https://testnet.nearblocks.io/txns/2VzPaXTJJcEJHJcHuCdvvEzjoQRmfq2qd8fmSJZrGKSK",
+              "sender": "runner.desk-lab-2026.testnet",
+              "block_height": 277483724,
+              "confirmed": true,
+              "read_from": "https://test.rpc.fastnear.com",
+              "note": "it returned NOPE OVER_LEVERAGE, refusal 3, and logged the refused event"
+            },
+            "tx_note": null
+          }
+        },
+        {
+          "check": 10,
+          "code": "TOO_MANY_TRADES",
+          "light": 4,
+          "fails_when": "bets_used already equals max_bets",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 11,
+          "code": "OVER_TRADE_LIMIT",
+          "light": 4,
+          "fails_when": "margin_e6 is above the per-bet limit",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 12,
+          "code": "OVER_ROUND_LIMIT",
+          "light": 4,
+          "fails_when": "at_risk + margin_e6 is above the per-round limit",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 13,
+          "code": "BAD_QUOTE_SIGNATURE",
+          "light": 5,
+          "fails_when": "A funding quote is attached and its signature does not match the pinned 1Click key, or it cannot be decoded",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 14,
+          "code": "STALE_QUOTE",
+          "light": 5,
+          "fails_when": "The quote's timestamp is older than quote_max_age_ms",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 15,
+          "code": "QUOTE_MISMATCH",
+          "light": 5,
+          "fails_when": "The quote is for another amount or pays someone else",
+          "count": 0,
+          "first": null
+        },
+        {
+          "check": 16,
+          "code": "TOO_EXPENSIVE",
+          "light": 5,
+          "fails_when": "The quote's cost is above max_funding_cost_bps of the margin",
+          "count": 0,
+          "first": null
+        }
+      ],
+      "unknown_codes": [],
+      "with_example": [
+        "FIRED",
+        "NOT_ON_LIST",
+        "OVER_LEVERAGE"
+      ],
+      "without_example": [
+        "OUTSIDE_WINDOW",
+        "BAD_MODEL_SIGNATURE",
+        "WRONG_RULEBOOK",
+        "MALFORMED_DECISION",
+        "SHORT_NOT_UNLOCKED",
+        "ZERO_MARGIN",
+        "TOO_MANY_TRADES",
+        "OVER_TRADE_LIMIT",
+        "OVER_ROUND_LIMIT",
+        "BAD_QUOTE_SIGNATURE",
+        "STALE_QUOTE",
+        "QUOTE_MISMATCH",
+        "TOO_EXPENSIVE"
+      ]
+    }
+  ],
+  "summary": {
+    "refusals": 5,
+    "with_example": [
+      "FIRED",
+      "MALFORMED_DECISION",
+      "NOT_ON_LIST",
+      "OVER_LEVERAGE",
+      "OVER_TRADE_LIMIT"
+    ],
+    "without_example": [
+      "OUTSIDE_WINDOW",
+      "BAD_MODEL_SIGNATURE",
+      "WRONG_RULEBOOK",
+      "SHORT_NOT_UNLOCKED",
+      "ZERO_MARGIN",
+      "TOO_MANY_TRADES",
+      "OVER_ROUND_LIMIT",
+      "BAD_QUOTE_SIGNATURE",
+      "STALE_QUOTE",
+      "QUOTE_MISMATCH",
+      "TOO_EXPENSIVE"
+    ],
+    "first_tx_found": 5,
+    "first_tx_confirmed": 5,
+    "first_tx_missing": 0
+  }
+}

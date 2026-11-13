@@ -5,6 +5,11 @@
  * (poll the feed, react to a new item) is exercised without a contract.
  */
 import type {
+  GroupResult,
+  LeagueView,
+  ReviewView,
+  Standing,
+  WeekView,
   DrawResult,
   JackpotWin,
   PlayerView,
@@ -81,6 +86,9 @@ type Wallet = { dollars: bigint; registered: boolean; coin: bigint; locked: bigi
 export const SAMPLE_ACCOUNT = "you.testnet";
 
 type World = {
+  reviews: ReviewView[];
+  league: Standing[];
+  stamped: Set<string>;
   rewards: Rewards;
   players: Map<string, PlayerView>;
   draws: DrawResult[];
@@ -121,7 +129,7 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
   const rankName: RankName = promoted ? "ANALYST" : "INTERN";
 
   const constants: Constants = {
-    interface_version: "1.5",
+    interface_version: "1.6",
     network: "testnet",
     usdc_token: "usdc.sample.testnet",
     coin_decimals: 6,
@@ -354,7 +362,24 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
   const draws: DrawResult[] = [
     { period: 5, held_at: start - 6 * H, held_in_round: 36, prize: "140000", winner: "carol.testnet", winner_prize: "98000", runners_up: [[SAMPLE_ACCOUNT, "42000"]], tickets_total: "9100000000" },
   ];
-  return { world: { rewards, players, draws, jackpotWins: [], playbooks, activePlaybook: 1, goals, fills, tippers: new Set(), claimable, owned: new Map(), launches, launchHeld: new Map(), wallets, constants, rank, round, previous, positions, pot, refusals, votes, firsts, feed }, script };
+  const league: Standing[] = [
+    { place: 1, account_id: "carol.testnet", points: 5, wrong: 1, best_run: 4, waiting: 0 },
+    { place: 2, account_id: SAMPLE_ACCOUNT, points: 4, wrong: 2, best_run: 3, waiting: 0 },
+    { place: 3, account_id: "dave.testnet", points: 4, wrong: 3, best_run: 2, waiting: 1 },
+    { place: 4, account_id: "a-sixty-four-character-account-name-that-goes-on-and-on-0123.testnet", points: 2, wrong: 2, best_run: 2, waiting: 0 },
+    { place: 5, account_id: "erin.testnet", points: 0, wrong: 1, best_run: 0, waiting: 1 },
+  ];
+  const review = (week: number, bets: number, refusedN: number, skippedN: number, result: string, stamps: number, open: boolean, backfilled: boolean): ReviewView => ({
+    week, first_round: week * 7 + 1, last_round: week * 7 + 7, written_at: start - (6 - week) * 7 * DAY, backfilled,
+    rounds: 7, settled: 7, bets, refused: refusedN, skipped: skippedN, result,
+    best_bet: bets > 0 ? { position_id: 6, round_id: week * 7 + 6, market: "PENGU", side: "LONG", margin: "19900000", leverage: 1, result: "3100000" } : null,
+    worst_bet: bets > 1 ? { position_id: 4, round_id: week * 7 + 3, market: "PEPE", side: "LONG", margin: "20000000", leverage: 1, result: "-800000" } : null,
+    refusals: refusedN > 0 ? [{ code: "OVER_TRADE_LIMIT", count: refusedN - 1 || 1 }, ...(refusedN > 1 ? [{ code: "NOT_ON_LIST" as const, count: 1 }] : [])] : [],
+    rank_start: "INTERN", rank_end: "INTERN", status_end: "EMPLOYED", pool_start: "996900000", pool_end: "1000000000",
+    long_shot: false, league_players: 5, stamps, bar: 5, bar_filled: stamps >= 5, stamping_open: open,
+  });
+  const reviews: ReviewView[] = [review(5, 4, 3, 1, "3800000", 3, true, false), review(4, 3, 1, 3, "-455187", 6, false, false), review(3, 2, 0, 5, "120000", 0, false, true)];
+  return { world: { reviews, league, stamped: new Set<string>(), rewards, players, draws, jackpotWins: [], playbooks, activePlaybook: 1, goals, fills, tippers: new Set(), claimable, owned: new Map(), launches, launchHeld: new Map(), wallets, constants, rank, round, previous, positions, pot, refusals, votes, firsts, feed }, script };
 }
 
 /** Made-up earlier shifts, so the Intern's record has something in it. */
@@ -820,6 +845,20 @@ function sampleActions(w: World, clock: () => Ms, who: string): Actions {
       w.rewards.prizes_owed = add(w.rewards.prizes_owed, -owed);
       say("prize_paid", { account_id: who, amount: owed.toString() });
     },
+    async stampReview(week) {
+      await pause();
+      const r = w.reviews.find((x) => x.week === week);
+      need(!!r, "That review is not written yet. Nothing was sent. Try again shortly.");
+      need(r!.stamping_open, "Only last week's review can be stamped.");
+      need(!w.stamped.has(`${who}:${week}`), "You have already stamped this review.");
+      me().registered = true;
+      w.stamped.add(`${who}:${week}`);
+      r!.stamps += 1;
+      if (!r!.bar_filled && r!.stamps >= r!.bar) {
+        r!.bar_filled = true;
+        say("review_bar_filled", { week, stamps: r!.stamps });
+      }
+    },
     async launch(name, symbol) {
       await pause();
       need(name.trim().length >= 2 && name.trim().length <= 32, "A name is 2 to 32 characters.");
@@ -1024,6 +1063,19 @@ export function sampleChain(scene: Scene, clock: () => Ms = Date.now, options: {
     },
     async getLaunchQuote(tokenId, side, amount) {
       return quote(w.launches.find((l) => l.id === tokenId)!, side, BigInt(amount));
+    },
+    async getWeek(): Promise<WeekView> {
+      return { round_id: w.round.id, week: 6, first_round: 43, last_round: 49, rounds_per_week: 7, league_players: w.league.length, league_groups: 1, group_size: 20, max_groups: 25, review_to_stamp: 5, review_bar: 5, max_stamps: 100 };
+    },
+    async getLeague(a = {}): Promise<LeagueView> {
+      const inIt = a.accountId ? w.league.some((s) => s.account_id === a.accountId) : true;
+      return { week: 6, first_round: 43, last_round: 49, players: w.league.length, groups: 1, group: a.accountId ? (inIt ? 0 : null) : (a.group ?? 0), closed: false, standings: inIt ? copy(w.league) : [], group_size: 20, max_groups: 25 };
+    },
+    async getLeagueResults(week): Promise<GroupResult[]> {
+      return week === 5 ? [{ group: 0, top: copy(w.league).slice(0, 3) }] : [];
+    },
+    async getReviews(_from, limit) {
+      return copy(w.reviews).slice(0, limit ?? 10);
     },
     async getRewards() {
       tick();

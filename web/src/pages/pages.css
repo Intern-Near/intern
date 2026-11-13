@@ -618,3 +618,120 @@
   color: var(--dim);
   text-align: center;
 }
+
+/* "Why NOPE?" and the "would this bet pass?" box */
+.why {
+  display: grid;
+  gap: var(--s-2);
+}
+.why h3 {
+  font-size: var(--display-s);
+}
+.why-note {
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--text-s);
+  font-weight: 600;
+  background: var(--sticky);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-s);
+}
+.chat-why {
+  justify-self: stretch;
+  padding: var(--s-2) var(--s-4);
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: 18px;
+}
+.chat-why summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chat-why .why {
+  padding-bottom: var(--s-3);
+}
+.chat-why .why h3 {
+  display: none;
+}
+.real-nope {
+  display: grid;
+  gap: var(--s-3);
+}
+.real-nope a {
+  color: var(--link);
+  font-weight: 700;
+}
+.would {
+  display: grid;
+  gap: var(--s-3);
+}
+.would-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+.would-form label {
+  display: grid;
+  gap: var(--s-1);
+  font-weight: 700;
+  font-size: var(--text-s);
+}
+.would-form select,
+.would-form input {
+  min-height: var(--tap);
+  width: 100%;
+  padding: 0 var(--s-3);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--cream);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-s);
+}
+.would-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  font-weight: 600;
+}
+.would-verdict .mono {
+  font-size: var(--mono-s);
+}
+.would-steps {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-s);
+}
+.would-steps li {
+  display: grid;
+  grid-template-columns: minmax(0, 22ch) minmax(0, 1fr);
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--radius-s);
+}
+.would-steps .mono {
+  font-size: var(--mono-s);
+  line-height: 2;
+}
+.would-steps .is-fail {
+  font-weight: 700;
+  background: var(--tomato);
+}
+.would-steps .is-not-reached,
+.would-steps .is-not-applied {
+  color: var(--pencil);
+}
+@media (max-width: 700px) {
+  .would-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .would-steps li {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

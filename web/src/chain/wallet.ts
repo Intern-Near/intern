@@ -146,6 +146,17 @@ export function walletActions(accountId: string, contractId: string, constants: 
     leaveDraw: () => coin("leave_draw", {}),
     addToJackpot: (amount) => send(usdc, [{ method: "ft_transfer_call", args: { receiver_id: contractId, amount, msg: JSON.stringify({ jackpot: {} }) }, gas: GAS_TRANSFER_CALL, deposit: ONE_YOCTO }]),
     claimPrizes: () => coin("claim_prizes", {}, ONE_YOCTO, GAS_TRANSFER_CALL),
+    // Interface 1.6, section 9.8. Free; 100 TGas because it may first write a review that is due. Needs a registered account.
+    async stampReview(week) {
+      const has = await view<object | null>(rpc, contractId, "storage_balance_of", { account_id: accountId });
+      const calls: Call[] = [];
+      if (!has) {
+        const bounds = await view<{ min: string }>(rpc, contractId, "storage_balance_bounds", {});
+        calls.push({ method: "storage_deposit", args: { account_id: accountId }, deposit: bounds.min });
+      }
+      calls.push({ method: "stamp_review", args: { week }, gas: GAS_TRANSFER_CALL });
+      await send(contractId, calls);
+    },
     sellLaunch: (token_id, amount, min_out) => send(pad, [{ method: "sell", args: { token_id, amount, min_out }, deposit: ONE_YOCTO, gas: GAS_TRANSFER_CALL }]),
   };
 }

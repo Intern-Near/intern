@@ -845,3 +845,192 @@
 .longshot .btn {
   justify-self: start;
 }
+
+/* --- The week: league and reviews --- */
+.h2-note {
+  font-family: var(--font-text);
+  font-size: var(--text-s);
+  font-weight: 600;
+  color: var(--pencil);
+}
+.league-table .r,
+.judge-table .r {
+  text-align: right;
+}
+.league-table tr.is-me {
+  background: var(--sticky);
+}
+.league-who {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+}
+.reviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--s-4);
+}
+.review {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+.review.is-open {
+  background: var(--sky);
+}
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+}
+.review-head h3 {
+  font-size: var(--display-s);
+}
+.review-head h3 span {
+  font-family: var(--font-text);
+  font-size: var(--text-s);
+  font-weight: 600;
+}
+.review-result {
+  font-size: var(--mono-m);
+  font-variant-numeric: tabular-nums;
+}
+.review-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: var(--s-3);
+}
+.review-facts dt {
+  font-size: var(--text-xs);
+  color: var(--pencil);
+}
+.review.is-open .review-facts dt,
+.review.is-open .fine {
+  color: var(--ink);
+}
+.review-facts dd {
+  font-size: var(--text-m);
+  font-variant-numeric: tabular-nums;
+}
+.review-facts dd.mono {
+  font-size: var(--mono-s);
+  line-height: 2;
+}
+.review-lines {
+  display: grid;
+  gap: var(--s-1);
+  padding-left: var(--s-5);
+  font-size: var(--text-s);
+}
+.review-lines .mono {
+  font-size: var(--mono-s);
+}
+.review-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+.review-bar {
+  display: flex;
+  gap: var(--s-1);
+}
+.review-bar span {
+  width: 30px;
+  height: 30px;
+  background: var(--card);
+  border: var(--line-card) dashed var(--ink);
+  border-radius: 50%;
+}
+.review-bar .is-on {
+  background: var(--tomato);
+  border-style: solid;
+}
+.review-count {
+  font-size: var(--text-s);
+  font-weight: 600;
+}
+.review-count .mono {
+  font-size: var(--mono-m);
+  font-weight: 400;
+}
+.review-foot .btn {
+  margin-left: auto;
+}
+
+/* --- Proof --- */
+.state-failed {
+  background: var(--tomato);
+  border-style: double;
+  border-width: 4px;
+}
+.proofs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: var(--s-4);
+}
+.proof-card {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+.proof-card h2 {
+  font-size: var(--text-l);
+  line-height: 1.2;
+}
+.proof-card h2 .state,
+#books-h .state {
+  font-family: var(--font-text);
+  vertical-align: middle;
+}
+.proof-card pre,
+.proof-list pre {
+  max-height: 320px;
+  margin-top: var(--s-2);
+  padding: var(--s-3);
+  overflow: auto;
+  font-size: var(--mono-s);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--screen-text);
+  background: var(--screen);
+  border-radius: var(--radius-s);
+}
+.proof-card summary,
+.proof-list summary {
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: var(--text-s);
+  cursor: pointer;
+}
+.proof-list {
+  display: grid;
+  gap: var(--s-2);
+  padding-left: var(--s-5);
+  font-size: var(--text-s);
+  overflow-wrap: anywhere;
+}
+.proof-list .mono {
+  font-size: var(--mono-s);
+}
+.proof-page a {
+  color: var(--link);
+  font-weight: 700;
+}
+.proof-reason {
+  font-size: var(--text-xs);
+  color: var(--pencil);
+}
+.proof-page .more {
+  margin-top: var(--s-3);
+}
+.counts .pencil .mono {
+  font-size: var(--mono-s);
+  color: var(--screen-text);
+}

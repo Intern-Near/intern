@@ -1,0 +1,2933 @@
+{
+  "kind": "intern-proof-bundle",
+  "version": 1,
+  "generated_at": "2026-11-13T16:46:27.151Z",
+  "finished_at": "2026-11-13T16:47:01.428Z",
+  "network": "testnet",
+  "coin": "coin.desk-lab-2026.testnet",
+  "git": {
+    "commit": "ddb2485f2cff750b22043d7e62dcd37d5c20a5df",
+    "ref": "refs/heads/main"
+  },
+  "endpoints": {
+    "near_rpc": "https://test.rpc.fastnear.com",
+    "near_archival_rpcs": [
+      "https://archival-rpc.testnet.fastnear.com",
+      "https://archival-rpc.testnet.near.org"
+    ],
+    "hyperliquid_info": "https://api.hyperliquid-testnet.xyz/info",
+    "near_ai": "https://cloud-api.near.ai/v1",
+    "nvidia_attestation": [
+      "https://nras.attestation.nvidia.com/v3/attest/gpu",
+      "https://nras.attestation.nvidia.com/.well-known/jwks.json"
+    ],
+    "nearblocks_api": "https://api-testnet.nearblocks.io",
+    "explorer": "https://testnet.nearblocks.io"
+  },
+  "summary": {
+    "ok": 5,
+    "warn": 1,
+    "fail": 0,
+    "sentence": "6 checks: 5 ok, 1 with a caveat, 0 failed."
+  },
+  "sections": [
+    {
+      "id": "contract-scan",
+      "title": "Who can change the contracts",
+      "started_at": "2026-11-13T16:46:27.152Z",
+      "status": "warn",
+      "sentence": "6 contracts, each running exactly the build docs/REPRODUCIBLE-BUILD.md records; each still has a full-access key, so its holder can change it; all import the host functions that deploy code or change keys (near-sdk links them), so the code alone does not show it never will.",
+      "data": {
+        "tool": "contract-scan",
+        "checked_at": "2026-11-13T16:46:27.152Z",
+        "network": "testnet",
+        "rpc": "https://test.rpc.fastnear.com",
+        "sources": [
+          "host function names: nearcore runtime/near-vm-runner/src/imports.rs (crate near-vm-runner 0.38.1) and near-sdk-rs near-sys/src/lib.rs (crate near-sys 0.4.1), both in the owner's Cargo.lock; read 2026-11-13",
+          "only the account itself may deploy code, add or delete keys, delete itself or use a global contract: nearcore runtime/runtime/src/actions.rs check_actor_permissions (master, read 2026-11-13); near-primitives 0.38.1 src/errors.rs ActorNoPermission",
+          "a function-call key signs exactly one FunctionCall with no deposit: nearcore runtime/runtime/src/verifier.rs verify_function_call_permission (master, read 2026-11-13)",
+          "near-sdk 5.30.1 links every action host function into any contract that uses its Promise type (as cross-contract calls do): src/promise.rs PromiseAction::add handles every kind of action in one function",
+          "global contracts in view_account: near-primitives 0.38.1 src/views.rs AccountView (global_contract_hash, global_contract_account_id)"
+        ],
+        "control_host_functions": [
+          "promise_batch_action_deploy_contract",
+          "promise_batch_action_add_key_with_full_access",
+          "promise_batch_action_add_key_with_function_call",
+          "promise_batch_action_add_gas_key_with_full_access",
+          "promise_batch_action_add_gas_key_with_function_call",
+          "promise_batch_action_delete_key",
+          "promise_batch_action_delete_account",
+          "promise_batch_action_deploy_global_contract",
+          "promise_batch_action_deploy_global_contract_by_account_id",
+          "promise_batch_action_use_global_contract",
+          "promise_batch_action_use_global_contract_by_account_id"
+        ],
+        "recorded_hashes": {
+          "file": "docs/REPRODUCIBLE-BUILD.md",
+          "heading": "The expected hashes (2026-11-13, interface 1.6)",
+          "rows": 7
+        },
+        "storage_price_per_byte_yocto": "10000000000000000000",
+        "accounts": [
+          {
+            "account_id": "stub.hackcheck-2026-1103.testnet",
+            "label": "stub",
+            "block_height": 277536448,
+            "balance_yocto": "5482661616619640400000000",
+            "locked_yocto": "0",
+            "storage_usage": 293554,
+            "storage": {
+              "cost_yocto": "2935540000000000000000000",
+              "free_yocto": "2547121616619640400000000",
+              "room_bytes": 254712
+            },
+            "code": {
+              "hash": "2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 291881,
+              "sha256": "2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "sha256",
+                "read_register",
+                "value_return",
+                "block_timestamp",
+                "predecessor_account_id",
+                "current_account_id",
+                "attached_deposit",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "log_utf8",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:81GiX34A1UhttikU2PoXEdZmKnGxgBoG38JDrpeWCRi6",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs",
+              "size": 291881,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          },
+          {
+            "account_id": "coin.desk-lab-2026.testnet",
+            "label": "coin",
+            "block_height": 277536450,
+            "balance_yocto": "12967457471717329599999926",
+            "locked_yocto": "0",
+            "storage_usage": 793515,
+            "storage": {
+              "cost_yocto": "7935150000000000000000000",
+              "free_yocto": "5032307471717329599999926",
+              "room_bytes": 503230
+            },
+            "code": {
+              "hash": "GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 677417,
+              "sha256": "GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "read_register",
+                "sha256",
+                "keccak256",
+                "value_return",
+                "ed25519_verify",
+                "prepaid_gas",
+                "attached_deposit",
+                "current_account_id",
+                "predecessor_account_id",
+                "block_timestamp",
+                "random_seed",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_usage",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_result",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "log_utf8",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8",
+                "ecrecover"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:86fbY6YwRaJMcYMCtw6YcRixD21QdqaSsnDWPXrTtNSY",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ",
+              "size": 677417,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          },
+          {
+            "account_id": "usdc.desk-lab-2026.testnet",
+            "label": "usdc",
+            "block_height": 277536453,
+            "balance_yocto": "2005113748110014800000028",
+            "locked_yocto": "0",
+            "storage_usage": 149895,
+            "storage": {
+              "cost_yocto": "1498950000000000000000000",
+              "free_yocto": "506163748110014800000028",
+              "room_bytes": 50616
+            },
+            "code": {
+              "hash": "C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 149106,
+              "sha256": "C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "value_return",
+                "read_register",
+                "current_account_id",
+                "predecessor_account_id",
+                "attached_deposit",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_usage",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_result",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "log_utf8",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:EE49tTH8KJHB7hetUVnKZFToiUzLnHf8126T1QGxAvqr",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H",
+              "size": 149106,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          },
+          {
+            "account_id": "stickers.desk-lab-2026.testnet",
+            "label": "stickers",
+            "block_height": 277536457,
+            "balance_yocto": "3015934170251925000000000",
+            "locked_yocto": "0",
+            "storage_usage": 205870,
+            "storage": {
+              "cost_yocto": "2058700000000000000000000",
+              "free_yocto": "957234170251925000000000",
+              "room_bytes": 95723
+            },
+            "code": {
+              "hash": "22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 203578,
+              "sha256": "22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "value_return",
+                "sha256",
+                "read_register",
+                "current_account_id",
+                "predecessor_account_id",
+                "attached_deposit",
+                "block_timestamp",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_usage",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_result",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "log_utf8",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:7eeoz5YKnAHxiBXUTtnJeGNzjahqco4YJqZsYsurZQiW",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm",
+              "size": 203578,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          },
+          {
+            "account_id": "launch.desk-lab-2026.testnet",
+            "label": "launchpad",
+            "block_height": 277536459,
+            "balance_yocto": "3096766925933188799999998",
+            "locked_yocto": "0",
+            "storage_usage": 209196,
+            "storage": {
+              "cost_yocto": "2091960000000000000000000",
+              "free_yocto": "1004806925933188799999998",
+              "room_bytes": 100480
+            },
+            "code": {
+              "hash": "Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 208384,
+              "sha256": "Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "value_return",
+                "read_register",
+                "current_account_id",
+                "predecessor_account_id",
+                "attached_deposit",
+                "block_timestamp",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_result",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "log_utf8",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:DuZ4gxjdYPv5CwerevFnJyGqSKUJDdS2X4zeajE9bgMV",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT",
+              "size": 208384,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          },
+          {
+            "account_id": "lender.desk-lab-2026.testnet",
+            "label": "lender",
+            "block_height": 277536462,
+            "balance_yocto": "1998869141685177999999995",
+            "locked_yocto": "0",
+            "storage_usage": 132486,
+            "storage": {
+              "cost_yocto": "1324860000000000000000000",
+              "free_yocto": "674009141685177999999995",
+              "room_bytes": 67400
+            },
+            "code": {
+              "hash": "2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em",
+              "deployed": true,
+              "global_contract_hash": null,
+              "global_contract_account_id": null,
+              "bytes": 131977,
+              "sha256": "2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em",
+              "matches_code_hash": true
+            },
+            "imports": {
+              "host_functions": [
+                "value_return",
+                "read_register",
+                "current_account_id",
+                "predecessor_account_id",
+                "attached_deposit",
+                "block_timestamp",
+                "promise_and",
+                "register_len",
+                "storage_read",
+                "storage_write",
+                "promise_return",
+                "storage_remove",
+                "storage_has_key",
+                "promise_batch_then",
+                "promise_batch_create",
+                "promise_result",
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_function_call_weight",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_use_global_contract_by_account_id",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "input",
+                "panic_utf8"
+              ],
+              "control": [
+                {
+                  "name": "promise_batch_action_deploy_contract",
+                  "power": "code",
+                  "does": "deploys new code"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access key"
+                },
+                {
+                  "name": "promise_batch_action_add_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_full_access",
+                  "power": "keys",
+                  "does": "adds a full-access gas key"
+                },
+                {
+                  "name": "promise_batch_action_add_gas_key_with_function_call",
+                  "power": "keys",
+                  "does": "adds a function-call gas key"
+                },
+                {
+                  "name": "promise_batch_action_delete_key",
+                  "power": "keys",
+                  "does": "deletes a key"
+                },
+                {
+                  "name": "promise_batch_action_delete_account",
+                  "power": "account",
+                  "does": "deletes the account"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract, fixed by its hash"
+                },
+                {
+                  "name": "promise_batch_action_deploy_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "publishes code as a global contract that follows this account (it can be replaced later)"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract",
+                  "power": "global contract",
+                  "does": "replaces the account's code with a global contract, by hash"
+                },
+                {
+                  "name": "promise_batch_action_use_global_contract_by_account_id",
+                  "power": "global contract",
+                  "does": "replaces the account's code with the global contract another account publishes, and follows its updates"
+                }
+              ],
+              "other_actions": [
+                "promise_batch_action_stake",
+                "promise_batch_action_transfer",
+                "promise_batch_action_function_call",
+                "promise_batch_action_create_account",
+                "promise_batch_action_transfer_to_gas_key",
+                "promise_batch_action_function_call_weight"
+              ],
+              "other_imports": []
+            },
+            "keys": {
+              "total": 1,
+              "full_access": 1,
+              "function_call": 0,
+              "unknown": 0,
+              "list": [
+                {
+                  "public_key": "ed25519:9TFnGFYUtqKNG1nVbL5UTMeEHe2bD1PxHZwkjnLfySap",
+                  "kind": "full-access",
+                  "gas_key": false,
+                  "receiver_id": null,
+                  "method_names": [],
+                  "allowance": null,
+                  "key": "a full-access key"
+                }
+              ]
+            },
+            "recorded": {
+              "hash": "2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em",
+              "size": 131977,
+              "same": true,
+              "note": "the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.6)): the code on chain is that build"
+            },
+            "can_change": {
+              "full_access_keys": 1,
+              "unknown_keys": 0,
+              "own_function_call_keys": 0,
+              "code": [
+                "promise_batch_action_deploy_contract",
+                "promise_batch_action_add_key_with_full_access",
+                "promise_batch_action_add_key_with_function_call",
+                "promise_batch_action_add_gas_key_with_full_access",
+                "promise_batch_action_add_gas_key_with_function_call",
+                "promise_batch_action_delete_key",
+                "promise_batch_action_delete_account",
+                "promise_batch_action_deploy_global_contract",
+                "promise_batch_action_deploy_global_contract_by_account_id",
+                "promise_batch_action_use_global_contract",
+                "promise_batch_action_use_global_contract_by_account_id"
+              ],
+              "code_unread": false,
+              "global_owner": null,
+              "nobody": false
+            },
+            "verdict": "1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does",
+            "status": "warn",
+            "problems": [],
+            "caveats": []
+          }
+        ],
+        "skipped": [
+          {
+            "account_id": "intern-runner-ed25519.testnet",
+            "label": "runner",
+            "reason": "no contract code deployed"
+          }
+        ],
+        "failed": [],
+        "summary": {
+          "accounts": 6,
+          "contracts": 6,
+          "nobody_can_change": 0,
+          "changeable_by_keys": 6,
+          "code_path_not_ruled_out": 6,
+          "recorded_same": 6,
+          "recorded_different": 0,
+          "not_recorded": 0,
+          "ok": true
+        }
+      },
+      "took_ms": 10067,
+      "error": null
+    },
+    {
+      "id": "key-scope",
+      "title": "The runner's and the relayer's keys",
+      "started_at": "2026-11-13T16:46:37.219Z",
+      "status": "ok",
+      "sentence": "The runner intern-runner-ed25519.testnet: a function-call key for coin.desk-lab-2026.testnet (propose, sign_next, report_result; allowance 0.850 NEAR) would pass as its signing key; it also holds a full-access key, normally the owner's. The relayer intern-relayer-ed25519.testnet: a full-access key would pass as its signing key. No private key was read, so which key actually signs is not shown.",
+      "data": [
+        {
+          "account_id": "intern-runner-ed25519.testnet",
+          "expect": "runner",
+          "contract": "coin.desk-lab-2026.testnet",
+          "signing_key": null,
+          "keys": [
+            {
+              "public_key": "ed25519:5ymHpQp7aMbRG2sLuD4CkvoUoFqfw9uvXoWFoPAiikes",
+              "kind": "full-access",
+              "gas_key": false,
+              "receiver_id": null,
+              "method_names": [],
+              "allowance": null,
+              "permission": "FullAccess",
+              "fit": "broader",
+              "fit_reason": "full access: it can do anything with this account",
+              "signing": false,
+              "passes": false,
+              "note": "a full-access key: would not pass as the runner's signing key (normally the account owner's key; whoever holds it can do anything with this account)"
+            },
+            {
+              "public_key": "ed25519:Cd5AKFazydp6F8rvUkKZsxV2mQYpUiAGAPEb464XF9wy",
+              "kind": "function-call",
+              "gas_key": false,
+              "receiver_id": "coin.desk-lab-2026.testnet",
+              "method_names": [
+                "propose",
+                "sign_next",
+                "report_result"
+              ],
+              "allowance": "850384031603761700000000",
+              "permission": {
+                "FunctionCall": {
+                  "allowance": "850384031603761700000000",
+                  "method_names": [
+                    "propose",
+                    "sign_next",
+                    "report_result"
+                  ],
+                  "receiver_id": "coin.desk-lab-2026.testnet"
+                }
+              },
+              "fit": "as declared",
+              "fit_reason": "exactly the runner's calls on the coin",
+              "signing": false,
+              "passes": true,
+              "note": "a function-call key for coin.desk-lab-2026.testnet (propose, sign_next, report_result; allowance 0.850 NEAR): would pass as the runner's signing key"
+            }
+          ],
+          "verdict": "no verdict",
+          "reasons": [],
+          "notes": [],
+          "passing": [
+            "ed25519:Cd5AKFazydp6F8rvUkKZsxV2mQYpUiAGAPEb464XF9wy"
+          ]
+        },
+        {
+          "account_id": "intern-relayer-ed25519.testnet",
+          "expect": "relayer",
+          "contract": "coin.desk-lab-2026.testnet",
+          "signing_key": null,
+          "keys": [
+            {
+              "public_key": "ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT",
+              "kind": "full-access",
+              "gas_key": false,
+              "receiver_id": null,
+              "method_names": [],
+              "allowance": null,
+              "permission": "FullAccess",
+              "fit": "as declared",
+              "fit_reason": "full access, as declared for the relayer (close attaches 1 yocto)",
+              "signing": false,
+              "passes": true,
+              "note": "a full-access key: would pass as the relayer's signing key"
+            }
+          ],
+          "verdict": "no verdict",
+          "reasons": [],
+          "notes": [],
+          "passing": [
+            "ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT"
+          ]
+        }
+      ],
+      "took_ms": 826,
+      "error": null
+    },
+    {
+      "id": "fills-check",
+      "title": "Reported results against Hyperliquid's fills (last 10 rounds)",
+      "started_at": "2026-11-13T16:46:38.045Z",
+      "status": "ok",
+      "sentence": "Rounds 48 to 57: 10 bets (9 OK, 1 NOT REPORTED); every fill on the contract's Hyperliquid address is tied to an order the contract signed.",
+      "data": {
+        "tool": "fills-check",
+        "checked_at": "2026-11-13T16:46:43.913Z",
+        "checked_at_ms": 1794588403913,
+        "contract": "coin.desk-lab-2026.testnet",
+        "rpc": "https://test.rpc.fastnear.com",
+        "hl": {
+          "info_url": "https://api.hyperliquid-testnet.xyz/info",
+          "address": "0x46f8eb2a044a826c70e9682fe3bfd65970340132"
+        },
+        "result_source": "REPORTED",
+        "rounds": {
+          "from": 48,
+          "to": 57,
+          "current": 57,
+          "missing": []
+        },
+        "matching": "Matching is approximate until orders carry a client order id: a fill is tied to a signed order by coin, side, size (at most the order's) and time (from the order's nonce to its expiry, 10 s slack).",
+        "rule": "returned = margin + trading result - fees + funding (runner/src/result.ts)",
+        "sources": {
+          "outbox_actions": 110,
+          "outbox_first_id": 1,
+          "feed_items": 342,
+          "feed_first_seq": 1,
+          "fills": 19,
+          "funding_records": 0,
+          "fills_from": 1794570830000,
+          "fills_to": 1794588403913
+        },
+        "round_rows": [
+          {
+            "round_id": 48,
+            "started_at": 1794570840000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-39727",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 49,
+            "started_at": 1794572640000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-88146",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 50,
+            "started_at": 1794574440000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-28930",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 51,
+            "started_at": 1794576240000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-48025",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 52,
+            "started_at": 1794578040000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-38429",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 53,
+            "started_at": 1794579840000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-72416",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 54,
+            "started_at": 1794581640000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-3462",
+            "bets": 1,
+            "skipped": 2,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 55,
+            "started_at": 1794583440000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "53136",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 1,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 56,
+            "started_at": 1794585240000,
+            "phase": "CLOSE",
+            "settled": true,
+            "result_e6": "-154641",
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          },
+          {
+            "round_id": 57,
+            "started_at": 1794587040000,
+            "phase": "HOLD",
+            "settled": false,
+            "result_e6": null,
+            "bets": 1,
+            "skipped": 0,
+            "refused": 0,
+            "unmatched_fill_groups": 0
+          }
+        ],
+        "bets": [
+          {
+            "round_id": 48,
+            "position_id": 29,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "20000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 83,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "4377",
+                "px": "0.004569",
+                "nonce": 1794571785299,
+                "expires_after": 1794571905299,
+                "matched": {
+                  "oid": 65226458349,
+                  "fills": 1,
+                  "filled_sz": "4377",
+                  "first_fill_at": 1794571791579,
+                  "tids": [
+                    160964005044785
+                  ]
+                }
+              },
+              {
+                "action_id": 84,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "4377",
+                "px": "0.004491",
+                "nonce": 1794572349995,
+                "expires_after": 1794572469995,
+                "matched": {
+                  "oid": 65226825227,
+                  "fills": 1,
+                  "filled_sz": "4377",
+                  "first_fill_at": 1794572356424,
+                  "tids": [
+                    605120631461881
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "19960273",
+              "result_e6": "-39727"
+            },
+            "feed_reported": {
+              "returned_e6": "19960273",
+              "result_e6": "-39727",
+              "seq": 275
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "19960273",
+              "result_e6": "-39727",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "4377",
+                "close_sz": "4377",
+                "open_value_e6": "19836564",
+                "close_value_e6": "19814679",
+                "fees_e6": "17842",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-21885",
+                "open_oids": [
+                  65226458349
+                ],
+                "close_oids": [
+                  65226825227
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 49,
+            "position_id": 30,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "15000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 86,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "3252",
+                "px": "0.004612",
+                "nonce": 1794573604032,
+                "expires_after": 1794573724032,
+                "matched": {
+                  "oid": 65227637946,
+                  "fills": 1,
+                  "filled_sz": "3252",
+                  "first_fill_at": 1794573609820,
+                  "tids": [
+                    75062120136623
+                  ]
+                }
+              },
+              {
+                "action_id": 87,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "3252",
+                "px": "0.004507",
+                "nonce": 1794574143773,
+                "expires_after": 1794574263773,
+                "matched": {
+                  "oid": 65227994337,
+                  "fills": 1,
+                  "filled_sz": "3252",
+                  "first_fill_at": 1794574150260,
+                  "tids": [
+                    299326817142842
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "14911854",
+              "result_e6": "-88146"
+            },
+            "feed_reported": {
+              "returned_e6": "14911854",
+              "result_e6": "-88146",
+              "seq": 282
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "14911854",
+              "result_e6": "-88146",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "3252",
+                "close_sz": "3252",
+                "open_value_e6": "14871396",
+                "close_value_e6": "14796600",
+                "fees_e6": "13350",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-74796",
+                "open_oids": [
+                  65227637946
+                ],
+                "close_oids": [
+                  65227994337
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 50,
+            "position_id": 31,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "11000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 89,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "2392",
+                "px": "0.004597",
+                "nonce": 1794575371570,
+                "expires_after": 1794575491570,
+                "matched": {
+                  "oid": 65228809895,
+                  "fills": 1,
+                  "filled_sz": "2392",
+                  "first_fill_at": 1794575377917,
+                  "tids": [
+                    145019401702664
+                  ]
+                }
+              },
+              {
+                "action_id": 90,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "2392",
+                "px": "0.004503",
+                "nonce": 1794575943149,
+                "expires_after": 1794576063149,
+                "matched": {
+                  "oid": 65229188035,
+                  "fills": 1,
+                  "filled_sz": "2392",
+                  "first_fill_at": 1794575948872,
+                  "tids": [
+                    1031743218853502
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "10971070",
+              "result_e6": "-28930"
+            },
+            "feed_reported": {
+              "returned_e6": "10971070",
+              "result_e6": "-28930",
+              "seq": 290
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "10971070",
+              "result_e6": "-28930",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "2392",
+                "close_sz": "2392",
+                "open_value_e6": "10893168",
+                "close_value_e6": "10874032",
+                "fees_e6": "9794",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-19136",
+                "open_oids": [
+                  65228809895
+                ],
+                "close_oids": [
+                  65229188035
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 51,
+            "position_id": 32,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "20000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 92,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "4313",
+                "px": "0.004637",
+                "nonce": 1794577180100,
+                "expires_after": 1794577300100,
+                "matched": {
+                  "oid": 65230268470,
+                  "fills": 1,
+                  "filled_sz": "4313",
+                  "first_fill_at": 1794577186431,
+                  "tids": [
+                    639279142048607
+                  ]
+                }
+              },
+              {
+                "action_id": 93,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "4313",
+                "px": "0.004544",
+                "nonce": 1794577743445,
+                "expires_after": 1794577863445,
+                "matched": {
+                  "oid": 65230705000,
+                  "fills": 1,
+                  "filled_sz": "4313",
+                  "first_fill_at": 1794577748871,
+                  "tids": [
+                    213406154156660
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "19951975",
+              "result_e6": "-48025"
+            },
+            "feed_reported": {
+              "returned_e6": "19951975",
+              "result_e6": "-48025",
+              "seq": 297
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "19951975",
+              "result_e6": "-48025",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "4313",
+                "close_sz": "4313",
+                "open_value_e6": "19831174",
+                "close_value_e6": "19800983",
+                "fees_e6": "17834",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-30191",
+                "open_oids": [
+                  65230268470
+                ],
+                "close_oids": [
+                  65230705000
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 52,
+            "position_id": 33,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "11000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 95,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "2386",
+                "px": "0.00461",
+                "nonce": 1794578986711,
+                "expires_after": 1794579106711,
+                "matched": {
+                  "oid": 65231591376,
+                  "fills": 1,
+                  "filled_sz": "2386",
+                  "first_fill_at": 1794578993055,
+                  "tids": [
+                    366892781968311
+                  ]
+                }
+              },
+              {
+                "action_id": 96,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "2386",
+                "px": "0.004515",
+                "nonce": 1794579550246,
+                "expires_after": 1794579670246,
+                "matched": {
+                  "oid": 65232005919,
+                  "fills": 1,
+                  "filled_sz": "2386",
+                  "first_fill_at": 1794579556035,
+                  "tids": [
+                    1070462842188943
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "10961571",
+              "result_e6": "-38429"
+            },
+            "feed_reported": {
+              "returned_e6": "10961571",
+              "result_e6": "-38429",
+              "seq": 304
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "10961571",
+              "result_e6": "-38429",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "2386",
+                "close_sz": "2386",
+                "open_value_e6": "10901634",
+                "close_value_e6": "10873002",
+                "fees_e6": "9797",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-28632",
+                "open_oids": [
+                  65231591376
+                ],
+                "close_oids": [
+                  65232005919
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 53,
+            "position_id": 34,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "11000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 98,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "2409",
+                "px": "0.004565",
+                "nonce": 1794580843986,
+                "expires_after": 1794580963986,
+                "matched": {
+                  "oid": 65233064318,
+                  "fills": 1,
+                  "filled_sz": "2409",
+                  "first_fill_at": 1794580849750,
+                  "tids": [
+                    494283465136131
+                  ]
+                }
+              },
+              {
+                "action_id": 99,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "2409",
+                "px": "0.004461",
+                "nonce": 1794581350199,
+                "expires_after": 1794581470199,
+                "matched": {
+                  "oid": 65233497112,
+                  "fills": 1,
+                  "filled_sz": "2409",
+                  "first_fill_at": 1794581356554,
+                  "tids": [
+                    1067464297247531
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "10927584",
+              "result_e6": "-72416"
+            },
+            "feed_reported": {
+              "returned_e6": "10927584",
+              "result_e6": "-72416",
+              "seq": 311
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "10927584",
+              "result_e6": "-72416",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "2409",
+                "close_sz": "2409",
+                "open_value_e6": "10900725",
+                "close_value_e6": "10838091",
+                "fees_e6": "9782",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-62634",
+                "open_oids": [
+                  65233064318
+                ],
+                "close_oids": [
+                  65233497112
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 54,
+            "position_id": 35,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "15000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 101,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "3300",
+                "px": "0.004545",
+                "nonce": 1794582632629,
+                "expires_after": 1794582752629,
+                "matched": {
+                  "oid": 65234635705,
+                  "fills": 1,
+                  "filled_sz": "3300",
+                  "first_fill_at": 1794582638783,
+                  "tids": [
+                    746881615576958
+                  ]
+                }
+              },
+              {
+                "action_id": 102,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "3300",
+                "px": "0.004459",
+                "nonce": 1794583144041,
+                "expires_after": 1794583264041,
+                "matched": {
+                  "oid": 65235081724,
+                  "fills": 1,
+                  "filled_sz": "3300",
+                  "first_fill_at": 1794583149348,
+                  "tids": [
+                    412020894639100
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "14996538",
+              "result_e6": "-3462"
+            },
+            "feed_reported": {
+              "returned_e6": "14996538",
+              "result_e6": "-3462",
+              "seq": 320
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "14996538",
+              "result_e6": "-3462",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "3300",
+                "close_sz": "3300",
+                "open_value_e6": "14843400",
+                "close_value_e6": "14853300",
+                "fees_e6": "13362",
+                "funding_e6": "0",
+                "closed_pnl_e6": "9900",
+                "open_oids": [
+                  65234635705
+                ],
+                "close_oids": [
+                  65235081724
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 55,
+            "position_id": 36,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "15000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 104,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "3327",
+                "px": "0.004508",
+                "nonce": 1794584406221,
+                "expires_after": 1794584526221,
+                "matched": {
+                  "oid": 65236293850,
+                  "fills": 1,
+                  "filled_sz": "3327",
+                  "first_fill_at": 1794584412599,
+                  "tids": [
+                    181664258809523
+                  ]
+                }
+              },
+              {
+                "action_id": 105,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "3327",
+                "px": "0.004448",
+                "nonce": 1794584944245,
+                "expires_after": 1794585064245,
+                "matched": {
+                  "oid": 65236825053,
+                  "fills": 1,
+                  "filled_sz": "3327",
+                  "first_fill_at": 1794584950907,
+                  "tids": [
+                    489373490649397
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "15053136",
+              "result_e6": "53136"
+            },
+            "feed_reported": {
+              "returned_e6": "15053136",
+              "result_e6": "53136",
+              "seq": 328
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "15053136",
+              "result_e6": "53136",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "3327",
+                "close_sz": "3327",
+                "open_value_e6": "14861709",
+                "close_value_e6": "14928249",
+                "fees_e6": "13404",
+                "funding_e6": "0",
+                "closed_pnl_e6": "66540",
+                "open_oids": [
+                  65236293850
+                ],
+                "close_oids": [
+                  65236825053
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 56,
+            "position_id": 37,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "11000000",
+            "leverage": 1,
+            "position_status": "SETTLED",
+            "orders_signed": 2,
+            "fills_matched": 2,
+            "orders": [
+              {
+                "action_id": 107,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "2415",
+                "px": "0.004553",
+                "nonce": 1794586184057,
+                "expires_after": 1794586304057,
+                "matched": {
+                  "oid": 65237956923,
+                  "fills": 1,
+                  "filled_sz": "2415",
+                  "first_fill_at": 1794586190581,
+                  "tids": [
+                    31178675181326
+                  ]
+                }
+              },
+              {
+                "action_id": 108,
+                "kind": "CLOSE",
+                "coin": "kPEPE",
+                "side": "A",
+                "dir": "Close Long",
+                "sz": "2415",
+                "px": "0.004412",
+                "nonce": 1794586750827,
+                "expires_after": 1794586870827,
+                "matched": {
+                  "oid": 65238442945,
+                  "fills": 1,
+                  "filled_sz": "2415",
+                  "first_fill_at": 1794586756969,
+                  "tids": [
+                    804772495926264
+                  ]
+                }
+              }
+            ],
+            "reported": {
+              "returned_e6": "10845359",
+              "result_e6": "-154641"
+            },
+            "feed_reported": {
+              "returned_e6": "10845359",
+              "result_e6": "-154641",
+              "seq": 335
+            },
+            "recomputed": {
+              "kind": "returned",
+              "returned_e6": "10845359",
+              "result_e6": "-154641",
+              "note": "opened and closed kPEPE",
+              "detail": {
+                "open_sz": "2415",
+                "close_sz": "2415",
+                "open_value_e6": "10896480",
+                "close_value_e6": "10751580",
+                "fees_e6": "9741",
+                "funding_e6": "0",
+                "closed_pnl_e6": "-144900",
+                "open_oids": [
+                  65237956923
+                ],
+                "close_oids": [
+                  65238442945
+                ]
+              }
+            },
+            "status": "OK",
+            "reason": "opened and closed kPEPE"
+          },
+          {
+            "round_id": 57,
+            "position_id": 38,
+            "market": "PEPE",
+            "coin": "kPEPE",
+            "side": "LONG",
+            "margin_e6": "11000000",
+            "leverage": 1,
+            "position_status": "OPEN_SIGNED",
+            "orders_signed": 1,
+            "fills_matched": 1,
+            "orders": [
+              {
+                "action_id": 110,
+                "kind": "OPEN",
+                "coin": "kPEPE",
+                "side": "B",
+                "dir": "Open Long",
+                "sz": "2447",
+                "px": "0.004494",
+                "nonce": 1794588024334,
+                "expires_after": 1794588144334,
+                "matched": {
+                  "oid": 65239505516,
+                  "fills": 1,
+                  "filled_sz": "2447",
+                  "first_fill_at": 1794588030667,
+                  "tids": [
+                    773658948366373
+                  ]
+                }
+              }
+            ],
+            "reported": null,
+            "feed_reported": null,
+            "recomputed": {
+              "kind": "waiting",
+              "note": "kPEPE: 0 of 244700000000 (×10^-8) closed so far",
+              "detail": {
+                "open_sz": "2447",
+                "close_sz": "0",
+                "open_value_e6": "10911173",
+                "close_value_e6": "0",
+                "fees_e6": "4910",
+                "funding_e6": "0",
+                "closed_pnl_e6": "0",
+                "open_oids": [
+                  65239505516
+                ],
+                "close_oids": []
+              }
+            },
+            "status": "NOT REPORTED",
+            "reason": "no result yet; the runner's rule says waiting: kPEPE: 0 of 244700000000 (×10^-8) closed so far"
+          }
+        ],
+        "unmatched_fills": [],
+        "older_fills": [],
+        "summary": {
+          "rounds": 10,
+          "rounds_without_bet": 0,
+          "bets": 10,
+          "by_status": {
+            "OK": 9,
+            "MISMATCH": 0,
+            "NO FILLS": 0,
+            "UNMATCHED FILLS": 0,
+            "NOT REPORTED": 1,
+            "NOT CHECKED": 0
+          },
+          "unmatched_fill_groups": 0,
+          "older_fill_groups": 0,
+          "ok": true
+        }
+      },
+      "took_ms": 8762,
+      "error": null
+    },
+    {
+      "id": "verify-round",
+      "title": "The last 3 proposals, re-checked from public data",
+      "started_at": "2026-11-13T16:46:46.807Z",
+      "status": "ok",
+      "sentence": "The last 3 proposals re-checked from public data: in each, NEAR AI's pinned key signed the exact request and answer, the request carried the rulebook of that moment, and the contract's verdict fits.",
+      "data": [
+        {
+          "tx_hash": "AxxPp6zgB97eXYQKRAmbBBUHopKD9QSZ2kxMYhfMW5t5",
+          "link": "https://testnet.nearblocks.io/txns/AxxPp6zgB97eXYQKRAmbBBUHopKD9QSZ2kxMYhfMW5t5",
+          "sender": "intern-runner-ed25519.testnet",
+          "block_height": 277535799,
+          "at": "2026-11-13T16:40:12.173Z",
+          "failures": 0,
+          "unverified": 0,
+          "fatal": null,
+          "result": "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (YES, position 38) fits it",
+          "lines": [
+            "Transaction AxxPp6zgB97eXYQKRAmbBBUHopKD9QSZ2kxMYhfMW5t5",
+            "  from intern-runner-ed25519.testnet to coin.desk-lab-2026.testnet, method propose, status FINAL; read from https://test.rpc.fastnear.com",
+            "  proposal: request 1205 bytes, response 2906 bytes, signature 64 bytes; credited_to none; funding none",
+            "  ran in block 277535799 (8JcogxZLtmDJWWPV3fer7aicGhZy53Jo4UW5izguUozE) at 2026-11-13T16:40:12.173Z; the state is read at the block before it, HWLYWUmDYeXHcX4x3RBR2gXNWVK2BdFTQAno5nKBjFwH",
+            "",
+            "Model and signer",
+            "  OK         model: z-ai/glm-5.3-flash named in the request; 01 pins z-ai/glm-5.3-flash",
+            "  OK         contract's pin: get_constants().model then: z-ai/glm-5.3-flash, ed25519, 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff (the same as 01)",
+            "  INFO       signed text, rebuilt: z-ai/glm-5.3-flash:604b01b7c1e69956c8e425f071d8d62cf56b70c70dcfb33e252f51aa04cc8122:70eca4f8bcc07aecafdac76a306482705538336c1a146c39b2f29d5deb0473e7",
+            "  OK         signer: the ed25519 signature verifies with the pinned key 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff: NEAR AI's z-ai/glm-5.3-flash key signed exactly these bytes",
+            "",
+            "Rulebook (check 4)",
+            "  OK         request shape: as 01 §6.3: the pinned model, a system and a user message, stream false",
+            "  OK         rulebook: the system message equals, byte for byte, the rulebook get_rulebook served just before the proposal ran (round 57, nonce 5eafa07eab90e8be, 728 bytes)",
+            "               round: 57 | nonce: 5eafa07eab90e8be | rank: INTERN | markets: DOGE, SHIB, PEPE, PENGU | sides: long | max_leverage: 1 | max_margin_e6: 31457613 | min_notional_e6: 11000000 | bets_left: 1 | playbook: none",
+            "",
+            "The AI's answer (check 5)",
+            "  INFO       the answer: {\"v\":1,\"round\":57,\"nonce\":\"5eafa07eab90e8be\",\"action\":\"bet\",\"market\":\"PEPE\",\"side\":\"long\",\"margin_e6\":\"11000000\",\"leverage\":1}",
+            "  OK         decision line: exact, for round 57 and nonce 5eafa07eab90e8be: bet PEPE long, margin_e6 11000000 ($11.000000) at 1x",
+            "",
+            "The contract's verdict",
+            "  INFO       return value: YES, position 38",
+            "  INFO       event approved: {\"position_id\":38,\"round_id\":57,\"market\":\"PEPE\",\"side\":\"LONG\",\"margin\":\"11000000\",\"leverage\":1,\"long_shot\":false}",
+            "  OK         event: the approved event matches the return value",
+            "  OK         agreement: the contract passed checks 3 to 5, and so does this re-check",
+            "",
+            "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (YES, position 38) fits it"
+          ]
+        },
+        {
+          "tx_hash": "DbYRJhdycZa682EFBCgHZYSfDfE9rieU8pXUwCJwLoC2",
+          "link": "https://testnet.nearblocks.io/txns/DbYRJhdycZa682EFBCgHZYSfDfE9rieU8pXUwCJwLoC2",
+          "sender": "intern-runner-ed25519.testnet",
+          "block_height": 277532641,
+          "at": "2026-11-13T16:09:32.487Z",
+          "failures": 0,
+          "unverified": 0,
+          "fatal": null,
+          "result": "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (YES, position 37) fits it",
+          "lines": [
+            "Transaction DbYRJhdycZa682EFBCgHZYSfDfE9rieU8pXUwCJwLoC2",
+            "  from intern-runner-ed25519.testnet to coin.desk-lab-2026.testnet, method propose, status FINAL; read from https://test.rpc.fastnear.com",
+            "  proposal: request 1203 bytes, response 2013 bytes, signature 64 bytes; credited_to none; funding none",
+            "  ran in block 277532641 (EBYQ2ujCxfm5qkQivWkYHsbwtYuEtUz94mLFfWgx6D8R) at 2026-11-13T16:09:32.487Z; the state is read at the block before it, CtaF8PFReu4z2bZJeHfi6V1WLfexfnowSbeVXyJE5DhG",
+            "",
+            "Model and signer",
+            "  OK         model: z-ai/glm-5.3-flash named in the request; 01 pins z-ai/glm-5.3-flash",
+            "  OK         contract's pin: get_constants().model then: z-ai/glm-5.3-flash, ed25519, 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff (the same as 01)",
+            "  INFO       signed text, rebuilt: z-ai/glm-5.3-flash:2d66ac8ce9a431f8f5c4cb856d06bb328430387743aac0488b1dc83794bf8a4d:1a85894b0be0d73d55d1c402cc018fd2a140cc327c6b7e6aabbd4b0fac692098",
+            "  OK         signer: the ed25519 signature verifies with the pinned key 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff: NEAR AI's z-ai/glm-5.3-flash key signed exactly these bytes",
+            "",
+            "Rulebook (check 4)",
+            "  OK         request shape: as 01 §6.3: the pinned model, a system and a user message, stream false",
+            "  OK         rulebook: the system message equals, byte for byte, the rulebook get_rulebook served just before the proposal ran (round 56, nonce d5584e0f9fa1d9ba, 728 bytes)",
+            "               round: 56 | nonce: d5584e0f9fa1d9ba | rank: INTERN | markets: DOGE, SHIB, PEPE, PENGU | sides: long | max_leverage: 1 | max_margin_e6: 31460706 | min_notional_e6: 11000000 | bets_left: 1 | playbook: none",
+            "",
+            "The AI's answer (check 5)",
+            "  INFO       the answer: {\"v\":1,\"round\":56,\"nonce\":\"d5584e0f9fa1d9ba\",\"action\":\"bet\",\"market\":\"PEPE\",\"side\":\"long\",\"margin_e6\":\"11000000\",\"leverage\":1}",
+            "  OK         decision line: exact, for round 56 and nonce d5584e0f9fa1d9ba: bet PEPE long, margin_e6 11000000 ($11.000000) at 1x",
+            "",
+            "The contract's verdict",
+            "  INFO       return value: YES, position 37",
+            "  INFO       event approved: {\"position_id\":37,\"round_id\":56,\"market\":\"PEPE\",\"side\":\"LONG\",\"margin\":\"11000000\",\"leverage\":1,\"long_shot\":false}",
+            "  OK         event: the approved event matches the return value",
+            "  OK         agreement: the contract passed checks 3 to 5, and so does this re-check",
+            "",
+            "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (YES, position 37) fits it"
+          ]
+        },
+        {
+          "tx_hash": "55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+          "link": "https://testnet.nearblocks.io/txns/55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+          "sender": "intern-runner-ed25519.testnet",
+          "block_height": 277529693,
+          "at": "2026-11-13T15:40:45.529Z",
+          "failures": 0,
+          "unverified": 0,
+          "fatal": null,
+          "result": "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (NOPE MALFORMED_DECISION (refusal 2, asked -, limit -)) fits it",
+          "lines": [
+            "Transaction 55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+            "  from intern-runner-ed25519.testnet to coin.desk-lab-2026.testnet, method propose, status FINAL; read from https://test.rpc.fastnear.com",
+            "  proposal: request 1363 bytes, response 2426 bytes, signature 64 bytes; credited_to none; funding none",
+            "  ran in block 277529693 (99iqHYDCxP6kEDnhrssYYQ2NtYmvtZdJyXiom169M4uM) at 2026-11-13T15:40:45.529Z; the state is read at the block before it, 6LyXABpyZ5EBiFH9vGxy1M9hc7MiPeJERWz11r4KJBx",
+            "",
+            "Model and signer",
+            "  OK         model: z-ai/glm-5.3-flash named in the request; 01 pins z-ai/glm-5.3-flash",
+            "  OK         contract's pin: get_constants().model then: z-ai/glm-5.3-flash, ed25519, 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff (the same as 01)",
+            "  INFO       signed text, rebuilt: z-ai/glm-5.3-flash:615eb0aba86626d69b20b90faf1b01e0ea8d344e520043951fd3dd70433ae3e1:44e26c807219a3edf65072b14281563806a999b5500321a3085da4b86e5098df",
+            "  OK         signer: the ed25519 signature verifies with the pinned key 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff: NEAR AI's z-ai/glm-5.3-flash key signed exactly these bytes",
+            "",
+            "Rulebook (check 4)",
+            "  OK         request shape: as 01 §6.3: the pinned model, a system and a user message, stream false",
+            "  OK         rulebook: the system message equals, byte for byte, the rulebook get_rulebook served just before the proposal ran (round 55, nonce a121be9226ac82bb, 728 bytes)",
+            "               round: 55 | nonce: a121be9226ac82bb | rank: INTERN | markets: DOGE, SHIB, PEPE, PENGU | sides: long | max_leverage: 1 | max_margin_e6: 16459643 | min_notional_e6: 11000000 | bets_left: 0 | playbook: none",
+            "",
+            "The AI's answer (check 5)",
+            "  INFO       the answer: No bets remain this round, so the only valid move is to skip.",
+            "  INFO       decision line: not a decision line, so MALFORMED_DECISION: not JSON",
+            "",
+            "The contract's verdict",
+            "  INFO       return value: NOPE MALFORMED_DECISION (refusal 2, asked -, limit -)",
+            "  INFO       event refused: {\"refusal_id\":2,\"round_id\":55,\"code\":\"MALFORMED_DECISION\",\"asked\":null,\"limit\":null,\"is_first\":true}",
+            "  OK         event: the refused event matches the return value",
+            "  OK         agreement: the contract refused with MALFORMED_DECISION, and so does this re-check",
+            "",
+            "RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (NOPE MALFORMED_DECISION (refusal 2, asked -, limit -)) fits it"
+          ]
+        }
+      ],
+      "took_ms": 4666,
+      "error": null
+    },
+    {
+      "id": "attestation",
+      "title": "NEAR AI's hardware evidence for the pinned model",
+      "started_at": "2026-11-13T16:46:51.473Z",
+      "status": "ok",
+      "sentence": "NEAR AI's z-ai/glm-5.3-flash ed25519 key is bound to a fresh Intel TDX quote carrying our nonce, and the GPU evidence with the same nonce passed NVIDIA's attestation; 6 parts stay UNVERIFIED (listed).",
+      "data": {
+        "model": "z-ai/glm-5.3-flash",
+        "signing_algo": "ed25519",
+        "lines": [
+          "NEAR AI attestation check, 2026-11-13T16:46:51.473Z. Read-only: no completion, no key.",
+          "model z-ai/glm-5.3-flash, signing scheme ed25519; our nonce 2699268afa699c363032e6b9406c49d569d60a9601999c05da484377de8f1fea (32 random bytes, new for this run)",
+          "GET https://cloud-api.near.ai/v1/attestation/report (provider=near): HTTP 200, 322790 bytes",
+          "",
+          "Candidate 1 of 1",
+          "  OK    nonce echoed: request_nonce is ours",
+          "  OK    model and scheme: z-ai/glm-5.3-flash, ed25519",
+          "  OK    signer is 01's pin: 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff (01 §6.3)",
+          " Intel TDX quote (5006 bytes, version 4)",
+          "  OK    PCK certificate chain: Intel SGX PCK Certificate -> Intel SGX PCK Platform CA -> Intel SGX Root CA; each signed by the next, the last is Intel's pinned root, all valid now",
+          "  OK    quoting enclave report: signed by the PCK certificate's key",
+          "  OK    attestation key: the quoting enclave's report data is sha256(attestation key || QE auth data)",
+          "  OK    quote signature: the header and TD report are signed by the attestation key",
+          "  OK    report data: the quote's report data is the signer's key then our nonce: it binds both",
+          "  OK    debug mode: TD attributes 0000001000000000: debug off",
+          "  OK    configuration: MRCONFIGID is 01, sha256(app_compose) c900dc7304663b73…, then zeros",
+          "  OK    event log: RTMR3 replayed from 10 events equals the quote's",
+          "  INFO  measured (not compared with any allowlist): MRTD df4d77c857de652b…, RTMR0 bc122d143ab76856…, RTMR1 4ae609807c765916…, RTMR2 bd67ab7554dc27ab…, os_image_hash 91fd5d69ccee3e5e…, compose_hash c900dc7304663b73…",
+          " NVIDIA GPU evidence (8 GPU(s), HOPPER)",
+          "  OK    payload nonce: ours",
+          "  POST NVIDIA NRAS /v3/attest/gpu: HTTP 200",
+          "  OK    NRAS token signature: ES384, verifies with NVIDIA's published key",
+          "  OK    GPU verdict: x-nvidia-overall-att-result is true",
+          "  OK    GPU nonce: the token's eat_nonce is ours",
+          "  OK    token time: valid now (nbf to exp)",
+          "  OK    each GPU: 8 GPU token(s), each signed by NVIDIA, named by the overall token, nonce matched",
+          "",
+          "UNVERIFIED, and why:",
+          "  - Intel TCB status and security advisories: the quote's signature chain reaches Intel's root, so it was made on genuine Intel TDX hardware, but whether that platform is up to date needs Intel's collateral (TCB info, QE identity, revocation lists), which a DCAP verifier such as dcap-qvl (the one NEAR AI's docs name; 27 npm packages) fetches. Not added: no heavy new dependency.",
+          "  - The quoting enclave's identity (its MRSIGNER and version against Intel's QE identity) and certificate revocation (Intel's PCK and root CRLs): the same collateral.",
+          "  - The software measured: MRTD, RTMR0 to RTMR2, the OS image and the compose file are printed but not compared with an allowlist, and the image digests in the compose file are not checked for build provenance (NEAR AI's image-provenance flow needs a signed provenance statement per digest; not added). NEAR AI's docs leave the accepted measurements and builders to the reader's policy.",
+          "  - That a given completion came from this instance: NEAR AI's docs warn that instances of one model share one signing key, so a matching signer does not show which instance answered.",
+          "  - The GPU verdict is NVIDIA's (its reference-measurement and certificate-status checks are not redone here); its tokens are checked against NVIDIA's keys as published at the JWKS URL. The GPU evidence and the TDX quote are linked only by carrying the same nonce; NEAR AI's docs give no other binding.",
+          "  - The gateway's own attestation (gateway_attestation): not checked. The signature the contract checks is the model's (provider_tee), made inside the model's TEE, so the gateway is not trusted for it.",
+          "",
+          "RESULT  every check above passed: NEAR AI's z-ai/glm-5.3-flash ed25519 key is bound to a fresh Intel TDX quote with our nonce, and the GPU evidence with the same nonce passed NVIDIA's attestation. The parts listed as UNVERIFIED were not checked."
+        ],
+        "failures": 0,
+        "callFailures": 0,
+        "unverified_parts": [
+          "Intel TCB status and security advisories: the quote's signature chain reaches Intel's root, so it was made on genuine Intel TDX hardware, but whether that platform is up to date needs Intel's collateral (TCB info, QE identity, revocation lists), which a DCAP verifier such as dcap-qvl (the one NEAR AI's docs name; 27 npm packages) fetches. Not added: no heavy new dependency.",
+          "The quoting enclave's identity (its MRSIGNER and version against Intel's QE identity) and certificate revocation (Intel's PCK and root CRLs): the same collateral.",
+          "The software measured: MRTD, RTMR0 to RTMR2, the OS image and the compose file are printed but not compared with an allowlist, and the image digests in the compose file are not checked for build provenance (NEAR AI's image-provenance flow needs a signed provenance statement per digest; not added). NEAR AI's docs leave the accepted measurements and builders to the reader's policy.",
+          "That a given completion came from this instance: NEAR AI's docs warn that instances of one model share one signing key, so a matching signer does not show which instance answered.",
+          "The GPU verdict is NVIDIA's (its reference-measurement and certificate-status checks are not redone here); its tokens are checked against NVIDIA's keys as published at the JWKS URL. The GPU evidence and the TDX quote are linked only by carrying the same nonce; NEAR AI's docs give no other binding.",
+          "The gateway's own attestation (gateway_attestation): not checked. The signature the contract checks is the model's (provider_tee), made inside the model's TEE, so the gateway is not trusted for it."
+        ]
+      },
+      "took_ms": 4511,
+      "error": null
+    },
+    {
+      "id": "refusals",
+      "title": "The refusal catalogue",
+      "started_at": "2026-11-13T16:46:55.984Z",
+      "status": "ok",
+      "sentence": "5 refusals on 2 coins: 5 of the 16 codes have an example (FIRED, MALFORMED_DECISION, NOT_ON_LIST, OVER_LEVERAGE, OVER_TRADE_LIMIT), 11 have none yet; each code's first example is tied to its transaction, confirmed on chain.",
+      "data": {
+        "tool": "refusals",
+        "checked_at": "2026-11-13T16:47:01.428Z",
+        "rpc": "https://test.rpc.fastnear.com",
+        "nearblocks": "https://api-testnet.nearblocks.io",
+        "codes_source": "interface/refusal-codes.json",
+        "coins": [
+          {
+            "coin": "coin.desk-lab-2026.testnet",
+            "refusals": 2,
+            "ids": {
+              "first": 1,
+              "last": 2
+            },
+            "codes": [
+              {
+                "check": 1,
+                "code": "OUTSIDE_WINDOW",
+                "light": 1,
+                "fails_when": "The phase is not PROPOSE",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 2,
+                "code": "FIRED",
+                "light": 1,
+                "fails_when": "Status is FIRED",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 3,
+                "code": "BAD_MODEL_SIGNATURE",
+                "light": 2,
+                "fails_when": "The signature does not match the pinned signer for the request and response given, or request, response or signature cannot be decoded",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 4,
+                "code": "WRONG_RULEBOOK",
+                "light": 2,
+                "fails_when": "The request's system message is not the current rulebook, or the model named in the request is not the pinned one",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 5,
+                "code": "MALFORMED_DECISION",
+                "light": 2,
+                "fails_when": "The answer is not exactly a decision line, or its v, round or nonce is wrong",
+                "count": 1,
+                "first": {
+                  "refusal_id": 2,
+                  "round_id": 55,
+                  "at": 1794584445529,
+                  "at_iso": "2026-11-13T15:40:45.529Z",
+                  "is_first": true,
+                  "asked": null,
+                  "limit": null,
+                  "decision": null,
+                  "credited_to": null,
+                  "detail": "no decision recorded",
+                  "tx": {
+                    "tx_hash": "55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+                    "link": "https://testnet.nearblocks.io/txns/55kMk6s7S1BiWebAau1yLvFjkuWYeo9a8sDV8iBpSrvv",
+                    "sender": "intern-runner-ed25519.testnet",
+                    "block_height": 277529693,
+                    "confirmed": true,
+                    "read_from": "https://test.rpc.fastnear.com",
+                    "note": "it returned NOPE MALFORMED_DECISION, refusal 2, and logged the refused event"
+                  },
+                  "tx_note": null
+                }
+              },
+              {
+                "check": 6,
+                "code": "NOT_ON_LIST",
+                "light": 3,
+                "fails_when": "market is not on this rank's list",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 7,
+                "code": "SHORT_NOT_UNLOCKED",
+                "light": 3,
+                "fails_when": "side is short and the rank allows only LONG",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 8,
+                "code": "ZERO_MARGIN",
+                "light": 4,
+                "fails_when": "margin_e6 is 0, or margin_e6 x leverage is under min_notional",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 9,
+                "code": "OVER_LEVERAGE",
+                "light": 4,
+                "fails_when": "leverage is above the rank's max_leverage",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 10,
+                "code": "TOO_MANY_TRADES",
+                "light": 4,
+                "fails_when": "bets_used already equals max_bets",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 11,
+                "code": "OVER_TRADE_LIMIT",
+                "light": 4,
+                "fails_when": "margin_e6 is above the per-bet limit",
+                "count": 1,
+                "first": {
+                  "refusal_id": 1,
+                  "round_id": 2,
+                  "at": 1794422593911,
+                  "at_iso": "2026-11-11T18:43:13.911Z",
+                  "is_first": true,
+                  "asked": "10000000",
+                  "limit": "1000010",
+                  "decision": {
+                    "action": "BET",
+                    "market": "DOGE",
+                    "side": "LONG",
+                    "margin": "10000000",
+                    "leverage": 1
+                  },
+                  "credited_to": null,
+                  "detail": "DOGE long $10.000000 at 1x; asked $10.000000 (margin); limit $1.000010 (per-bet limit in dollars)",
+                  "tx": {
+                    "tx_hash": "5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW",
+                    "link": "https://testnet.nearblocks.io/txns/5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW",
+                    "sender": "runner.desk-lab-2026.testnet",
+                    "block_height": 277253621,
+                    "confirmed": true,
+                    "read_from": "https://archival-rpc.testnet.fastnear.com",
+                    "note": "it returned NOPE OVER_TRADE_LIMIT, refusal 1, and logged the refused event"
+                  },
+                  "tx_note": null
+                }
+              },
+              {
+                "check": 12,
+                "code": "OVER_ROUND_LIMIT",
+                "light": 4,
+                "fails_when": "at_risk + margin_e6 is above the per-round limit",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 13,
+                "code": "BAD_QUOTE_SIGNATURE",
+                "light": 5,
+                "fails_when": "A funding quote is attached and its signature does not match the pinned 1Click key, or it cannot be decoded",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 14,
+                "code": "STALE_QUOTE",
+                "light": 5,
+                "fails_when": "The quote's timestamp is older than quote_max_age_ms",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 15,
+                "code": "QUOTE_MISMATCH",
+                "light": 5,
+                "fails_when": "The quote is for another amount or pays someone else",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 16,
+                "code": "TOO_EXPENSIVE",
+                "light": 5,
+                "fails_when": "The quote's cost is above max_funding_cost_bps of the margin",
+                "count": 0,
+                "first": null
+              }
+            ],
+            "unknown_codes": [],
+            "with_example": [
+              "MALFORMED_DECISION",
+              "OVER_TRADE_LIMIT"
+            ],
+            "without_example": [
+              "OUTSIDE_WINDOW",
+              "FIRED",
+              "BAD_MODEL_SIGNATURE",
+              "WRONG_RULEBOOK",
+              "NOT_ON_LIST",
+              "SHORT_NOT_UNLOCKED",
+              "ZERO_MARGIN",
+              "OVER_LEVERAGE",
+              "TOO_MANY_TRADES",
+              "OVER_ROUND_LIMIT",
+              "BAD_QUOTE_SIGNATURE",
+              "STALE_QUOTE",
+              "QUOTE_MISMATCH",
+              "TOO_EXPENSIVE"
+            ]
+          },
+          {
+            "coin": "coin-fast.desk-lab-2026.testnet",
+            "refusals": 3,
+            "ids": {
+              "first": 1,
+              "last": 3
+            },
+            "codes": [
+              {
+                "check": 1,
+                "code": "OUTSIDE_WINDOW",
+                "light": 1,
+                "fails_when": "The phase is not PROPOSE",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 2,
+                "code": "FIRED",
+                "light": 1,
+                "fails_when": "Status is FIRED",
+                "count": 1,
+                "first": {
+                  "refusal_id": 1,
+                  "round_id": 7,
+                  "at": 1794465628244,
+                  "at_iso": "2026-11-12T06:40:28.244Z",
+                  "is_first": true,
+                  "asked": null,
+                  "limit": null,
+                  "decision": null,
+                  "credited_to": null,
+                  "detail": "no decision recorded",
+                  "tx": {
+                    "tx_hash": "DuTxFWRfc9hde1upCbeiDfThcAuzUM9ef7ABbZsJnXBD",
+                    "link": "https://testnet.nearblocks.io/txns/DuTxFWRfc9hde1upCbeiDfThcAuzUM9ef7ABbZsJnXBD",
+                    "sender": "runner.desk-lab-2026.testnet",
+                    "block_height": 277327036,
+                    "confirmed": true,
+                    "read_from": "https://archival-rpc.testnet.fastnear.com",
+                    "note": "it returned NOPE FIRED, refusal 1, and logged the refused event"
+                  },
+                  "tx_note": null
+                }
+              },
+              {
+                "check": 3,
+                "code": "BAD_MODEL_SIGNATURE",
+                "light": 2,
+                "fails_when": "The signature does not match the pinned signer for the request and response given, or request, response or signature cannot be decoded",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 4,
+                "code": "WRONG_RULEBOOK",
+                "light": 2,
+                "fails_when": "The request's system message is not the current rulebook, or the model named in the request is not the pinned one",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 5,
+                "code": "MALFORMED_DECISION",
+                "light": 2,
+                "fails_when": "The answer is not exactly a decision line, or its v, round or nonce is wrong",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 6,
+                "code": "NOT_ON_LIST",
+                "light": 3,
+                "fails_when": "market is not on this rank's list",
+                "count": 1,
+                "first": {
+                  "refusal_id": 2,
+                  "round_id": 16,
+                  "at": 1794485715310,
+                  "at_iso": "2026-11-12T12:15:15.310Z",
+                  "is_first": true,
+                  "asked": null,
+                  "limit": null,
+                  "decision": {
+                    "action": "BET",
+                    "market": "WIF",
+                    "side": "LONG",
+                    "margin": "11000000",
+                    "leverage": 1
+                  },
+                  "credited_to": "boss2.desk-lab-2026.testnet",
+                  "detail": "WIF long $11.000000 at 1x; credited to boss2.desk-lab-2026.testnet",
+                  "tx": {
+                    "tx_hash": "4VoxFZW92Qyd6ALLE5H7Gp1qgH2y8cJfNr6WCuXZUhrx",
+                    "link": "https://testnet.nearblocks.io/txns/4VoxFZW92Qyd6ALLE5H7Gp1qgH2y8cJfNr6WCuXZUhrx",
+                    "sender": "runner.desk-lab-2026.testnet",
+                    "block_height": 277361490,
+                    "confirmed": true,
+                    "read_from": "https://test.rpc.fastnear.com",
+                    "note": "it returned NOPE NOT_ON_LIST, refusal 2, and logged the refused event"
+                  },
+                  "tx_note": null
+                }
+              },
+              {
+                "check": 7,
+                "code": "SHORT_NOT_UNLOCKED",
+                "light": 3,
+                "fails_when": "side is short and the rank allows only LONG",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 8,
+                "code": "ZERO_MARGIN",
+                "light": 4,
+                "fails_when": "margin_e6 is 0, or margin_e6 x leverage is under min_notional",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 9,
+                "code": "OVER_LEVERAGE",
+                "light": 4,
+                "fails_when": "leverage is above the rank's max_leverage",
+                "count": 1,
+                "first": {
+                  "refusal_id": 3,
+                  "round_id": 22,
+                  "at": 1794557412792,
+                  "at_iso": "2026-11-13T08:10:12.792Z",
+                  "is_first": true,
+                  "asked": "10",
+                  "limit": "1",
+                  "decision": {
+                    "action": "BET",
+                    "market": "DOGE",
+                    "side": "LONG",
+                    "margin": "3514000",
+                    "leverage": 10
+                  },
+                  "credited_to": null,
+                  "detail": "DOGE long $3.514000 at 10x; asked 10 (leverage); limit 1 (max_leverage)",
+                  "tx": {
+                    "tx_hash": "2VzPaXTJJcEJHJcHuCdvvEzjoQRmfq2qd8fmSJZrGKSK",
+                    "link": "https://testnet.nearblocks.io/txns/2VzPaXTJJcEJHJcHuCdvvEzjoQRmfq2qd8fmSJZrGKSK",
+                    "sender": "runner.desk-lab-2026.testnet",
+                    "block_height": 277483724,
+                    "confirmed": true,
+                    "read_from": "https://test.rpc.fastnear.com",
+                    "note": "it returned NOPE OVER_LEVERAGE, refusal 3, and logged the refused event"
+                  },
+                  "tx_note": null
+                }
+              },
+              {
+                "check": 10,
+                "code": "TOO_MANY_TRADES",
+                "light": 4,
+                "fails_when": "bets_used already equals max_bets",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 11,
+                "code": "OVER_TRADE_LIMIT",
+                "light": 4,
+                "fails_when": "margin_e6 is above the per-bet limit",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 12,
+                "code": "OVER_ROUND_LIMIT",
+                "light": 4,
+                "fails_when": "at_risk + margin_e6 is above the per-round limit",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 13,
+                "code": "BAD_QUOTE_SIGNATURE",
+                "light": 5,
+                "fails_when": "A funding quote is attached and its signature does not match the pinned 1Click key, or it cannot be decoded",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 14,
+                "code": "STALE_QUOTE",
+                "light": 5,
+                "fails_when": "The quote's timestamp is older than quote_max_age_ms",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 15,
+                "code": "QUOTE_MISMATCH",
+                "light": 5,
+                "fails_when": "The quote is for another amount or pays someone else",
+                "count": 0,
+                "first": null
+              },
+              {
+                "check": 16,
+                "code": "TOO_EXPENSIVE",
+                "light": 5,
+                "fails_when": "The quote's cost is above max_funding_cost_bps of the margin",
+                "count": 0,
+                "first": null
+              }
+            ],
+            "unknown_codes": [],
+            "with_example": [
+              "FIRED",
+              "NOT_ON_LIST",
+              "OVER_LEVERAGE"
+            ],
+            "without_example": [
+              "OUTSIDE_WINDOW",
+              "BAD_MODEL_SIGNATURE",
+              "WRONG_RULEBOOK",
+              "MALFORMED_DECISION",
+              "SHORT_NOT_UNLOCKED",
+              "ZERO_MARGIN",
+              "TOO_MANY_TRADES",
+              "OVER_TRADE_LIMIT",
+              "OVER_ROUND_LIMIT",
+              "BAD_QUOTE_SIGNATURE",
+              "STALE_QUOTE",
+              "QUOTE_MISMATCH",
+              "TOO_EXPENSIVE"
+            ]
+          }
+        ],
+        "summary": {
+          "refusals": 5,
+          "with_example": [
+            "FIRED",
+            "MALFORMED_DECISION",
+            "NOT_ON_LIST",
+            "OVER_LEVERAGE",
+            "OVER_TRADE_LIMIT"
+          ],
+          "without_example": [
+            "OUTSIDE_WINDOW",
+            "BAD_MODEL_SIGNATURE",
+            "WRONG_RULEBOOK",
+            "SHORT_NOT_UNLOCKED",
+            "ZERO_MARGIN",
+            "TOO_MANY_TRADES",
+            "OVER_ROUND_LIMIT",
+            "BAD_QUOTE_SIGNATURE",
+            "STALE_QUOTE",
+            "QUOTE_MISMATCH",
+            "TOO_EXPENSIVE"
+          ],
+          "first_tx_found": 5,
+          "first_tx_confirmed": 5,
+          "first_tx_missing": 0
+        }
+      },
+      "took_ms": 5444,
+      "error": null
+    }
+  ]
+}

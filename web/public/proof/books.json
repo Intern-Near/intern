@@ -1,0 +1,157 @@
+{
+  "tool": "books-check",
+  "coin": "coin.desk-lab-2026.testnet",
+  "rpc": "https://test.rpc.fastnear.com",
+  "block": {
+    "height": 277536567,
+    "hash": "5or4BwZBAEYMKUHcBj6YUqiyLcDHg4xUtSGpP1wCSmkd",
+    "at": "2026-11-13T16:47:35.249Z",
+    "at_ms": 1794588455249
+  },
+  "usdc_token": "usdc.desk-lab-2026.testnet",
+  "lender": "lender.desk-lab-2026.testnet",
+  "rule": "USDC held by the coin = brave.total - brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed, and brave.lent is at the lender (01 §9.7, §9.6)",
+  "owed": [
+    {
+      "name": "BRAVE pool",
+      "source": "get_pot.brave.total",
+      "amount_e6": "1572880690",
+      "held_at": null,
+      "part": false,
+      "note": "the coins' money; its parts follow"
+    },
+    {
+      "name": "idle",
+      "source": "get_pot.brave.idle",
+      "amount_e6": "19740364",
+      "held_at": "the coin's USDC",
+      "part": true,
+      "note": "in the contract, not lent, not on a bet"
+    },
+    {
+      "name": "margin on open bets",
+      "source": "get_pot.brave.in_play",
+      "amount_e6": "11000000",
+      "held_at": "the coin's USDC",
+      "part": true,
+      "note": "on testnet it never leaves the contract (01 §14.3)"
+    },
+    {
+      "name": "lent",
+      "source": "get_pot.brave.lent",
+      "amount_e6": "1542140326",
+      "held_at": "the lender, for this coin",
+      "part": true,
+      "note": "at the stand-in lender, earning a test rate"
+    },
+    {
+      "name": "BRAVE pending",
+      "source": "get_pot.brave.pending",
+      "amount_e6": "0",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "paid in, becomes coins at the next round's opening"
+    },
+    {
+      "name": "outside income waiting",
+      "source": "get_pot.brave.income_waiting",
+      "amount_e6": "0",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "joins the BRAVE pool at the next round's opening"
+    },
+    {
+      "name": "SAFE",
+      "source": "get_pot.safe.total",
+      "amount_e6": "221106315",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "never bet, never lent"
+    },
+    {
+      "name": "streak jackpot",
+      "source": "get_rewards.jackpot",
+      "amount_e6": "100000000",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "half of each tip, and direct additions"
+    },
+    {
+      "name": "payday draw pot",
+      "source": "get_rewards.draw_pot",
+      "amount_e6": "0",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "the lender's interest, held for the next draw"
+    },
+    {
+      "name": "prizes owed",
+      "source": "get_rewards.prizes_owed",
+      "amount_e6": "0",
+      "held_at": "the coin's USDC",
+      "part": false,
+      "note": "won, not yet claimed"
+    }
+  ],
+  "owed_total_e6": "1893987005",
+  "held": [
+    {
+      "name": "the coin's USDC",
+      "source": "usdc.desk-lab-2026.testnet ft_balance_of(coin.desk-lab-2026.testnet)",
+      "amount_e6": "351846679"
+    },
+    {
+      "name": "lent, by the lender's own books",
+      "source": "lender.desk-lab-2026.testnet get_account(coin.desk-lab-2026.testnet).principal",
+      "amount_e6": "1542140326"
+    }
+  ],
+  "held_total_e6": "1893987005",
+  "difference_e6": "0",
+  "places": [
+    {
+      "place": "the coin's USDC",
+      "rule": "brave.total - brave.lent + pending + income waiting + SAFE + jackpot + draw pot + prizes owed (01 §9.7)",
+      "should_hold_e6": "351846679",
+      "holds_e6": "351846679",
+      "holds_source": "usdc.desk-lab-2026.testnet ft_balance_of(coin.desk-lab-2026.testnet)",
+      "difference_e6": "0"
+    },
+    {
+      "place": "the lender, for this coin",
+      "rule": "brave.lent (01 §9.6)",
+      "should_hold_e6": "1542140326",
+      "holds_e6": "1542140326",
+      "holds_source": "lender.desk-lab-2026.testnet get_account(coin.desk-lab-2026.testnet).principal",
+      "difference_e6": "0"
+    }
+  ],
+  "checks": [
+    {
+      "ok": true,
+      "rule": "brave.idle + brave.in_play + brave.lent = brave.total (01 §9.6: at every moment)",
+      "detail": "19.740364 + 11.000000 + 1542.140326 = 1572.880690; brave.total 1572.880690"
+    },
+    {
+      "ok": true,
+      "rule": "safe.lent is 0 and safe.idle = safe.total (01 §9.7's rule counts all SAFE money as held by the coin)",
+      "detail": "safe.lent 0.000000, safe.idle 221.106315, safe.total 221.106315"
+    }
+  ],
+  "info": [
+    "coin supply 1298.643317, coin price $1.202701, 2 boss(es) (get_pot)",
+    "interest collected so far 0.000110 (get_pot.brave.interest, a running total: since 01 1.4 it goes to the draw pot or is paid as prizes, so it is not a bucket of its own)",
+    "the lender holds 2217.140216 test USDC in all (usdc.desk-lab-2026.testnet ft_balance_of(lender.desk-lab-2026.testnet)), for every account that lends to it; no view lists them",
+    "interest the lender has accrued for this coin, not yet collected: 0.218868 (get_account(coin.desk-lab-2026.testnet).interest, at its fixed test rate of 500 bps a year). It is not the coin's until collect_interest() moves it into the draw pot"
+  ],
+  "gaps": [
+    "Hyperliquid: the bets trade on Hyperliquid testnet from the contract's own address 0x46f8eb2a044a826c70e9682fe3bfd65970340132, whose margin was funded by hand, not by the contract: a stand-in (01 §14.3; docs/REAL-VS-STANDIN.md: the live coin's address got 100 test USDC once). No margin moves from the contract to Hyperliquid, so brave.in_play stays in the coin's USDC while a bet is open, and that account's balance is outside the contract and outside these books (https://app.hyperliquid-testnet.xyz/explorer/address/0x46f8eb2a044a826c70e9682fe3bfd65970340132).",
+    "Results are reported by the runner (result_source REPORTED, 01 §14.2), and the contract mints or burns test dollars for each round's result so its USDC follows its books (01 §14.12). So the books add up whatever the bets did; whether each reported result matches Hyperliquid's fills is what `npm run fills-check` checks.",
+    "The lender is a stand-in (lending.mode STANDIN, 01 §9.6) at a fixed test rate. It pays interest from the dollars it holds and, when it holds too few to pay back, mints the shortfall from the test dollar's open mint (crates/lender send), so its own USDC can be below what it owes without anyone being short. get_constants does not name the lender: this check reads the one in interface/deployments.json, or --lender.",
+    "The dollar (usdc.desk-lab-2026.testnet) is a test token with an open mint (01 §13): every amount here is worth nothing.",
+    "USDC sent to the coin by a plain ft_transfer (not a pay-in, tip, income or jackpot message) is held but owed to nobody, and shows here as a surplus (the contract's sandbox tests call it `ignored`).",
+    "Everything is read at block 277536567. A payment in flight at that block (a cash-out, a prize or a coach cut being paid, a loan to or from the lender, a settlement's test-dollar mint or burn) shows as a difference for a block or two: run the check again."
+  ],
+  "verdict": "ADD UP",
+  "ok": true
+}

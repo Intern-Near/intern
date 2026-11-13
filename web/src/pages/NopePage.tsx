@@ -8,6 +8,7 @@ import { day, href } from "../lib/nav";
 import { LIGHTS, lightFor, refusalParts, refusalSentence } from "../lib/refusals";
 import { useAsync } from "../lib/useAsync";
 import { TopBar } from "../ui/TopBar";
+import { WhyNope } from "../ui/WhyNope";
 import { saveCard } from "./shareCard";
 
 function asked(d: Decision | null): string {
@@ -130,6 +131,10 @@ export function NopePage() {
                 </dl>
               </div>
             </article>
+
+            <section className="card" aria-label="Why it was refused">
+              <WhyNope code={r.code} asked={r.asked} limit={r.limit} />
+            </section>
 
             <section className="screen panel-dark" aria-labelledby="checks-h">
               <h2 id="checks-h">Where it stopped</h2>

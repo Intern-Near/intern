@@ -4,7 +4,7 @@
  * If this file and that one disagree, that one is right.
  */
 
-export const INTERFACE_VERSION = "1.5" as const;
+export const INTERFACE_VERSION = "1.6" as const;
 
 /** Whole number as a decimal string, e.g. "20000000". Never a JSON number. */
 export type U128 = string;
@@ -71,7 +71,7 @@ export type MarketInfo = {
 };
 
 export type Constants = {
-  interface_version: "1.5";
+  interface_version: "1.6";
   network: "testnet" | "mainnet";
   usdc_token: AccountId;
   coin_decimals: 6;
@@ -365,6 +365,73 @@ export type EventData = {
   prize_paid: { account_id: AccountId; amount: Usdc };
   // (1.5)
   long_shot_allowed: { round_id: number };
+  // (1.6)
+  league_closed: { week: number; players: number; groups: number; winners: { group: number; account_id: AccountId; points: number }[] };
+  review_written: { week: number; bets: number; refused: number; skipped: number; result: Signed; rank_end: RankName };
+  review_bar_filled: { week: number; stamps: number };
+};
+
+/** (1.6) Section 9.8: the week (7 rounds), its league and its review. Leagues are points only: there is no prize. */
+export type WeekView = {
+  round_id: number;
+  week: number;
+  first_round: number;
+  last_round: number;
+  rounds_per_week: number;
+  league_players: number;
+  league_groups: number;
+  group_size: number;
+  max_groups: number;
+  /** Last week's review, once written: the one people can stamp now. */
+  review_to_stamp: number | null;
+  review_bar: number;
+  max_stamps: number;
+};
+/** `waiting`: guesses whose round has no ruling yet. */
+export type Standing = { place: number; account_id: AccountId; points: number; wrong: number; best_run: number; waiting: number };
+export type LeagueView = {
+  week: number;
+  first_round: number;
+  last_round: number;
+  players: number;
+  groups: number;
+  /** With an account: that account's group, or null if it has not guessed this week. Otherwise the group asked for. */
+  group: number | null;
+  closed: boolean;
+  /** The whole group while the week runs; its top three once closed. */
+  standings: Standing[];
+  group_size: number;
+  max_groups: number;
+};
+export type GroupResult = { group: number; top: Standing[] };
+export type BetLine = { position_id: number; round_id: number; market: Market; side: Side; margin: Usdc; leverage: number; result: Signed };
+export type ReviewView = {
+  week: number;
+  first_round: number;
+  last_round: number;
+  written_at: Ms;
+  /** Written after the fact, for a week that ended before reviews existed. */
+  backfilled: boolean;
+  rounds: number;
+  settled: number;
+  bets: number;
+  refused: number;
+  skipped: number;
+  result: Signed;
+  best_bet: BetLine | null;
+  worst_bet: BetLine | null;
+  refusals: { code: RefusalCode; count: number }[];
+  rank_start: RankName;
+  rank_end: RankName;
+  status_end: Status;
+  pool_start: Usdc;
+  pool_end: Usdc;
+  long_shot: boolean;
+  league_players: number;
+  stamps: number;
+  bar: number;
+  bar_filled: boolean;
+  stamping_open: boolean;
 };
 
 /** (1.4) Section 9.7: the reward ladder. Every prize comes from a named source; none changes what the Intern may bet. */
@@ -473,6 +540,11 @@ export interface Chain {
   getPlayer(accountId: AccountId): Promise<PlayerView>;
   getDrawResults(from?: number, limit?: number): Promise<DrawResult[]>;
   getJackpotWins(limit?: number): Promise<JackpotWin[]>;
+  // (1.6)
+  getWeek(): Promise<WeekView>;
+  getLeague(args?: { week?: number; group?: number; accountId?: AccountId }): Promise<LeagueView>;
+  getLeagueResults(week: number): Promise<GroupResult[]>;
+  getReviews(from?: number, limit?: number): Promise<ReviewView[]>;
 }
 
 /**
@@ -515,4 +587,7 @@ export interface Actions {
   addToJackpot(amount: Usdc): Promise<void>;
   /** Pays every prize owed to the caller. */
   claimPrizes(): Promise<void>;
+  // (1.6)
+  /** One free stamp on last week's review. */
+  stampReview(week: number): Promise<void>;
 }

@@ -111,6 +111,15 @@ export function feedRow(f: FeedItem): Row {
       };
     case "long_shot_allowed":
       return { face: "mug", tag: "Long shot", tone: "vote", text: `The bosses allowed one long shot in shift ${f.data.round_id}: a small bet at up to 10x. It usually loses.` };
+    case "league_closed":
+      return {
+        face: "mug", tag: "League", tone: "vote",
+        text: `Week ${f.data.week}'s league is over: ${f.data.players} ${f.data.players === 1 ? "guesser" : "guessers"} in ${f.data.groups} ${f.data.groups === 1 ? "group" : "groups"}.${f.data.winners[0] ? ` ${shortAccount(f.data.winners[0].account_id)} came first with ${f.data.winners[0].points} points.` : ""} Points only, no prize.`,
+      };
+    case "review_written":
+      return { face: "intern", tag: "Weekly review", tone: "plain", text: `Week ${f.data.week} is written up: ${f.data.bets} bets, ${f.data.refused} refused, ${f.data.skipped} skipped, ${signedUsd(f.data.result)} for the BRAVE pool. You can stamp it this week.` };
+    case "review_bar_filled":
+      return { face: "stamp", tag: "Weekly review", tone: "yes", text: `Week ${f.data.week}'s review got its ${f.data.stamps} stamps. The bar is full.` };
     case "prize_paid":
       return { face: "tin", tag: "Prize", tone: "money", text: `${shortAccount(f.data.account_id)} collected a prize of ${usd(f.data.amount)}.` };
   }

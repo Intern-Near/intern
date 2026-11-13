@@ -17,11 +17,13 @@ const MAIN: [Page, string][] = [
 ];
 const MORE: [Page, string][] = [
   ["vote", "Vote"],
+  ["week", "League & review"],
   ["intern", "The Intern"],
   ["coach", "Playbooks"],
   ["goals", "Goals"],
   ["launch", "Launch"],
   ["feed", "Feed"],
+  ["proof", "Proof"],
   ["judge", "For judges"],
 ];
 
@@ -51,7 +53,7 @@ export function TopBar({ source, scene }: Props) {
         Skip to the content
       </a>
       <a className="brand" href={href("desk")} aria-label="$INTERN, home">
-        <img src="/cast/face-intern.webp" alt="" width={44} height={44} />
+        <img src="/cast/logo-intern.webp" alt="" width={52} height={52} />
         <span>$INTERN</span>
       </a>
       <nav className="nav" aria-label="Pages">
@@ -69,25 +71,18 @@ export function TopBar({ source, scene }: Props) {
               {name}
             </a>
           ))}
+          <hr />
+          <a href="?page=desk&scene=REFUSED">Demo: watch a NOPE</a>
+          <a href="?page=desk&scene=APPROVED">Demo: watch a YES</a>
         </nav>
       </details>
       <div className="topbar-tags">
-        {page === "desk" && (
-          <>
-            <a className="pill pill-link" href="?page=desk&scene=REFUSED">
-              {source === "sample" ? "Play a NOPE" : "Demo: a NOPE"}
-            </a>
-            <a className="pill pill-link" href="?page=desk&scene=APPROVED">
-              {source === "sample" ? "Play a YES" : "Demo: a YES"}
-            </a>
-          </>
-        )}
         {source === "sample" && <span className="pill pill-gum">Sample data · {scene?.toLowerCase().replace("_", " ")}</span>}
         {source === "stub" && <span className="pill pill-gum">Stub contract · canned answers</span>}
         {source === "live" ? <span className="pill pill-live">Live · test network</span> : <span className="pill">Test network</span>}
         {session.accountId ? (
           <button className="pill pill-me" onClick={signOut} title="Clock out">
-            {shortAccount(session.accountId, 18)} · Clock out
+            {shortAccount(session.accountId, 14)} · Clock out
           </button>
         ) : (
           session.canSignIn && (

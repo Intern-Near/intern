@@ -19,6 +19,8 @@ const BetsPage = lazy(() => import("./pages/BetsPage").then((m) => ({ default: m
 const StreamPage = lazy(() => import("./pages/StreamPage").then((m) => ({ default: m.StreamPage })));
 const TailFadePage = lazy(() => import("./pages/TailFadePage").then((m) => ({ default: m.TailFadePage })));
 const RewardsPage = lazy(() => import("./pages/RewardsPage").then((m) => ({ default: m.RewardsPage })));
+const WeekPage = lazy(() => import("./pages/WeekPage").then((m) => ({ default: m.WeekPage })));
+const ProofPage = lazy(() => import("./pages/ProofPage").then((m) => ({ default: m.ProofPage })));
 const TrickPage = lazy(() => import("./pages/TrickPage").then((m) => ({ default: m.TrickPage })));
 const later = (page: ReactNode) => <Suspense fallback={null}>{page}</Suspense>;
 
@@ -39,6 +41,8 @@ export function App() {
   if (page === "goals") return <GoalsPage />;
   if (page === "launch") return <LaunchPage />;
   if (page === "rewards") return later(<RewardsPage />);
+  if (page === "week") return later(<WeekPage />);
+  if (page === "proof") return later(<ProofPage />);
   if (page === "trick") return later(<TrickPage />);
   if (page === "tailfade") return later(<TailFadePage />);
   if (page === "stream") return later(<StreamPage />);

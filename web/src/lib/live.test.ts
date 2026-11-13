@@ -13,6 +13,11 @@ describe("Tail or Fade library", () => {
       expect(readFileSync(`src/tailfade/${f}`, "utf8"), f).toBe(readFileSync(`../tailfade/src/${f}`, "utf8"));
     }
   });
+  it("the Why NOPE rule code is a byte-for-byte copy of the runner's files", () => {
+    for (const f of ["explain.ts", "rules.ts", "ranks.ts", "decision.ts", "markets.ts", "json.ts"]) {
+      expect(readFileSync(`src/explain/${f}`, "utf8"), f).toBe(readFileSync(`../runner/src/${f}`, "utf8"));
+    }
+  });
   it("reads Hyperliquid's answer to an order", () => {
     expect(readFill({ status: "ok", response: { type: "order", data: { statuses: [{ filled: { totalSz: "314.0", avgPx: "0.063806", oid: 1 } }] } } })).toEqual({ ok: true, sz: "314.0", px: "0.063806" });
     expect(readFill({ status: "ok", response: { type: "order", data: { statuses: [{ error: "Order could not immediately match" }] } } })).toEqual({ ok: false, why: "Order could not immediately match" });

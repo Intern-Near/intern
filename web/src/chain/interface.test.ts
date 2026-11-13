@@ -9,8 +9,14 @@ import { INTERFACE_VERSION, REFUSAL_CODES, type RefusalCode } from "./types";
 /** The site must name the same rules as the program. These read the files the program is built from. */
 describe("the shared interface files", () => {
   it("agree with the site on the interface version", () => {
-    expect(codes.interface_version).toBe(INTERFACE_VERSION);
-    expect(vectors.interface_version).toBe(INTERFACE_VERSION);
+    // 1.5 and 1.6 added views and events but changed no refusal code or test case, so these two files
+    // keep the version they last changed in. The site must be at least that new.
+    const known = ["1.4", "1.5", "1.6"];
+    expect(known).toContain(INTERFACE_VERSION);
+    for (const v of [codes.interface_version, vectors.interface_version]) {
+      expect(known).toContain(v);
+      expect(known.indexOf(v)).toBeLessThanOrEqual(known.indexOf(INTERFACE_VERSION));
+    }
   });
 
   it("list the same sixteen codes in the same order", () => {

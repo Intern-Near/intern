@@ -1250,3 +1250,47 @@ number-flow-react {
 .desk-jackpot .btn {
   margin-left: auto;
 }
+
+/* The row of page links never hides a link on a wide screen: if the bar runs out of room, the tags drop to a second row */
+@media (min-width: 1181px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+  }
+  .nav {
+    flex: none;
+    overflow: visible;
+    margin-right: 0;
+  }
+  .nav-more {
+    margin-right: auto;
+  }
+  .topbar-tags {
+    margin-left: auto;
+  }
+}
+.nav-more nav hr {
+  width: 100%;
+  margin: var(--s-1) 0;
+  border: 0;
+  border-top: 2px dashed var(--pencil);
+}
+.brand img {
+  width: 52px;
+  height: 52px;
+}
+@media (max-width: 720px) {
+  .brand img {
+    width: 40px;
+    height: 40px;
+  }
+}
+@media (min-width: 1181px) {
+  .nav a,
+  .nav-more summary {
+    padding: 0 var(--s-3);
+  }
+  .topbar {
+    column-gap: var(--s-3);
+  }
+}

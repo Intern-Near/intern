@@ -81,5 +81,9 @@ export function nearChain(rpcUrl: string, contractId: string): Chain {
     getPlayer: (account_id) => ask("get_player", { account_id }),
     getDrawResults: (from, limit) => ask("get_draw_results", { from, limit }),
     getJackpotWins: (limit) => ask("get_jackpot_wins", { limit }),
+    getWeek: () => ask("get_week"),
+    getLeague: (a = {}) => ask("get_league", { week: a.week, group: a.group, account_id: a.accountId }),
+    getLeagueResults: (week) => ask("get_league_results", { week }),
+    getReviews: (from, limit) => ask("get_reviews", { from, limit }),
   };
 }
