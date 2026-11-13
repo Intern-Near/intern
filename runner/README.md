@@ -188,6 +188,9 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run quote -- --market PEPE --side long --margin 20 [--leverage 1]` | Read-only. "Why NOPE?": the verdict a bet would get from checks 6 to 12 right now, with the rule, its 01 section and the numbers ("quote" below) |
 | `npm run --silent mcp` | The read-only MCP server for other AI agents, over stdio ("mcp" below) |
 | `npm run mcp-check` | Starts that server the way an MCP client does, lists its tools, calls `intern_status` and `intern_quote`. Read-only |
+| `npm run contract-scan -- [--accounts a,b,...] [--json <file>]` | Read-only. Who can change each contract: keys, the host functions its code imports, the code hash against the recorded one ("contract-scan" below) |
+| `npm run refusals -- [--coin <account>] [--json <file>]` | Read-only. The sixteen NOPE codes, each with its count, first example and that example's transaction ("refusals" below) |
+| `npm run proof -- [--json <file>]` | Read-only. Everything above in one JSON bundle for a proof page ("proof" below) |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
 
@@ -672,6 +675,194 @@ Not done, and what to know:
 - Each call reads a fresh final block (a second or two behind the chain), through public RPCs with their rate limits.
   `intern_fills_check` reads the whole feed and outbox each time, as the command does: a few seconds.
 
+## contract-scan: who can change the contracts
+
+```
+npm run contract-scan -- [--accounts a,b,...] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. Without `--accounts` it scans every account under `testnet` in
+`interface/deployments.json` that holds a contract (an account with no code, such as the runner's, is listed as
+skipped). For each account it reads, at the latest final block:
+
+- `view_account`: the code hash, the balance and the storage used. With the storage price from
+  `EXPERIMENTAL_protocol_config` (10^19 yocto per byte on testnet) it says how much NEAR the storage holds and how much
+  room is left (NEAR requires balance + locked ≥ storage × price: nearcore `check_storage_stake`);
+- `view_access_key_list`: every key, described as `key-scope` does;
+- `view_code`: the deployed wasm. It checks that the bytes hash to the code hash, then lists the NEAR host functions the
+  wasm imports, read with a small parser of the WebAssembly binary format (`src/wasm-imports.ts`: the header and the
+  import section; no new dependency);
+- the code hash against the one the repository records: the "expected hashes" table of `docs/REPRODUCIBLE-BUILD.md`.
+  `verify.sh` records none of its own: it builds the wasm and compares its sha256 with the chain.
+
+It flags the 11 host functions that can change who controls an account or its code (`src/host-functions.ts`, names
+exactly as nearcore's `runtime/near-vm-runner/src/imports.rs` and near-sdk's `near-sys/src/lib.rs` give them, both in
+the owner's `Cargo.lock`): `promise_batch_action_deploy_contract`, `promise_batch_action_add_key_with_full_access`,
+`promise_batch_action_add_key_with_function_call`, `promise_batch_action_add_gas_key_with_full_access`,
+`promise_batch_action_add_gas_key_with_function_call`, `promise_batch_action_delete_key`,
+`promise_batch_action_delete_account`, `promise_batch_action_deploy_global_contract`,
+`promise_batch_action_deploy_global_contract_by_account_id`, `promise_batch_action_use_global_contract` and
+`promise_batch_action_use_global_contract_by_account_id`. Why those and nothing else: nearcore refuses deploying code,
+adding or deleting keys, deleting an account and using a global contract unless the account itself acts
+(`check_actor_permissions` in `runtime/runtime/src/actions.rs`), and a function-call key can only send one function
+call with no deposit (`verify_function_call_permission` in `runtime/runtime/src/verifier.rs`). So an account changes only
+through a full-access key or through its own code calling one of those 11; a code that follows another account's
+global contract changes when that account republishes it. The verdict per account says which applies, for example
+`1 full-access key: the holder can change it`, or `0 full-access keys and no code path that deploys code, changes
+keys or deletes the account: nobody can change it`. Exit code: 0 nothing failed (a key that can still change a contract
+is a caveat, not a failure); 1 a hash differs from the recorded one, the code read does not match its hash, or an
+account could not be read; 2 a bad option or a network other than testnet.
+
+**What the code part can and cannot show.** A wasm module can only call the host functions it imports, so "imports
+none of the 11" proves there is no such path. Importing them proves nothing either way: near-sdk 5.30.1 handles every
+kind of action in one function (`PromiseAction::add` in `src/promise.rs`), so any contract that uses its `Promise` type
+(as cross-contract calls do) imports all 11, used or not. That is the case for all six contracts today; the scan reports "cannot rule out a
+code path" for them, and it does not try to follow the code. (By hand, 2026-11-13: none of the contracts' sources under
+`crates/` calls the SDK functions that build those actions; the sandbox tests aside.) While each account keeps its
+full-access key, the key decides it anyway.
+
+Real run, 2026-11-13 15:23 UTC (trimmed):
+
+```
+$ npm run contract-scan
+coin.desk-lab-2026.testnet (coin)
+  code       9oufg5viW3x5eQ49p8zBkZMNvdLzyQFT7Pd4GRjuBoZK, 632,157 bytes; the bytes read hash to it
+  recorded   SAME: the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.5)): the code on chain is that build
+  storage    738,077 bytes (7.380 NEAR held for it); balance 7.972 NEAR: 0.591 NEAR free, room for about 59,158 more bytes
+  keys       ed25519:86fbY6YwRaJMcYMCtw6YcRixD21QdqaSsnDWPXrTtNSY: a full-access key
+  imports    43 NEAR host functions; 11 of the 11 that can change control: deploy_contract, add_key_with_full_access, …
+             the others: read_register, sha256, keccak256, value_return, ed25519_verify, prepaid_gas, attached_deposit, …
+  verdict    1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does
+…
+intern-runner-ed25519.testnet (runner): skipped, no contract code deployed
+
+SUMMARY  6 account(s) scanned, 6 with a contract: 0 nobody can change, 6 changeable by a full-access key, 6 whose code imports control host functions; code hash 6 same as recorded, 0 different, 0 not recorded
+```
+
+The other five (`stub`, `usdc`, `stickers`, `launch`, `lender`) read the same: their recorded build, one full-access
+key, all 11 imported.
+
+**The live coin's storage room** (measured by hand on 2026-11-13 with `view_account` at older blocks on the archival
+node, not by this tool): its storage grew from 712,087 bytes (block 277,497,910, 10:29 UTC) to 738,077 (block
+277,527,910, 15:23 UTC), about 5.3 KB an hour, and its balance did not change. The 0.591 NEAR beyond its storage holds
+about 59 KB more: at that rate it is used up around 02:30 UTC on 14 November. NEAR checks the balance against the
+storage after every receipt and fails one that leaves too little (`LackBalanceForState`; nearcore
+`runtime/runtime/src/lib.rs`), so from then on calls that grow the coin's storage would fail until someone sends it
+NEAR; anyone can, with or without its keys. The owner's call (`docs/ACCESS-KEYS.md`, step 2).
+
+## refusals: the refusal catalogue
+
+```
+npm run refusals -- [--coin <account>]... [--no-tx] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. Default: the live coin (`testnet.coin` of `deployments.json`) and its test copy
+`coin-fast.desk-lab-2026.testnet`. For each it reads every refusal with `get_refusals` (01 §8: newest first, `from` is
+the highest id to return, 100 per page) and lists the sixteen codes of `interface/refusal-codes.json` in check order:
+how many refusals each has, and the first one (round, time, the bet, `asked` and `limit` with their meaning; dollars for
+`ZERO_MARGIN`, `OVER_TRADE_LIMIT` and `OVER_ROUND_LIMIT`, whose numbers are dollars), then the codes with no example yet.
+
+For each first example it also finds the transaction, read-only. NEAR's RPC cannot list an account's transactions, so
+it asks NearBlocks' public API (`GET https://api-testnet.nearblocks.io/v3/accounts/<coin>/receipts?method=propose&
+before_ts=<ns>`, checked against its `openapi.json` and by running it, 2026-11-13) for the `propose` receipts at the
+refusal's millisecond (`at` is the block time of the proposal), then reads each candidate with the RPC `tx` method (an
+archival node when the regular one no longer has it) and keeps the one that returned this very refusal (`refusal_id`
+and `code`), with its `refused` event. The explorer link is `https://testnet.nearblocks.io/txns/<hash>`: the form NEAR's
+own explorer page links to (the NearBlocks page itself sits behind a browser check and was not fetched). `--no-tx`
+skips NearBlocks. A transaction that cannot be found is a line, not a failure. NearBlocks asks for attribution
+("Powered by Nearblocks.io APIs") when its data is shown; its free rate limit is not stated (UNVERIFIED): an HTTP 429
+is reported, never retried in a loop. Exit code: 0 read; 2 a refusal list could not be read, a bad option, or a network
+other than testnet.
+
+Real run, 2026-11-13 15:23 UTC (trimmed):
+
+```
+$ npm run refusals
+coin.desk-lab-2026.testnet: 1 refusal(s), ids 1 to 1
+  11 OVER_TRADE_LIMIT       1  first: refusal 1, round 2, 2026-11-11T18:43:13.911Z: DOGE long $10.000000 at 1x; asked $10.000000 (margin); limit $1.000010 (per-bet limit in dollars)
+                             tx https://testnet.nearblocks.io/txns/5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW: confirmed on https://archival-rpc.testnet.fastnear.com, it returned NOPE OVER_TRADE_LIMIT, refusal 1, and logged the refused event
+  no example yet (15): OUTSIDE_WINDOW, FIRED, BAD_MODEL_SIGNATURE, …
+
+coin-fast.desk-lab-2026.testnet: 3 refusal(s), ids 1 to 3
+   2 FIRED                  1  first: refusal 1, round 7, 2026-11-12T06:40:28.244Z: no decision recorded
+   6 NOT_ON_LIST            1  first: refusal 2, round 16, 2026-11-12T12:15:15.310Z: WIF long $11.000000 at 1x; credited to boss2.desk-lab-2026.testnet
+   9 OVER_LEVERAGE          1  first: refusal 3, round 22, 2026-11-13T08:10:12.792Z: DOGE long $3.514000 at 10x; asked 10 (leverage); limit 1 (max_leverage)
+  (each with its transaction, confirmed: DuTxFWRf…, 4VoxFZW9…, 2VzPaXTJ…)
+
+SUMMARY  4 refusal(s) on 2 coin(s); 4 of 16 codes have an example (FIRED, NOT_ON_LIST, OVER_LEVERAGE, OVER_TRADE_LIMIT); no example anywhere yet: OUTSIDE_WINDOW, BAD_MODEL_SIGNATURE, WRONG_RULEBOOK, MALFORMED_DECISION, SHORT_NOT_UNLOCKED, ZERO_MARGIN, TOO_MANY_TRADES, OVER_ROUND_LIMIT, BAD_QUOTE_SIGNATURE, STALE_QUOTE, QUOTE_MISMATCH, TOO_EXPENSIVE. First examples' transactions: 4 confirmed, 0 found but not confirmed, 0 not found.
+```
+
+The live coin's only refusal is Engine 1's step-4 test with the stand-in signature (`fixtures/chain/testnet-accounts.md`);
+no proposal on it has been refused since (`get_refusals` holds only that one).
+
+## proof: one bundle for the proof page
+
+```
+npm run proof -- [--json <file>] [--coin <account>] [--relayer <account>] [--rounds N] [--proposals N] [--rpc <url>]
+```
+
+Read-only; no key, no `.env`. It calls the libraries of the read-only tools directly (no subprocess), one after another,
+and writes one JSON file (`--json`) with a section per check; a section that fails is recorded with its error and the
+others still run. About 35 seconds. Defaults: the live coin, the relayer `intern-relayer-ed25519.testnet`, the last 10
+rounds, the last 3 proposals. Exit code: 0 no section failed; 1 a section failed; 2 a bad option or a network other
+than testnet. A real bundle, with its own times, is `test/data/proof-bundle-2026-11-13T152437Z.json`.
+
+| Section `id` | What it runs | `data` |
+|---|---|---|
+| `contract-scan` | The scan above, default list | `contract-scan`'s report (as `--json` writes it) |
+| `key-scope` | `key-scope` on `get_constants().runner` (as runner) and the relayer, with no signing key named (no `.env` is read): the keys, and which would pass | A list of two key scopes (`src/key-scope.ts` `KeyScope`) |
+| `fills-check` | `fills-check` over the last `--rounds` rounds | `fills-check`'s report (as its `--json` writes it) |
+| `verify-round` | The coin's latest `--proposals` `propose` transactions, found with NearBlocks (as above), each through `verify-round` | A list of `{tx_hash, link, sender, block_height, at, failures, unverified, fatal, result, lines}` |
+| `attestation` | `attestation-check` for 01's pinned model, with a fresh random nonce | `{model, signing_algo, lines, failures, callFailures, unverified_parts}` |
+| `refusals` | The catalogue above, both coins, with transactions | `refusals`' report (as `--json` writes it) |
+
+The shape, for the website (`bundleShapeProblems` in `src/proof.ts` checks it; the tests run it on the sample):
+
+```ts
+type Bundle = {
+  kind: "intern-proof-bundle";
+  version: 1;
+  generated_at: string;              // ISO time the run started; finished_at when it ended
+  finished_at: string;
+  network: "testnet";
+  coin: string;                      // the coin contract
+  git: { commit: string; ref: string | null } | null;   // read from .git files; null where there is no .git
+  endpoints: {                       // every service the bundle read
+    near_rpc: string; near_archival_rpcs: string[]; hyperliquid_info: string; near_ai: string;
+    nvidia_attestation: string[]; nearblocks_api: string; explorer: string;
+  };
+  summary: { ok: number; warn: number; fail: number; sentence: string };
+  sections: Section[];               // in the order of the table above
+};
+type Section = {
+  id: "contract-scan" | "key-scope" | "fills-check" | "verify-round" | "attestation" | "refusals";
+  title: string;                     // a heading for the page
+  status: "ok" | "warn" | "fail";    // warn: true, with a caveat to show (e.g. the contracts still have their keys)
+  sentence: string;                  // one plain sentence for the page
+  started_at: string;                // ISO time
+  took_ms: number;
+  data: unknown;                     // the tool's own output, unchanged (table above); null when the section failed
+  error: string | null;              // why the section could not run
+};
+```
+
+Real run, 2026-11-13 15:24 UTC (the sample):
+
+```
+$ npm run proof -- --json bundle.json
+  WARN  contract-scan 6 contracts, each running exactly the build docs/REPRODUCIBLE-BUILD.md records; each still has a full-access key, so its holder can change it; all import the host functions that deploy code or change keys (near-sdk links them), so the code alone does not show it never will.
+  OK    key-scope     The runner intern-runner-ed25519.testnet: a function-call key for coin.desk-lab-2026.testnet (propose, sign_next, report_result; allowance 0.862 NEAR) would pass as its signing key; it also holds a full-access key, normally the owner's. The relayer intern-relayer-ed25519.testnet: a full-access key would pass as its signing key. No private key was read, so which key actually signs is not shown.
+  OK    fills-check   Rounds 46 to 55: 9 bets (9 OK); every fill on the contract's Hyperliquid address is tied to an order the contract signed.
+  OK    verify-round  The last 3 proposals re-checked from public data: in each, NEAR AI's pinned key signed the exact request and answer, the request carried the rulebook of that moment, and the contract's verdict fits.
+  OK    attestation   NEAR AI's z-ai/glm-5.3-flash ed25519 key is bound to a fresh Intel TDX quote carrying our nonce, and the GPU evidence with the same nonce passed NVIDIA's attestation; 6 parts stay UNVERIFIED (listed).
+  OK    refusals      4 refusals on 2 coins: 4 of the 16 codes have an example (FIRED, NOT_ON_LIST, OVER_LEVERAGE, OVER_TRADE_LIMIT), 12 have none yet; each code's first example is tied to its transaction, confirmed on chain.
+SUMMARY  6 checks: 5 ok, 1 with a caveat, 0 failed.
+```
+
+Not done: the bundle is a snapshot made where the repository is (it reads `interface/` and `docs/`, which the runner's
+Docker image does not have); nothing publishes it or runs it on a schedule. `git` says which commit, not whether the
+working tree had uncommitted changes.
+
 ## What is in `src/`
 
 | File | What it is |
@@ -707,6 +898,10 @@ Not done, and what to know:
 | `at-block.ts`, `view-fields.ts`, `deployed.ts` | Views read at one final block (testnet only); strict readers for view answers; any name from `deployments.json` |
 | `explain.ts`, `quote.ts`, `chain-snapshot.ts`, `cli/quote.ts` | `quote`: the explanation of checks 6 to 12 (browser-safe; the verdict is `rules.ts`'s), the views turned into the round's state and the bet (browser-safe), the views at one final block, the command |
 | `mcp.ts`, `cli/mcp.ts`, `cli/mcp-check.ts` | The read-only MCP server's six tools, its stdio entry point, and a client that starts it and calls two tools |
+| `contract-scan.ts`, `wasm-imports.ts`, `host-functions.ts` | `contract-scan`: the scan and its verdicts; the WebAssembly import-section reader; the NEAR host functions that can change control, with their sources |
+| `refusals.ts`, `nearblocks.ts` | `refusals`: the catalogue and the transaction lookup; NearBlocks' receipts endpoint and the explorer link |
+| `proof.ts`, `git-head.ts` | `proof`: the sections, their sentences and the bundle's shape check; the commit read from the `.git` files |
+| `rpc-read.ts` | Read-only RPC queries at the latest final block over `near-rpc.ts` (so every reply can be recorded and replayed) |
 
 Tests drive the round loop against test doubles in `test/support/`: an in-memory stand-in for the contract and a
 `fetch` answering like NEAR AI and Hyperliquid testnet. They are labelled as test doubles, live only under `test/`,
@@ -727,6 +922,10 @@ and no command can select them. Hyperliquid's market data in them is a real test
   After that it logs `STUCK` and a person has to look.
 - **Gas** attached to each call is a guess (`TERA_GAS` in `src/chain.ts`, UNVERIFIED). Every call logs the gas it
   really burnt (`tgas`); the first real round's numbers are under "What is checked live".
+- **`contract-scan` reads imports, not code paths.** All six contracts import the 11 host functions that can change
+  control (near-sdk links them), so for each it can only say a path is not ruled out; it does not follow the code.
+  **`refusals` and `proof` find transactions through NearBlocks**, a third-party index (each find is then confirmed
+  on NEAR RPC); its free rate limit is UNVERIFIED.
 - `check` reads each model's signer from NEAR AI's attestation report without verifying the hardware evidence.
   `attestation-check` verifies part of that evidence for the pinned model; what it leaves UNVERIFIED is listed
   above. The runner itself does not run it before proposing.

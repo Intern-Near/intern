@@ -44,3 +44,23 @@ contract itself. `test/supply-log.test.ts` replays them.
 window and the live runner had just placed bet #35 (PEPE long $15). Every NEAR RPC exchange with
 `https://test.rpc.fastnear.com`, exactly as received: `status`, the latest final block (277526635), then six views at
 that block (get_constants, get_round, get_rank, get_pot, get_rulebook, get_positions). `test/quote.test.ts` replays it.
+
+`contract-scan-2026-11-13T151137Z/`: one real read-only run of `npm run contract-scan -- --save …` (the default list) on
+2026-11-13 at 15:11:37 UTC through `https://test.rpc.fastnear.com`. `rpc.json.gz`: its NEAR RPC exchanges, each request
+and reply body exactly as received with its own `fetched_at`: `EXPERIMENTAL_protocol_config`, `view_account` and
+`view_access_key_list` for the seven accounts, and `view_code` for `lender.desk-lab-2026.testnet` only (the smallest
+contract, 131,977 bytes; gzipped). `imports-only.json`: the other five contracts' code cut to the header, type section
+and import section, byte for byte (`keepImportsOnly`: not the whole code, so it does not hash to the code hash), with
+the whole code's size and sha256 and the imports read from it at the time. `test/contract-scan.test.ts`,
+`test/wasm-imports.test.ts` and `test/proof.test.ts` replay them.
+
+`refusals-2026-11-13T151222Z/replies.json`: one real read-only run of `npm run refusals -- --save …` on 2026-11-13 at
+15:12:22 UTC: `get_refusals` of `coin.desk-lab-2026.testnet` and `coin-fast.desk-lab-2026.testnet` and the four `tx`
+reads (`https://test.rpc.fastnear.com`; `5JND4c…` from `https://archival-rpc.testnet.fastnear.com`, as the regular node
+no longer had it), and the four NearBlocks GETs (`https://api-testnet.nearblocks.io/v3/accounts/<coin>/receipts`), all
+exactly as received. `test/refusals.test.ts` and `test/proof.test.ts` replay them.
+
+`proof-bundle-2026-11-13T152437Z.json`: a real bundle written by `npm run proof -- --json …` on 2026-11-13 from
+15:24:38 to 15:25:11 UTC (its `generated_at`, `finished_at` and each section's `started_at`), read-only, with no `.env`.
+Public data only: public keys, transaction hashes, attestation results. `test/proof.test.ts` checks its shape; the
+website can use it as a sample.

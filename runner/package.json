@@ -26,7 +26,10 @@
     "supply-log": "node src/cli/supply-log.ts",
     "quote": "node src/cli/quote.ts",
     "mcp": "node src/cli/mcp.ts",
-    "mcp-check": "node src/cli/mcp-check.ts"
+    "mcp-check": "node src/cli/mcp-check.ts",
+    "contract-scan": "node src/cli/contract-scan.ts",
+    "refusals": "node src/cli/refusals.ts",
+    "proof": "node src/cli/proof.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
