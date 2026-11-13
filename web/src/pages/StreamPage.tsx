@@ -14,6 +14,7 @@ import { clock, titleCase } from "../lib/format";
 import { href } from "../lib/nav";
 import { nextMoment, phaseAt } from "../lib/round";
 import { useNow } from "../lib/useNow";
+import { sayLine, stopVoice, voiceAvailable } from "../stream/voice";
 import { Usd } from "../ui/Usd";
 import { Waiting } from "../ui/Waiting";
 
@@ -109,7 +110,11 @@ export function StreamPage() {
     setCurrent(next);
     if (!next) return;
     setLog((l) => [next, ...l.filter((c) => c.seq !== next.seq)].slice(0, 6));
-    if (soundRef.current && next.speak && next.intern) speak(next.intern);
+    if (soundRef.current && next.speak && next.intern) {
+      const line = next.intern;
+      // The real voice if this site has one; the browser's own voice otherwise
+      void voiceAvailable().then((real) => (real ? sayLine(line).then((ok) => ok || speak(line)) : speak(line)));
+    }
     timer.current = window.setTimeout(play, holdMs(next));
   }, []);
 
@@ -153,6 +158,7 @@ export function StreamPage() {
   useEffect(
     () => () => {
       window.clearTimeout(timer.current);
+      stopVoice();
       try {
         window.speechSynthesis.cancel();
       } catch {

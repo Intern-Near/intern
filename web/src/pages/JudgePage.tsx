@@ -4,6 +4,7 @@ import { accessKeyCount } from "../chain/near";
 import { getSource, useDesk, type Desk } from "../chain/store";
 import { useAsync } from "../lib/useAsync";
 import { INTERFACE_VERSION, REFUSAL_CODES } from "../chain/types";
+import { href } from "../lib/nav";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
@@ -79,7 +80,7 @@ function realOrNot(desk: Desk, source: string): Row[] {
     {
       thing: "The stream",
       state: "standin",
-      note: "A web page that plays the program's feed. The Intern on it is a Live2D model we rigged by hand from AI-made art; its face and arms follow each event, and its mouth moves while a line is shown (a rhythm, not lip-sync to sound). The lines are written, not generated live. No video stream and no recorded voice is built.",
+      note: "A web page that plays the program's feed; it is not a video stream. The Intern on it is a Live2D model we rigged by hand from AI-made art: its face and arms follow each event. Its lines are written, not generated live. Where the site has a voice server, each line is spoken by a generated voice (ElevenLabs) and the mouth follows the sound; otherwise the browser's own voice is used and the mouth moves on a rhythm.",
     },
     { thing: "The AI's answers", state: sample ? "standin" : "real", note: sample ? "None in sample data." : `From the pinned model ${c.model.id}, with its signature checked by the program.` },
     { thing: "The artwork", state: "real", note: "Made with AI image tools (ChatGPT for stills, Midjourney for clips), then cut out and placed by code." },
@@ -106,6 +107,10 @@ const LIMITS = [
   "Voting power can be rented for the cost of one day's exposure. Locking and a seven-day weight slow that; the fixed limits cap what a captured vote can do.",
   "Leaving while a bet is open gives up your share of that bet.",
   "If the AI provider changes the model's signing key, the program refuses every proposal from then on. Cash-out still works.",
+  "A bet of exactly the rank's maximum can be refused OVER_TRADE_LIMIT if someone cashes out between the shift's opening and the proposal. The rule held; the AI did not break it.",
+  "Many small accounts could crowd the payday draw and the jackpot. On the test network the prizes are cents.",
+  "A league holds 25 groups of 20 a week; later guessers earn points but have no group.",
+  "A vote nobody votes in fails.",
   "The Intern can lose. Most AI traders that have been measured did.",
 ];
 
@@ -217,6 +222,27 @@ export function JudgePage() {
                 <li key={l}>{l}</li>
               ))}
             </ul>
+          </section>
+
+          <section aria-labelledby="who-h">
+            <h2 id="who-h">Who built what</h2>
+            <ul className="limits-list">
+              <li>
+                <strong>The program on NEAR</strong> (the coin, the pools, the sixteen checks, votes, rewards, leagues, weekly reviews, the launchpad, stickers): the project owner, with
+                AI coding assistants.
+              </li>
+              <li>
+                <strong>The Intern's runner, the "really the AI" check, the Hyperliquid order builder, the shadow run and the public checks</strong> on the{" "}
+                <a href={href("proof")}>Proof page</a>: Atharva (github AtharvaWaghchoure).
+              </li>
+              <li>
+                <strong>This website</strong>: built with an AI coding assistant. The characters are AI-made images (ChatGPT for stills, Midjourney for clips); the Live2D
+                Intern was rigged by hand from them.
+              </li>
+            </ul>
+            <p className="fine">
+              Saved checks, with the time each was made, are on the <a href={href("proof")}>Proof page</a>. A plain-text summary for AI agents is at <a href="/llms.txt">/llms.txt</a>.
+            </p>
           </section>
         </main>
       )}

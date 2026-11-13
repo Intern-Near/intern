@@ -735,3 +735,20 @@
     gap: 0;
   }
 }
+
+/* Golden versions in the sticker book */
+.sticker.has-gold {
+  border: 2px solid var(--sticky);
+  box-shadow: 0 0 0 2px var(--sticky) inset;
+}
+.sticker-gold {
+  padding: 0 var(--s-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--sticky);
+  border-radius: var(--radius-pill);
+}
+.panel-sub a {
+  color: var(--sticky);
+}

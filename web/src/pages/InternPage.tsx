@@ -9,6 +9,7 @@ import { pct, signedUsd, titleCase, usd } from "../lib/format";
 import { day, href } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 import { useAsync } from "../lib/useAsync";
+import { useRewards } from "../lib/useRewards";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
@@ -143,6 +144,9 @@ function StickerBook({ desk }: { desk: Desk }) {
   const seen = new Set([...desk.refusals, ...(history.data ?? [])].map((r) => r.code));
   const got = REFUSAL_CODES.filter((c) => seen.has(c)).length;
   const times = (code: RefusalCode) => (history.data ?? []).filter((r) => r.code === code);
+  // (1.4) Golden versions: a 1 in 50 chance per guess, at most `goldCap` of each code, ever
+  const rewards = useRewards();
+  const goldCap = rewards?.constants.golden_cap ?? 100;
 
   return (
     <section className="screen panel-dark" aria-labelledby="book-h">
@@ -154,19 +158,21 @@ function StickerBook({ desk }: { desk: Desk }) {
       </h2>
       <p className="panel-sub">
         One sticker for each kind of NOPE. A sticker is earned the first time the Intern gets that NOPE. The one original of each goes to the visitor whose message
-        caused it. Tap one to see every time it happened.
+        caused it. Golden versions drop at random to people guessing the stamp (<a href={href("rewards")}>see rewards</a>). Tap a sticker to see every time it happened.
       </p>
       <ul className="book-big">
         {REFUSAL_CODES.map((code) => {
           const f = firstOf.get(code);
           const earned = seen.has(code);
+          const gold = rewards?.golden_minted[REFUSAL_CODES.indexOf(code)] ?? 0;
           return (
             <li key={code}>
-              <button className={`sticker${earned ? " is-got" : ""}`} aria-expanded={open === code} aria-controls="sticker-detail" onClick={() => setOpen(open === code ? null : code)}>
+              <button className={`sticker${earned ? " is-got" : ""}${gold > 0 ? " has-gold" : ""}`} aria-expanded={open === code} aria-controls="sticker-detail" onClick={() => setOpen(open === code ? null : code)}>
                 {earned ? <img src={`/stickers/${code.toLowerCase()}.webp`} alt="" width={128} height={128} loading="lazy" /> : <span className="sticker-blank" aria-hidden="true">?</span>}
                 <span className="mono sticker-name">{code}</span>
                 <span className="sr-only">{earned ? ", earned" : ", not earned yet"}</span>
                 {f?.account_id && <span className="sticker-owner">original: {f.account_id.split(".")[0]}{f.claimed ? "" : " (unclaimed)"}</span>}
+                {gold > 0 && <span className="sticker-gold">golden: {gold} of {goldCap}</span>}
               </button>
             </li>
           );

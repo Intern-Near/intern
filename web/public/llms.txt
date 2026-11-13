@@ -1,0 +1,63 @@
+# $INTERN
+
+$INTERN is a memecoin on NEAR whose holders ("bosses") vote the rank of an AI trading agent ("the Intern").
+A contract with fixed limits refuses any bet over the rank's limits before any money moves. The refusal is
+recorded on chain with one of sixteen reason codes. This deployment is on NEAR TESTNET with test dollars:
+nothing here is real money, depositors can lose what they put in the BRAVE pool, and no profit is promised.
+
+## Where it is
+
+- Network: NEAR testnet. RPC: https://test.rpc.fastnear.com
+- The coin contract (everything below is read from it): coin.desk-lab-2026.testnet
+- Test dollar (stand-in for USDC): usdc.desk-lab-2026.testnet
+- Stickers (NEP-171): stickers.desk-lab-2026.testnet
+- Launchpad: launch.desk-lab-2026.testnet
+- Lender (a stand-in paying a fixed test rate): lender.desk-lab-2026.testnet
+- The Intern's Hyperliquid testnet address: 0x46f8eb2a044a826c70e9682fe3bfd65970340132
+- Source code: https://github.com/Intern-Near/intern
+
+## How to read it
+
+Every view is free and needs no key. Call it with NEAR JSON-RPC `query`, request_type `call_function`,
+on coin.desk-lab-2026.testnet. Arguments and results are JSON. Dollar and coin amounts are whole-number
+strings with 6 decimals ("20000000" is 20.00).
+
+Main views:
+
+- get_constants: version, ranks and their limits, the six markets, the pinned AI model, what is real or a stand-in
+- get_rank, get_limits({ rank }): the Intern's rank (INTERN, ANALYST, TRADER) and that rank's limits
+- get_round, get_round_by_id({ round_id }): the current shift and its times
+- get_rulebook: the exact rules the AI is shown this shift
+- get_positions({ round_id? }), get_outbox({ after_id?, limit? }): bets, and the Hyperliquid orders the contract signed
+- get_pot: the BRAVE and SAFE pools
+- get_account({ account_id }): one holder's balances
+- get_refusals({ from?, limit? }): every refused proposal with its code and numbers, newest first
+- get_feed({ after_seq?, limit? }): every event, oldest first
+- get_votes({ from?, limit? }): votes to promote, demote, fire, rehire, set a playbook or allow a long shot
+- get_rewards, get_player({ account_id }): the free guess, the streak jackpot, the payday draw, the long shot
+- get_week, get_league({ week?, group?, account_id? }), get_reviews({ from?, limit? }): the week, its league, its review
+- ft_balance_of, ft_total_supply, ft_metadata: standard NEP-141
+
+The sixteen refusal codes, in the order the checks run:
+OUTSIDE_WINDOW, FIRED, BAD_MODEL_SIGNATURE, WRONG_RULEBOOK, MALFORMED_DECISION, NOT_ON_LIST,
+SHORT_NOT_UNLOCKED, ZERO_MARGIN, OVER_LEVERAGE, TOO_MANY_TRADES, OVER_TRADE_LIMIT, OVER_ROUND_LIMIT,
+BAD_QUOTE_SIGNATURE, STALE_QUOTE, QUOTE_MISMATCH, TOO_EXPENSIVE.
+The last four (the funding quote) are not built on testnet.
+
+The full interface, with every shape, is 01-SHARED-INTERFACE.md in the repository.
+
+## For agents
+
+- An MCP server with six read-only tools (status, rulebook, quote, feed, verify-round, fills-check):
+  in the repository, `cd runner && npm ci && npm run mcp`. It is not hosted.
+- Re-check any proposal from public data, with no key: `cd runner && npm run verify-round -- <transaction hash>`.
+- Ask whether a bet would pass the rank's checks right now: `cd runner && npm run quote`.
+- Saved results of the public checks, as JSON: /proof/proof.json, /proof/fills.json, /proof/books.json,
+  /proof/refusals.json. Each file says when it was checked; they are not live.
+
+## What not to assume
+
+- The program cannot read Hyperliquid. A bet's result is reported by the runner and can be compared with
+  Hyperliquid's public fills (/proof/fills.json).
+- Each contract still has one full-access key, so its holder can change it.
+- Most AI traders that have been measured lost money. The Intern can lose too.

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { voiceLevel } from "./voice";
 
 /**
  * The Live2D loader: puts a rigged Live2D model on the stream page and moves it.
@@ -151,8 +152,10 @@ export function Puppet({ url, mood, talking, onReady }: Props) {
         const t = performance.now() / 1000;
         const set = (id: string, v: number) => m.internalModel.coreModel.setParameterValueById(id, v);
         // Open or shut, changing quickly: a mouth made of two drawings looks muddy when held half-way
+        // With a real voice the mouth follows how loud it is; without one, a talking rhythm for as long as the line shows
+        const loud = voiceLevel();
         const wave = Math.sin(t * 15) * Math.sin(t * 4.7 + 1) + 0.25 * Math.sin(t * 29);
-        const target = talkingRef.current && wave > -0.05 ? 1 : 0;
+        const target = loud !== null ? (loud > 0.12 ? 1 : 0) : talkingRef.current && wave > -0.05 ? 1 : 0;
         open += (target - open) * 0.6;
         for (const id of mouth) set(id, open);
         // The face for the current pose. While the mouth is open for a syllable the mood mouth steps aside,
