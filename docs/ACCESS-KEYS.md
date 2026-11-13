@@ -14,7 +14,10 @@ how steps 3 to 9 were deployed and migrated without losing a balance. Removing t
 | `lender.desk-lab-2026.testnet` | the STAND-IN lender | keep (a stand-in) |
 | `usdc.desk-lab-2026.testnet` | the STAND-IN dollar | keep (a stand-in) |
 | `stub.hackcheck-2026-1103.testnet` | the stub | keep (a stand-in) |
+| `tickets.desk-lab-2026.testnet` | *(1.7)* golden stickers as multi-tokens, and their market | with the coin |
 | `coin-fast.desk-lab-2026.testnet` | a test copy with 5-minute rounds | keep, or delete the account |
+| `stickers-fast.desk-lab-2026.testnet` | *(1.7)* coin-fast's own sticker contract | keep, or delete with coin-fast |
+| `rival-contrarian`, `rival-copycat`, `rival-glm` `.desk-lab-2026.testnet` | *(1.7)* labelled rival players; the runner holds only a function-call key limited to the coin's `guess` | keep (players, not contracts) |
 
 ## The exact steps (per account; run by the owner)
 

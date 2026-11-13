@@ -1113,6 +1113,7 @@ Decision-line cases, for `ai-check` (round 42, nonce `9f2c41d07ab35e16`):
     "stickers": "stickers.desk-lab-2026.testnet",
     "launchpad": "launch.desk-lab-2026.testnet",
     "lender": "lender.desk-lab-2026.testnet",
+    "tickets": "tickets.desk-lab-2026.testnet",
     "rpc": "https://test.rpc.fastnear.com",
     "trick_api": "https://intern-runner-production.up.railway.app",
     "tailfade_faucet": "https://tailfade-faucet-production.up.railway.app"
@@ -1123,6 +1124,8 @@ Decision-line cases, for `ai-check` (round 42, nonce `9f2c41d07ab35e16`):
 *(1.3)* `stickers` is the NFT contract, `launchpad` the launchpad, `lender` the STAND-IN lender (section 9.6). Registering on the launchpad costs 0.05 NEAR.
 
 *(1.4)* Two off-chain services, both on Railway: `trick_api`, the trick page's queue inside the runner (`intern/docs/TRICK-API.md`); `tailfade_faucet`, which sends a visitor's Tail or Fade address its test dollars once (`intern/docs/TAILFADE.md`).
+
+*(1.7)* `tickets` is the NEP-245 multi-token contract with the player market (section 9.16); its only minter is the coin, which points at it with `set_tickets`. Three rival players guess on the coin: `rival-contrarian`, `rival-copycat`, `rival-glm` `.desk-lab-2026.testnet` (section 9.7). The test copy `coin-fast.desk-lab-2026.testnet` (stand-in AI check, 5-minute rounds) has its own sticker contract, `stickers-fast.desk-lab-2026.testnet`, and no tickets contract.
 
 `usdc` is a stand-in test dollar worth nothing: call `storage_deposit` on it, then `mint({ account_id, amount })`. `runner` is Engine 2's account; the contract accepts `propose`, `sign_next` and `report_result` from it only. The stub's `propose` is open to any caller.
 

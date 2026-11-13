@@ -101,6 +101,25 @@ once every seven rounds.
 - **Stickers, goals, a launchpad.** Badges and "first of its kind" stickers (NEP-171), tip and goal bars, and a
   small launchpad (a constant-product curve) whose 1% fee goes to the BRAVE pool.
 
+**Added in interface 1.7** (from Engine 2's list; each is in `01-SHARED-INTERFACE.md` §9.9 to §9.18):
+
+- **Consequences without a vote.** Three NOPE rounds in a row demote the Intern (an INTERN is fired); a week that
+  lost 1% of the pool halves the limits for 7 rounds; a 30-day term ends unless a `RENEW` vote passes; a round whose
+  bets never get a result can be abandoned by anyone.
+- **Draw luck anyone can check.** The payday draw's winners come from a drand beacon named a minute after the
+  tickets are frozen. The contract verifies drand's BLS signature itself, and keeps the tickets so anyone can replay
+  the draw.
+- **Paying to trick it, and catching it out.** A trick can be paid ($1; half goes to a bounty pot). A credited trick
+  that gets a NOPE wins 10% of the pot. Holders can rescue a fired Intern by raising $50.
+- **Challenging a result.** Anyone can post a $5 bond against a reported result within 3 rounds; a `CORRECT` vote
+  decides, and a passed one rewrites the bet's result.
+- **NFTs that do something.** Originals earn a share of trick money; playbook NFTs carry the coach cut; a career
+  card whose picture the contract redraws from its record; each original owns a Hyperliquid account that only its
+  holder can have signed for.
+- **Supply that reacts, wagers, rivals, a market.** 5% of a won round becomes the Intern's stake, burned first on a
+  loss; point wagers and banking a streak; three labelled rival bots in the free guess; golden stickers as NEP-245
+  multi-tokens with a player market; copy trading from the follower's own account.
+
 ## Where NEAR is used
 
 | NEAR technology | Where |
@@ -110,6 +129,7 @@ once every seven rounds.
 | NEAR AI Cloud | The model `z-ai/glm-5.3-flash`. Its ed25519 signature is checked on chain by `crates/ai-check` |
 | NEP-141, NEP-145, NEP-148 | The $INTERN coin and the test dollar |
 | NEP-171 | Stickers and badges (`stickers.desk-lab-2026.testnet`) |
+| NEP-245 | Golden stickers as multi-tokens, with a market paid in USDC (`tickets.desk-lab-2026.testnet`, `crates/tickets`) |
 | NEP-413 signed messages | A visitor proves their account to be credited for a trick |
 | BLS12-381 host functions (NEP-488) | The coin verifies drand's beacon itself, for the payday draw's luck (`crates/coin/src/drand.rs`) |
 | Block randomness (`env::random_seed`) | Golden stickers (and the draw, only if no drand beacon came in time) |
@@ -129,9 +149,10 @@ short:
 | | The funding quote (checks 13 to 16) is not built |
 | The stream page: a rigged Live2D Intern on the website follows the feed, with a line for every event ([`interface/lines.json`](interface/lines.json)) | No recorded voice (only the browser's own speech, off by default) and no video stream |
 | The long shot: one vote passed and its 10x ticket was approved, on `coin-fast` only. It was not placed on Hyperliquid | `coin-fast`'s AI check is a stand-in that accepts the signature `"FAKE"` |
+| The 1.7 additions: drand draws, consequences, challenges, rescue, paid tricks and the bounty, NFT earnings, career cards, the originals' Hyperliquid signing, wagers. Each was run on `coin-fast` with a transaction | The stake, the drawdown brake and the dead-man switch are shown in tests only; the originals' Hyperliquid accounts are unfunded; rival players are bots run by our runner |
 | | Rounds are 30 minutes for the demo; the product's round is 24 hours |
 
-**Known limits** ([`01-SHARED-INTERFACE.md`](01-SHARED-INTERFACE.md) section 14 lists all sixteen):
+**Known limits** ([`01-SHARED-INTERFACE.md`](01-SHARED-INTERFACE.md) section 14 lists all twenty):
 
 - The contract cannot read Hyperliquid. It bounds what it signs against the margin it recorded.
 - The runner is trusted for two things. It writes the user message and could ask the model several times and
@@ -145,6 +166,25 @@ short:
   still works.
 - The contracts can still be upgraded: each account still holds its full-access key
   ([`docs/ACCESS-KEYS.md`](docs/ACCESS-KEYS.md)). `./verify.sh` shows what runs today.
+
+## Abuse, in numbers
+
+What an attacker pays, what they could get, and what stops them. The numbers come from Engine 2's 60-day simulation
+(`shadow/README.md`, `shadow/data/sim/options/options-report.md`; 24-hour rounds, 30-minute rounds in brackets), the
+attack suite on a local NEAR node (`crates/coin/sandbox/tests/attacks.rs`) and section 14 of the interface.
+
+| Attack | Cost to the attacker | What it could take | Defence today | Risk left |
+|---|---|---|---|---|
+| 200 fake accounts farm the payday draw | 2.56 NEAR of registration and about $2,002 parked | Before 1.7: every draw prize, turning about 100 honest bosses a run away | 1.7: tickets count BRAVE dollars only, each prize is drawn by tickets with replacement, a full draw keeps its places for the biggest holders | The fakes' share fell from 100% to 13.2% (9.0%), close to their 6.9% of the dollars: a draw by money at risk |
+| Fake accounts farm the streak jackpot | Covering every answer of a 7-round streak takes 3^7 = 2,187 accounts with $10 each in BRAVE for 7 rounds: about $21,870 at the Intern's risk | The jackpot (half of every tip, plus direct additions) | 1.7: eligibility and the split count BRAVE dollars only | A well-funded script can still play many free guesses; a cost per guess would close it (limit 18) |
+| Rent voting power | One round's exposure | A promote, fire or playbook vote | Weight grows over 7 rounds; demote and fire pass at 34% of all locked weight | A captured vote moves only inside the fixed limits (limit 7) |
+| Cash out a cent while the AI answers | A cent and gas, every round | Make the Intern miss rounds | The rulebook states the limit on the same base the checks use; the runner asks again once when the rulebook changed (option e2: refusals for money that left 9 → 0 a run) | Doing it at the right moment every round could still cost the Intern a round (limit 17) |
+| The runner asks until it likes an answer | Free for the runner | Its pick among the model's answers | NEAR AI's signature ties each answer to its request; any answer must pass the rank's limits | The runner is trusted here (limit 6) |
+| The runner misreports a result | Free for the runner | At most 10 times the margin, booked in test dollars | 1.7: anyone can challenge within 3 rounds with a $5 bond; a `CORRECT` vote rewrites it | Holders must vote; on mainnet the result would be measured |
+| A broken or captured model | — | Endless refusals, or bets at the limit | 1.7: three NOPE rounds fire an INTERN; the drawdown brake halves the limits after a 1% losing week (always-max worst fall at TRADER 11.9% → 8.8%) | Limits bound every bet; deepest fall in any seed with the limits on: 11.9% |
+| A visitor's trick | Free, or $1 paid | Push the AI past its limits | The answer is proposed unchanged and judged like any other; a NOPE is recorded | None beyond the limits; a NOPE pays the trickster from the bounty |
+| Forged or replayed proposals, calls from the wrong account, forged callbacks, numbers near the top of u128, first-depositor inflation, concurrent spends of the same coins, junk tokens, free calls that grow storage, coins locked after a vote opened | Gas | — | Refused (ten attack tests on a local NEAR node, all passing) | None found |
+| The runner disappears with bets open | — | Money stuck in a round | 1.7: after 3 round lengths anyone can `abandon` the round; open bets are booked as lost and money can leave | Holders lose those bets' margins |
 
 ## Future scope (not built)
 
@@ -177,7 +217,7 @@ tests run without them.
 
 | Folder | What it is |
 |---|---|
-| `crates/` | The NEAR contracts (Rust): `coin`, `rules`, `shared`, `ai-check`, `hl-order`, `mock-usdc`, `lender`, `stickers`, `launchpad`, `coin/stub`, `coin/wire` (the interface's JSON shapes). `crates/coin/sandbox/` has the local-node tests |
+| `crates/` | The NEAR contracts (Rust): `coin`, `rules`, `shared`, `ai-check`, `hl-order`, `mock-usdc`, `lender`, `stickers`, `launchpad`, `tickets`, `coin/stub`, `coin/wire` (the interface's JSON shapes). `crates/coin/sandbox/` has the local-node tests |
 | `runner/` | The off-chain Intern (TypeScript). It asks the model, proposes on NEAR, carries signed orders to Hyperliquid, reports results, and serves the trick API |
 | `tailfade/` | Tail or Fade (TypeScript, browser and Node) and its faucet service |
 | `stream/` | Builds a cue (pose, line, caption) for every feed event |
@@ -187,7 +227,7 @@ tests run without them.
 | `fixtures/` | Recorded AI answers, Hyperliquid replies, and every testnet account and transaction |
 | `docs/` | Real versus stand-in, measurements (gas, storage, attacks), APIs, the build |
 | `tools/view.py` | Read-only questions to the testnet contracts |
-| `01-SHARED-INTERFACE.md` | The interface every part follows (version 1.6). The planning files it mentions (`00-HOW-WE-WORK.md`, `02`–`05`) are not in this repository |
+| `01-SHARED-INTERFACE.md` | The interface every part follows (version 1.7). The planning files it mentions (`00-HOW-WE-WORK.md`, `02`–`05`) are not in this repository |
 
 ## How it was built
 
