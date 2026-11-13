@@ -30,17 +30,17 @@ or simply `./verify.sh --quick`, which runs these, the tests, and the comparison
 The coin includes Engine 2's crates `ai-check` (the "really the AI" check) and `hl-order` (Hyperliquid
 orders), from `crates/` in this folder; their code is part of the coin's hash.
 
-## The expected hashes (2026-11-13, interface 1.4)
+## The expected hashes (2026-11-13, interface 1.5)
 
 | Account | Wasm | Size (bytes) | sha256, base58 (= the account's `code_hash`) |
 |---|---|---|---|
-| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 621,944 | `4yqGNWQ9evz9exRC4zkt1xiua1UkJL1czDDtxm9K9XCT` |
+| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 632,157 | `9oufg5viW3x5eQ49p8zBkZMNvdLzyQFT7Pd4GRjuBoZK` |
 | `usdc.desk-lab-2026.testnet` | `target/near/mock_usdc/mock_usdc.wasm` | 149,106 | `C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H` |
 | `lender.desk-lab-2026.testnet` | `target/near/lender/lender.wasm` | 131,977 | `2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em` |
 | `stickers.desk-lab-2026.testnet` | `target/near/stickers/stickers.wasm` | 203,578 | `22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm` |
 | `launch.desk-lab-2026.testnet` | `target/near/launchpad/launchpad.wasm` | 208,384 | `Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT` |
-| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,150 | `4d4Pp3gzwXwPjBSvK66G4wcdDQ1HgaXENx6jz3hfHiYu` |
-| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 619,669 | `4GgRc46n6fSQXuep8dfHWwvRsuVJhaEZhV1PAhdejYiZ` |
+| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,530 | `4vtJ6cRc5t6aXE1GzgajcmGPyg5TYktgKAqZrZCwNPtV` |
+| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 629,392 | `DdPGocHujJSw9F5nXuXZCCbhe4gkM6wHCN89Y9Bb5WYN` |
 
 `./verify.sh --quick` on 2026-11-13 printed `SAME` for all seven. To check one by hand:
 

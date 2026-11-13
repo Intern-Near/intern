@@ -32,7 +32,7 @@ all money is test money.
 | The streak jackpot (R3) | the coin | **Real**, test dollars | Half of every tip plus direct additions (the team's $100 seed); 7 right in a row by an eligible boss wins it |
 | The payday draw (R4) | the coin | **Real mechanism, stand-in money** | Every 7 rounds the interest collected is drawn (70% to one winner, the rest to up to 10 runners-up). The interest is the STAND-IN lender's 5% test rate, so prizes are cents |
 | Bigger Tail or Fade chips (R5) | the visitor's Hyperliquid account | **Real, once** | 5x and 10x where the market allows; a $10 TAIL at 10x filled and closed on 2026-11-13 |
-| The long shot (R6) | — | **Not built yet** | A voted, once-a-week high-leverage ticket; it changes what the Intern may trade, so it comes last |
+| The long shot (R6, interface 1.5) | the coin | **Real, once** (on coin-fast) | A `LONG_SHOT` vote allows one extra ticket two rounds later: exactly 0.5% of the pool at up to 10x, inside the round's limit. On 2026-11-13 a vote passed on coin-fast and the 10x ticket was approved in round 22; a second was refused. Not yet used on the live coin. It usually loses: that is what a long shot is |
 | The stub | `stub.hackcheck-2026-1103.testnet` | **Stand-in** | Made-up data in the interface's shapes, for building the site |
 | The round clock | the coin | **Demo** | 30-minute rounds on testnet; the product's round is 24 hours |
 | The contracts cannot be changed | — | **Not yet** | All contract accounts still hold a full-access key, so they can be upgraded; that is how steps 3–9 were deployed. Removing the keys is the owner's decision: see `ACCESS-KEYS.md` |

@@ -45,6 +45,23 @@ So the Intern's 2% limit is clear of the $11 minimum bet: `boss1.desk-lab-2026.t
 `GN9KQhByXUfjqNVqHXwPcumBbXMfkKSdYSND4nQua7BC`, 17:26 UTC; it opened round 11, so the money converts at round 12).
 From then on the Intern runs on Railway (project `intern-runner`), not from a laptop.
 
+## Interface 1.5: the long shot (2026-11-13)
+
+`migrate_long_shot` upgraded both coins in place (the reward ladder's money, guesses and draw entries kept; tested
+first on a local node from coin-fast's exact 1.4 code). The runner on Railway was redeployed first: it reads the
+program's version every round and accepts 1.3 to 1.5.
+
+| What | Transaction | Code hash now |
+|---|---|---|
+| `coin-fast` upgraded to 1.5 | `788nJooz2bbe45ThiNejohfW2g5Vrw2XUHfvx9ZHYbe` | `DdPGocHujJSw9F5nXuXZCCbhe4gkM6wHCN89Y9Bb5WYN` |
+| `coin` (live) upgraded to 1.5, round 39 before its window | `2cgZGguv1MxzBNhv9XZtjjQGmwYtgztuYgnjdTR4rCRC` | `9oufg5viW3x5eQ49p8zBkZMNvdLzyQFT7Pd4GRjuBoZK` |
+| `stub` redeployed (reports 1.5) | `8GSiUhj6pLYoj2uPaxv36zzEdm89oUP4JxLopXJreL1V` | `4vtJ6cRc5t6aXE1GzgajcmGPyg5TYktgKAqZrZCwNPtV` |
+| The live runner's first `rewards_tick` on 1.5 (round 39, 2.9 TGas) | `A8HVYhVE6YmSNYnWqeFqUJwojgHamPWy5MmrfWcU2ijm` | |
+| **A long shot on coin-fast:** vote 5 `LONG_SHOT` passed (boss1 and boss2, yes 189,999,505 of weight), effective round 22; round 21 ticked open | `8omLPg6wb6jvzcRA57GHTrdSaLAtJBqzWAfRafgXbLBU` (tick) | |
+| Round 22: the rulebook said `long_shot: one ticket this round: margin_e6 exactly 3514000, leverage up to 10`; the ticket (DOGE long, $3.514 at 10x) approved as position 3 with `long_shot: true`, `bets_used` still 0 | `2zKMByzTK71H9Jiu9n3pugiJpXntjqRuvJ9G9odDHsp3` | |
+| A second ticket in round 22: NOPE `OVER_LEVERAGE` | `2VzPaXTJJcEJHJcHuCdvvEzjoQRmfq2qd8fmSJZrGKSK` | |
+| Round 22 reported (margin back) and settled | `9v752unmBaz7Lid7e6iiKeENrLydw8vS6kmXq4mZoWBr`, `E3Du4jFYv1XoGt7yVCVrh4nN8D923N1TZ9NCUjHGvGHr` | |
+
 ## Interface 1.4: the reward ladder (2026-11-13)
 
 `migrate_rewards` upgraded both coins in place (balances, locks and records kept; tested first on a local node from
