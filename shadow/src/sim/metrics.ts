@@ -1,5 +1,5 @@
 import type { Arm } from "./engine.ts";
-import type { Kind } from "./ledger.ts";
+import { type Kind, usdOf } from "./ledger.ts";
 import type { MetricName } from "./scenarios.ts";
 import type { DayPoint, Track, World } from "./world.ts";
 
@@ -26,7 +26,24 @@ function stat(t: Track): Stat {
 }
 
 type ByKind = Record<Kind, number>;
-const byKind = (): ByKind => ({ boss: 0, whale: 0, fake: 0 });
+const byKind = (): ByKind => ({ boss: 0, whale: 0, fake: 0, griefer: 0, sniper: 0 });
+
+/** What the PROPOSALS did in a run (all zero under today's rules). */
+export interface ProposalResult {
+  blocked: number;
+  blocked_won: number;
+  shrunk: number;
+  unblocked: number;
+  suspensions: number;
+  halts: number;
+  rounds_halted: number;
+  rounds_gated: number;
+  burned_coins: number;
+  burn_spent: number;
+  reasks: number;
+  /** f3: entrants who lost their place in the draw to a newcomer holding more. */
+  bumped: ByKind;
+}
 
 export interface RunResult {
   scenario: string;
@@ -34,6 +51,17 @@ export interface RunResult {
   seed: number;
   window_start: string;
   rounds: number;
+  /**
+   * The ordinary bosses' net gain over the run: what they hold at the end (BRAVE at its value, pending, SAFE), plus
+   * what they took out, plus prizes, minus what they paid in.
+   */
+  honest_result: number;
+  proposals: ProposalResult;
+  /**
+   * ABUSE TESTS: the round the sniper locked its coins and the round its first firing vote passed (null: never); what
+   * the whale, sniper and griefer paid in; the whale's own playbook's coach cut is `coach_cut`.
+   */
+  attack: { sniper_locked_round: number | null; sniper_fired_round: number | null; attacker_paid_in: number };
   /** The coin price (dollars per coin), the BRAVE pool (dollars) and the coin supply (coins), round by round. */
   price: Stat;
   brave: Stat;
@@ -160,8 +188,45 @@ export function resultOf(w: World, meta: RunMeta): RunResult {
     prizes_beyond_sources_e6: Math.round(beyond * 1e6),
     book_failures: c.invariant_failures.length,
   };
+  let honest = 0n;
+  for (const a of w.accounts) {
+    if (a.kind !== "boss") continue;
+    honest += usdOf(w.pot, a) + a.paid_out - a.paid_in;
+    honest += (rw.prizes.draw.get(a.id) ?? 0n) + (rw.prizes.jackpot.get(a.id) ?? 0n);
+  }
+  const bumped = byKind();
+  for (const id of rw.bumped) bumped[kindOf(id)] += 1;
+  const pc = w.pc;
+  const sniper = w.accounts.find((a) => a.kind === "sniper");
+  const sniperFire = sniper
+    ? w.votes.find((v) => v.kind === "FIRE" && v.opened_by === sniper.id && v.state === "PASSED")
+    : undefined;
   return {
     ...meta,
+    honest_result: dollars(honest),
+    proposals: {
+      blocked: pc.blocked,
+      blocked_won: pc.blocked_won,
+      shrunk: pc.shrunk,
+      unblocked: pc.unblocked,
+      suspensions: pc.suspensions,
+      halts: pc.halts,
+      rounds_halted: pc.rounds_halted,
+      rounds_gated: pc.rounds_gated,
+      burned_coins: dollars(pc.burned_coins),
+      burn_spent: dollars(pc.burn_spent),
+      reasks: pc.reasks,
+      bumped,
+    },
+    attack: {
+      sniper_locked_round: sniper?.lots[0]?.round ?? null,
+      sniper_fired_round: sniperFire?.effective_round ?? null,
+      attacker_paid_in: dollars(
+        w.accounts
+          .filter((a) => a.kind === "whale" || a.kind === "sniper" || a.kind === "griefer")
+          .reduce((s, a) => s + a.paid_in, 0n),
+      ),
+    },
     price: stat(w.track.price),
     brave: stat(w.track.brave),
     supply: stat(w.track.supply),

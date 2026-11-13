@@ -64,6 +64,8 @@ export interface Rewards {
   jackpot_wins: { round: number; winners: string[]; each: bigint }[];
   /** Accounts refused a place in the draw because it was full. */
   refused_full: string[];
+  /** PROPOSAL f3: entrants who lost their place to a newcomer holding more. */
+  bumped: string[];
 }
 
 export function newRewards(): Rewards {
@@ -86,6 +88,7 @@ export function newRewards(): Rewards {
     draws: [],
     jackpot_wins: [],
     refused_full: [],
+    bumped: [],
   };
 }
 
@@ -210,21 +213,46 @@ export function settleJackpots(rw: Rewards, currentRound: number): void {
 
 export type EntryResult = "IN" | "ALREADY" | "FULL" | "NO_MONEY";
 
-/** R4, joining the draw: a boss with money, at most 200 entrants (01 §9.7). */
-export function enterDraw(rw: Rewards, id: string, usd: bigint, round: number): EntryResult {
+/**
+ * R4, joining the draw: a boss with money, at most 200 entrants (01 §9.7). PROPOSAL f3 (`sizeOf` given): when the draw
+ * is full, a newcomer holding more takes the place of the entrant holding least, who leaves the draw.
+ */
+export function enterDraw(
+  rw: Rewards,
+  id: string,
+  usd: bigint,
+  round: number,
+  sizeOf?: (id: string) => bigint,
+): EntryResult {
   if (rw.entries.has(id)) return "ALREADY";
-  if (rw.entrants.length >= REWARDS.max_entrants) {
-    rw.refused_full.push(id);
-    return "FULL";
-  }
   if (usd <= 0n) return "NO_MONEY";
+  if (rw.entrants.length >= REWARDS.max_entrants) {
+    let smallest: string | null = null;
+    let least = 0n;
+    if (sizeOf) {
+      for (const e of rw.entrants) {
+        const x = sizeOf(e);
+        if (smallest === null || x < least) {
+          smallest = e;
+          least = x;
+        }
+      }
+    }
+    if (smallest === null || usd <= least) {
+      rw.refused_full.push(id);
+      return "FULL";
+    }
+    rw.entrants = rw.entrants.filter((e) => e !== smallest);
+    rw.entries.delete(smallest);
+    rw.bumped.push(smallest);
+  }
   rw.entrants.push(id);
   rw.entries.set(id, { since_round: round, base_usd: usd });
   return "IN";
 }
 
-/** One weighted pick, without putting the picked account back. */
-function pick(weights: [string, bigint][], rng: Rng): string | null {
+/** One weighted pick; the picked account is taken out unless `keep` (PROPOSAL f3: drawing with replacement). */
+function pick(weights: [string, bigint][], rng: Rng, keep = false): string | null {
   const total = weights.reduce((s, [, w]) => s + w, 0n);
   if (total === 0n) return null;
   let x = (BigInt(Math.floor(rng.next() * 2 ** 32)) * total) >> 32n;
@@ -232,7 +260,7 @@ function pick(weights: [string, bigint][], rng: Rng): string | null {
     const entry = weights[i];
     if (!entry) break;
     if (x < entry[1]) {
-      weights.splice(i, 1);
+      if (!keep) weights.splice(i, 1);
       return entry[0];
     }
     x -= entry[1];
@@ -248,11 +276,19 @@ function pick(weights: [string, bigint][], rng: Rng): string | null {
  * proportion to tickets, each account at most once, and an entrant holding nothing leaves the draw: the contract's
  * reading (crates/coin/src/rewards.rs `rw_draw`), as 01 does not say how the tickets are drawn.
  */
+export interface DrawRule {
+  /** PROPOSAL f1: an entrant's lowest balance this period; its tickets count no more than that. */
+  lowest?: (id: string) => bigint | undefined;
+  /** PROPOSAL f3: every prize drawn by tickets with replacement, so an account may win several. */
+  withReplacement?: boolean;
+}
+
 export function holdDraw(
   rw: Rewards,
   currentRound: number,
   usdOf: (id: string) => bigint,
   rng: Rng,
+  rule: DrawRule = {},
 ): DrawResult | null {
   const p = rw.draw_period;
   const start = p * REWARDS.draw_rounds + 1;
@@ -266,7 +302,9 @@ export function holdDraw(
     const now = usdOf(id);
     const rounds = BigInt(Math.max(0, end + 1 - Math.max(start, e.since_round)));
     // biome-ignore lint/complexity/useMathMinMax: these are bigints, and Math.min throws on bigint.
-    const base = e.base_usd < now ? e.base_usd : now;
+    let base = e.base_usd < now ? e.base_usd : now;
+    const low = rule.lowest?.(id);
+    if (low !== undefined && low < base) base = low;
     if (base * rounds > 0n) weights.push([id, base * rounds]);
     if (now === 0n) gone.add(id);
     else e.base_usd = now; // the next period counts from what is held now
@@ -287,11 +325,12 @@ export function holdDraw(
     each: 0n,
     tickets_total: total,
   };
-  const winner = total > 0n && prize > 0n ? pick(weights, rng) : null;
+  const keep = rule.withReplacement === true;
+  const winner = total > 0n && prize > 0n ? pick(weights, rng, keep) : null;
   if (winner !== null) {
     const runners: string[] = [];
     while (runners.length < REWARDS.draw_runners) {
-      const r = pick(weights, rng);
+      const r = pick(weights, rng, keep);
       if (r === null) break;
       runners.push(r);
     }

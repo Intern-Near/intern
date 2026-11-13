@@ -6,7 +6,7 @@ import { isRecord } from "../../../runner/src/json.ts";
 import { type AnswerRule, answerText, applyAnswerRule } from "../../../runner/src/judge.ts";
 import { MARKETS, type Market } from "../../../runner/src/markets.ts";
 import type { SigningAlgo } from "../../../runner/src/nearai.ts";
-import { classify, loadRun } from "../report.ts";
+import { classify, type ExchangeRecord, loadRun } from "../report.ts";
 import { type Profile, type Recorded, type ShapeCode, sizeOf } from "./behaviour.ts";
 import { buildBook, type Candle, type PriceBook, parseCandles } from "./prices.ts";
 
@@ -83,6 +83,18 @@ function exampleMargin(rulebook: string): bigint {
 }
 
 /**
+ * How long an exchange took from sending the question to holding the signed answer: the recording's signature fetch
+ * time minus its start (meta.json), or the answer time alone when the signature time is missing. The proposal's own
+ * transaction comes on top (not recorded here).
+ */
+function answerMs(meta: NonNullable<ExchangeRecord["meta"]>, scheme: SigningAlgo): number {
+  const signedAt = meta.signatures?.[scheme]?.fetched_at;
+  const start = Date.parse(meta.recorded_at);
+  const ms = signedAt ? Date.parse(signedAt) - start : (meta.response?.ms ?? 0);
+  return Number.isFinite(ms) && ms > 0 ? ms : 0;
+}
+
+/**
  * One model's recorded answers from a shadow run folder, judged exactly as the shadow report judges them
  * (shadow/src/report.ts `loadRun` and `classify`: each real signature checked against the signer pinned at set-up).
  */
@@ -115,6 +127,7 @@ export function buildProfile(
     const toldMax = rulebookNumber(rulebook, "max_margin_e6");
     const toldExample = exampleMargin(rulebook);
     told ??= { rank: rec.rank, max_margin_e6: String(toldMax), example_e6: String(toldExample) };
+    const ms = answerMs(rec.meta, opts.scheme);
     if (c.readableBet) {
       // classify read a bet; read the same line again for its exact margin (classify keeps it in dollars).
       const read = readDecisionLine(
@@ -130,11 +143,12 @@ export function buildProfile(
         side: d.side,
         leverage: d.leverage,
         size: sizeOf(d.margin_e6, toldMax, toldExample),
+        ms,
       });
     } else if (v.verdict === "SKIP") {
-      decisions.push({ kind: "skip" });
+      decisions.push({ kind: "skip", ms });
     } else if (v.verdict === "NOPE" && SHAPE_CODES.has(v.code)) {
-      decisions.push({ kind: "unreadable", code: v.code as ShapeCode });
+      decisions.push({ kind: "unreadable", code: v.code as ShapeCode, ms });
     } else {
       throw new Error(`${rec.tick}: verdict ${key} without a readable bet`);
     }

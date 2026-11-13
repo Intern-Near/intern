@@ -3,16 +3,11 @@ import type { Market } from "../../../runner/src/markets.ts";
 import type { RankName, Side } from "../../../runner/src/ranks.ts";
 import type { RoundState, Status, Verdict } from "../../../runner/src/rules.ts";
 import { type Account, type Kind, newAccount, newPot, type Pot } from "./ledger.ts";
+import { type Proposals, TODAY } from "./proposals.ts";
 import { newRewards, type Rewards, type Verdict3 } from "./rewards.ts";
 import type { Vote } from "./votes.ts";
 
 /** The whole simulated coin at one moment, and what the run has counted so far. Pure: no node: imports. */
-
-/**
- * When in a round something happens: before the proposal (no bet open), during the hold (bets open: a leaver gives
- * up their share of the margin out, 01 §9.1 1.1), or after the close (bets settled).
- */
-export type Moment = "before" | "hold" | "after";
 
 /** What an account does in a scenario: assumptions, drawn when it arrives. */
 export interface Traits {
@@ -22,8 +17,67 @@ export interface Traits {
   /** Joins the payday draw. */
   joins_draw: boolean;
   draw_tried: boolean;
-  /** In a run on BRAVE: the round it leaves in, and when in that round. */
-  leaves: { round: number; when: Moment } | null;
+  /** In a run on BRAVE: the round it leaves in, and when in that round (ms after the round's start). */
+  leaves: { round: number; at_ms: number } | null;
+}
+
+/**
+ * The state of the PROPOSALS (src/sim/proposals.ts) a run has switched on. Unused under today's rules.
+ */
+export interface ProposalState {
+  /** a: refusals in a row on the Intern's own proposals; whether the Intern is suspended by them. */
+  strikes: number;
+  suspended: boolean;
+  /** b: whether new bets are halted, the coin price high the line is measured from, when the halt began. */
+  halted: boolean;
+  halt_high: bigint;
+  halted_round: number | null;
+  /** b: the round a passed RESUME vote takes effect in. */
+  resume_round: number | null;
+  /** c: the bets' result of each recent round, newest last; whether this round's limits are shrunk. */
+  recent: bigint[];
+  gated: boolean;
+  /** f1: each account's balance at the end of each of the last rounds (newest last), and its lowest this period. */
+  balances: Map<string, bigint[]>;
+  period_low: Map<string, bigint>;
+  /** f2: each account's balance when the current round opened. */
+  at_open: Map<string, bigint>;
+}
+
+/** What the PROPOSALS did: how many bets they stopped, shrank or let through, and their own events. */
+export interface ProposalCounters {
+  /** Bets today's rules would have approved that the proposal stopped (refused, or not asked while halted). */
+  blocked: number;
+  /** Of those, the ones that would have made money. */
+  blocked_won: number;
+  /** Bets placed smaller than today's rules would have placed them. */
+  shrunk: number;
+  /** Bets today's rules would have refused that the proposal let through. */
+  unblocked: number;
+  suspensions: number;
+  halts: number;
+  rounds_halted: number;
+  rounds_gated: number;
+  burned_coins: bigint;
+  burn_spent: bigint;
+  /** e2: answers asked again because the rulebook changed while the model was answering. */
+  reasks: number;
+}
+
+export function newProposalCounters(): ProposalCounters {
+  return {
+    blocked: 0,
+    blocked_won: 0,
+    shrunk: 0,
+    unblocked: 0,
+    suspensions: 0,
+    halts: 0,
+    rounds_halted: 0,
+    rounds_gated: 0,
+    burned_coins: 0n,
+    burn_spent: 0n,
+    reasks: 0,
+  };
 }
 
 export interface Position {
@@ -162,6 +216,10 @@ export interface World {
   daily: DayPoint[];
   audit: AuditEntry[] | null;
   next_id: number;
+  /** The PROPOSALS switched on for this run (none: today's rules), their state and what they did. */
+  proposals: Proposals;
+  ps: ProposalState;
+  pc: ProposalCounters;
 }
 
 export function newCounters(): Counters {
@@ -193,7 +251,7 @@ export function newCounters(): Counters {
 }
 
 /** A coin before its first round: no money, the Intern at INTERN and EMPLOYED (01 §3). */
-export function newWorld(audit = false): World {
+export function newWorld(audit = false, proposals?: Proposals): World {
   return {
     round: 0,
     pot: newPot(),
@@ -218,6 +276,21 @@ export function newWorld(audit = false): World {
     daily: [],
     audit: audit ? [] : null,
     next_id: 0,
+    proposals: proposals ?? TODAY,
+    ps: {
+      strikes: 0,
+      suspended: false,
+      halted: false,
+      halt_high: 0n,
+      halted_round: null,
+      resume_round: null,
+      recent: [],
+      gated: false,
+      balances: new Map(),
+      period_low: new Map(),
+      at_open: new Map(),
+    },
+    pc: newProposalCounters(),
   };
 }
 

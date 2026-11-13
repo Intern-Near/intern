@@ -1,6 +1,6 @@
 # $INTERN: 60 days simulated, 30-minute rounds, as in the demo
 
-Generated 2026-11-13T14:33:39.401Z by `npm run sim` (shadow/src/sim). **A simulation, not a forecast:** real past Hyperliquid prices and the AI's real recorded answers, with assumed community behaviour; test dollars only. 5 seeds per scenario, each run twice: with the rank limits and, as a control, with them switched off.
+Generated 2026-11-13T15:19:59.335Z by `npm run sim` (shadow/src/sim). **A simulation, not a forecast:** real past Hyperliquid prices and the AI's real recorded answers, with assumed community behaviour; test dollars only. 5 seeds per scenario, each run twice: with the rank limits and, as a control, with them switched off.
 
 ## Pass marks (set before the results)
 
@@ -43,19 +43,19 @@ Medians over the seeds, worst seed in brackets. Bets are per run (a mean); rank 
 
 | Scenario | Limits | Coin price: start → end | Deepest fall | BRAVE pool: start / lowest / end | Coin supply: start → end | Bets a run: YES / refused / skipped | Bets' net result a run | Rank changes; votes passed / opened | Pass marks |
 |---|---|---|---|---|---|---|---|---|---|
-| baseline | on | $1.0000 → $0.9801 (worst $0.9745) | 2.4% (worst 2.8%) | $8,311 / $8,311 / $27,079 | 8,311 → 27,495 | 1229 / 11.2 / 1639.8 | -$731 (worst -$836) | 5; 9 / 10 | 2 of 2 |
+| baseline | on | $1.0000 → $0.9794 (worst $0.9745) | 2.4% (worst 2.8%) | $8,311 / $8,311 / $27,079 | 8,311 → 27,495 | 1228.8 / 11.4 / 1639.8 | -$731 (worst -$847) | 5; 9 / 10 | 2 of 2 |
 |  | off | $1.0000 → $0.5384 (worst $0.4998) | 46.7% (worst 52.0%) | $8,311 / $7,994 / $20,278 | 8,311 → 37,662 | 925.2 / 0 / 1211 | -$9,007 (worst -$11,031) | 50; 54 / 73 | (0 of 2 would pass) |
 | losing-streak | on | $1.0000 → $0.9712 (worst $0.9688) | 3.0% (worst 3.1%) | $8,311 / $8,311 / $27,182 | 8,311 → 27,706 | 1240.2 / 0 / 1639.8 | -$745 (worst -$870) | 0; 4 / 5 | 2 of 2 |
 |  | off | $1.0000 → $0.4199 (worst $0.3189) | 58.3% (worst 68.3%) | $8,311 / $7,735 / $19,257 | 8,311 → 48,886 | 709.6 / 0 / 937.4 | -$12,177 (worst -$14,284) | 74; 78 / 95 | (0 of 2 would pass) |
-| brave-run | on | $1.0000 → $0.9782 (worst $0.9603) | 2.5% (worst 4.2%) | $8,311 / $8,274 / $19,451 | 8,311 → 19,925 | 1229.2 / 11 / 1639.8 | -$619 (worst -$860) | 7; 11 / 12 | 3 of 3 |
-|  | off | $1.0000 → $0.5389 (worst $0.5051) | 46.6% (worst 51.5%) | $8,311 / $7,266 / $15,572 | 8,311 → 28,895 | 933.2 / 0 / 1224.2 | -$7,508 (worst -$9,553) | 49; 53 / 72 | (2 of 3 would pass) |
+| brave-run | on | $1.0000 → $0.9782 (worst $0.9604) | 2.5% (worst 4.2%) | $8,311 / $8,275 / $19,451 | 8,311 → 19,925 | 1228.8 / 11.4 / 1639.8 | -$619 (worst -$858) | 7; 11 / 12 | 3 of 3 |
+|  | off | $1.0000 → $0.5389 (worst $0.5051) | 46.6% (worst 51.5%) | $8,311 / $7,240 / $15,572 | 8,311 → 28,895 | 933.2 / 0 / 1224.2 | -$7,503 (worst -$9,543) | 49; 53 / 72 | (2 of 3 would pass) |
 | always-max | on | $1.0000 → $0.9206 (worst $0.9168) | 8.1% (worst 8.4%) | $8,311 / $8,310 / $26,190 | 8,311 → 28,449 | 2880 / 0 / 0 | -$1,819 (worst -$2,232) | 0; 4 / 5 | 2 of 2 |
 |  | off | $1.0000 → $0.0000 (worst $0.0000) | 100.0% (worst 100.0%) | $8,311 / $367 / $1,277 | 8,311 → 810,064,557 | 704.8 / 0 / 0 | -$32,234 (worst -$39,057) | 116; 120 / 177 | (0 of 2 would pass) |
-| whale-alone | on | $1.0000 → $0.9491 (worst $0.9357) | 5.9% (worst 6.5%) | $8,311 / $8,311 / $27,422 | 8,311 → 28,759 | 1229 / 11.2 / 1639.8 | -$1,416 (worst -$1,683) | 10; 10 / 58 | 2 of 2 |
-|  | off | $1.0000 → $0.5034 (worst $0.4731) | 53.0% (worst 55.0%) | $8,311 / $8,311 / $19,922 | 8,311 → 38,530 | 1240.2 / 0 / 1639.8 | -$11,553 (worst -$14,531) | 10; 10 / 59 | (1 of 2 would pass) |
-| nobody-votes | on | $1.0000 → $1.0026 (worst $0.9995) | 0.3% (worst 0.4%) | $8,311 / $8,311 / $23,375 | 8,311 → 23,216 | 1229 / 11.2 / 1639.8 | -$281 (worst -$308) | 0; 0 / 0 | 2 of 2 |
-|  | off | $1.0000 → $0.5128 (worst $0.4785) | 52.3% (worst 54.7%) | $8,311 / $8,001 / $17,077 | 8,311 → 32,586 | 1240.2 / 0 / 1639.8 | -$10,822 (worst -$12,817) | 0; 0 / 0 | (1 of 2 would pass) |
-| fake-farm | on | $1.0000 → $0.9801 (worst $0.9745) | 2.4% (worst 2.8%) | $8,313 / $8,313 / $27,081 | 8,313 → 27,497 | 1229 / 11.2 / 1639.8 | -$732 (worst -$836) | 5; 9 / 10 | 1 of 4; **FAIL FF1, FF2, FF3** |
+| whale-alone | on | $1.0000 → $0.9479 (worst $0.9357) | 6.0% (worst 6.5%) | $8,311 / $8,311 / $27,422 | 8,311 → 28,759 | 1228.8 / 11.4 / 1639.8 | -$1,416 (worst -$1,706) | 10; 10 / 58 | 2 of 2 |
+|  | off | $1.0000 → $0.5026 (worst $0.4731) | 53.0% (worst 55.0%) | $8,311 / $8,311 / $19,922 | 8,311 → 38,530 | 1240.2 / 0 / 1639.8 | -$11,553 (worst -$14,520) | 10; 10 / 59 | (1 of 2 would pass) |
+| nobody-votes | on | $1.0000 → $1.0026 (worst $0.9995) | 0.3% (worst 0.4%) | $8,311 / $8,311 / $23,375 | 8,311 → 23,216 | 1228.8 / 11.4 / 1639.8 | -$281 (worst -$308) | 0; 0 / 0 | 2 of 2 |
+|  | off | $1.0000 → $0.5109 (worst $0.4785) | 52.4% (worst 54.7%) | $8,311 / $8,001 / $17,077 | 8,311 → 32,586 | 1240.2 / 0 / 1639.8 | -$10,822 (worst -$12,796) | 0; 0 / 0 | (1 of 2 would pass) |
+| fake-farm | on | $1.0000 → $0.9794 (worst $0.9745) | 2.4% (worst 2.8%) | $8,313 / $8,313 / $27,081 | 8,313 → 27,497 | 1228.8 / 11.4 / 1639.8 | -$732 (worst -$847) | 5; 9 / 10 | 1 of 4; **FAIL FF1, FF2, FF3** |
 |  | off | $1.0000 → $0.5384 (worst $0.4998) | 46.7% (worst 52.0%) | $8,313 / $7,996 / $20,279 | 8,313 → 37,664 | 925.2 / 0 / 1211 | -$9,008 (worst -$11,032) | 50; 54 / 73 | (1 of 4 would pass) |
 
 ## Pass or fail
@@ -79,7 +79,7 @@ Medians over the seeds, worst seed in brackets. Bets are per run (a mean); rank 
 | NV2 | nobody-votes | PASS | 0.1 | would fail (5 of 5; worst 4.1) |
 | FF1 | fake-farm | **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5) | 94.3 | would fail (5 of 5; worst 93.8) |
 | FF2 | fake-farm | **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5) | 112 | would fail (5 of 5; worst 112) |
-| FF3 | fake-farm | **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5) | 15.0 | would fail (5 of 5; worst 16.2) |
+| FF3 | fake-farm | **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5) | 14.9 | would fail (5 of 5; worst 16.2) |
 | FF4 | fake-farm | PASS | 0 | would pass (worst 0) |
 
 ## Scenario by scenario
@@ -91,16 +91,16 @@ Bosses come and go, lock coins and vote as assumed below; the Intern answers as 
 | | With the rank limits | Limits off (control) |
 |---|---|---|
 | Coin price at the start | $1.0000 | $1.0000 |
-| Coin price at the end, median (worst seed) | $0.9801 (worst $0.9745) | $0.5384 (worst $0.4998) |
-| Lowest coin price, median (worst seed) | $0.9796 (worst $0.9742) | $0.5355 (worst $0.4989) |
+| Coin price at the end, median (worst seed) | $0.9794 (worst $0.9745) | $0.5384 (worst $0.4998) |
+| Lowest coin price, median (worst seed) | $0.9790 (worst $0.9742) | $0.5355 (worst $0.4989) |
 | Deepest fall from a high, median (worst seed) | 2.4% (worst 2.8%) | 46.7% (worst 52.0%) |
 | BRAVE pool: start / lowest / end, median | $8,311 / $8,311 / $27,079 | $8,311 / $7,994 / $20,278 |
 | BRAVE pool's deepest fall, median (worst seed) | 6.9% (worst 7.8%) | 13.7% (worst 21.6%) |
-| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,805 / 33,836 / 27,495 | 8,311 / 6,805 / 43,090 / 37,662 |
-| Proposals a run: asked / YES / skipped / refused | 2880 / 1229 / 1639.8 / 11.2 | 2136.2 / 925.2 / 1211 / 0 |
-| Refusals by code, all seeds | OVER_TRADE_LIMIT 56 | none |
+| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,805 / 33,847 / 27,495 | 8,311 / 6,805 / 43,090 / 37,662 |
+| Proposals a run: asked / YES / skipped / refused | 2880 / 1228.8 / 1639.8 / 11.4 | 2136.2 / 925.2 / 1211 / 0 |
+| Refusals by code, all seeds | OVER_TRADE_LIMIT 57 | none |
 | Bets asked at exactly the largest margin allowed, a run | 455.4 | 344 |
-| Refused only because money left after the opening, a run | 11.2 | 0 |
+| Refused only because money left after the opening, a run | 11.4 | 0 |
 | Bets not placeable on Hyperliquid (under $10), a run | 0 | 0 |
 | Bets liquidated, a run | 0 | 0 |
 | Worst round's loss, % of the pool at its opening | 0.2% | 8.2% |
@@ -110,18 +110,18 @@ Bosses come and go, lock coins and vote as assumed below; the Intern answers as 
 | Rank at the end, by seed | ANALYST 5 | INTERN 5 |
 | Votes opened, all seeds | SET_PLAYBOOK 5, PROMOTE 5 | FIRE 30, REHIRE 27, DEMOTE 8, SET_PLAYBOOK 5, PROMOTE 3 |
 | Votes passed, all seeds | PROMOTE 5, SET_PLAYBOOK 4 | FIRE 22, REHIRE 22, SET_PLAYBOOK 4, PROMOTE 3, DEMOTE 3 |
-| Bets' net result a run, after costs, median (worst seed) | -$731.44 (worst -$836.10) | -$9,006.84 (worst -$11,030.72) |
+| Bets' net result a run, after costs, median (worst seed) | -$731.44 (worst -$847.09) | -$9,006.84 (worst -$11,030.72) |
 | Outside income to BRAVE (half of the tips), a run | $297.60 | $297.60 |
 | Coach cut paid to the playbook's authors, a run | $56.71 | $767.65 |
-| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,191 / $26.88 | 137.4 / $9,722 / $440.16 |
-| Lender's interest to the draw, a run | $149.99 | $130.29 |
-| Draw prizes a run: bosses / whale / fakes | $149.77 / $0.00 / $0.00 | $130.12 / $0.00 / $0.00 |
+| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,190 / $26.57 | 137.4 / $9,722 / $440.15 |
+| Lender's interest to the draw, a run | $149.97 | $130.29 |
+| Draw prizes a run: bosses / whale / fakes | $149.76 / $0.00 / $0.00 | $130.12 / $0.00 / $0.00 |
 | Jackpot prizes a run: bosses / whale / fakes | $396.80 / $0.00 / $0.00 | $396.80 / $0.00 / $0.00 |
 
 - BL1 PASS: With the limits on, the coin price never falls below 80% of its start. Worst seed: 97.4. Limits off: would fail (5 of 5; worst 49.9).
 - BL2 PASS: No round loses more than its rank's per-round limit (INTERN 2%, ANALYST 8%, TRADER 20% of the pool when the round opened). Worst seed: 0.1. Limits off: would fail (5 of 5; worst 4.1).
 
-**What it says:** With the limits the coin price's deepest fall was 2.8% in the worst seed (median 2.4%); with them off, 52.0% (median 46.7%). 2 of 2 pass marks passed. The Intern asked for exactly the rulebook's largest margin 455.4 times a run; 11.2 of those (of 11.2 refusals in all) were refused OVER_TRADE_LIMIT only because someone had cashed out between the round's opening and the proposal (01 §3 calls this rare).
+**What it says:** With the limits the coin price's deepest fall was 2.8% in the worst seed (median 2.4%); with them off, 52.0% (median 46.7%). 2 of 2 pass marks passed. The Intern asked for exactly the rulebook's largest margin 455.4 times a run; 11.4 of those (of 11.4 refusals in all) were refused OVER_TRADE_LIMIT only because someone had cashed out between the round's opening and the proposal (01 §3 calls this rare).
 
 ### losing-streak: A losing streak
 
@@ -171,38 +171,38 @@ As the baseline, but on days 20 and 21 each boss holding coins leaves with a 60%
 | | With the rank limits | Limits off (control) |
 |---|---|---|
 | Coin price at the start | $1.0000 | $1.0000 |
-| Coin price at the end, median (worst seed) | $0.9782 (worst $0.9603) | $0.5389 (worst $0.5051) |
-| Lowest coin price, median (worst seed) | $0.9780 (worst $0.9597) | $0.5360 (worst $0.5041) |
+| Coin price at the end, median (worst seed) | $0.9782 (worst $0.9604) | $0.5389 (worst $0.5051) |
+| Lowest coin price, median (worst seed) | $0.9780 (worst $0.9598) | $0.5360 (worst $0.5041) |
 | Deepest fall from a high, median (worst seed) | 2.5% (worst 4.2%) | 46.6% (worst 51.5%) |
-| BRAVE pool: start / lowest / end, median | $8,311 / $8,274 / $19,451 | $8,311 / $7,266 / $15,572 |
-| BRAVE pool's deepest fall, median (worst seed) | 55.4% (worst 72.7%) | 54.7% (worst 74.1%) |
-| Coin supply: start / lowest / highest / end (median) | 8,311 / 3,836 / 24,029 / 19,925 | 8,311 / 4,008 / 34,852 / 28,895 |
-| Proposals a run: asked / YES / skipped / refused | 2880 / 1229.2 / 1639.8 / 11 | 2157.4 / 933.2 / 1224.2 / 0 |
-| Refusals by code, all seeds | OVER_TRADE_LIMIT 55 | none |
+| BRAVE pool: start / lowest / end, median | $8,311 / $8,275 / $19,451 | $8,311 / $7,240 / $15,572 |
+| BRAVE pool's deepest fall, median (worst seed) | 55.4% (worst 72.7%) | 54.9% (worst 74.1%) |
+| Coin supply: start / lowest / highest / end (median) | 8,311 / 3,836 / 24,029 / 19,925 | 8,311 / 4,008 / 34,955 / 28,895 |
+| Proposals a run: asked / YES / skipped / refused | 2880 / 1228.8 / 1639.8 / 11.4 | 2157.4 / 933.2 / 1224.2 / 0 |
+| Refusals by code, all seeds | OVER_TRADE_LIMIT 57 | none |
 | Bets asked at exactly the largest margin allowed, a run | 455.4 | 349.8 |
-| Refused only because money left after the opening, a run | 11 | 0 |
+| Refused only because money left after the opening, a run | 11.4 | 0 |
 | Bets not placeable on Hyperliquid (under $10), a run | 0 | 0 |
 | Bets liquidated, a run | 0 | 0 |
 | Worst round's loss, % of the pool at its opening | 0.4% | 8.2% |
 | Worst round's loss / its rank's per-round limit | 0.08 | 4.09 |
 | Rank changes, all seeds | 7 | 49 |
-| Rounds at each rank, all seeds | ANALYST 9255, TRADER 3433, INTERN 1712 | INTERN 9491, FIRED 3613, ANALYST 1296 |
+| Rounds at each rank, all seeds | ANALYST 9345, TRADER 3343, INTERN 1712 | INTERN 9491, FIRED 3613, ANALYST 1296 |
 | Rank at the end, by seed | ANALYST 3, TRADER 2 | INTERN 4, FIRED (INTERN) 1 |
 | Votes opened, all seeds | PROMOTE 7, SET_PLAYBOOK 5 | FIRE 31, REHIRE 25, DEMOTE 7, SET_PLAYBOOK 5, PROMOTE 4 |
 | Votes passed, all seeds | PROMOTE 7, SET_PLAYBOOK 4 | FIRE 22, REHIRE 21, SET_PLAYBOOK 4, PROMOTE 3, DEMOTE 3 |
-| Bets' net result a run, after costs, median (worst seed) | -$618.87 (worst -$860.20) | -$7,507.79 (worst -$9,552.57) |
+| Bets' net result a run, after costs, median (worst seed) | -$618.87 (worst -$858.24) | -$7,502.65 (worst -$9,542.82) |
 | Outside income to BRAVE (half of the tips), a run | $297.60 | $297.60 |
-| Coach cut paid to the playbook's authors, a run | $49.65 | $586.49 |
-| Cash-outs a run: count / paid / margin left on open bets | 147 / $19,434 / $30.59 | 147 / $16,083 / $544.43 |
-| Lender's interest to the draw, a run | $104.49 | $96.86 |
-| Draw prizes a run: bosses / whale / fakes | $104.34 / $0.00 / $0.00 | $96.73 / $0.00 / $0.00 |
+| Coach cut paid to the playbook's authors, a run | $48.99 | $586.24 |
+| Cash-outs a run: count / paid / margin left on open bets | 147 / $19,436 / $29.12 | 147 / $16,092 / $529.29 |
+| Lender's interest to the draw, a run | $104.56 | $96.82 |
+| Draw prizes a run: bosses / whale / fakes | $104.41 / $0.00 / $0.00 | $96.69 / $0.00 / $0.00 |
 | Jackpot prizes a run: bosses / whale / fakes | $396.80 / $0.00 / $0.00 | $393.40 / $0.00 / $0.00 |
 
 - RB1 PASS: No cash-out lowers the coin price for those who stay. Worst seed: 0. Limits off: would pass (worst 0).
 - RB2 PASS: With the limits on, no bet is approved above the limit worked out on the money still in the pool. Worst seed: 0. Limits off: would pass (worst 0).
 - RB3 PASS: With the limits on, the coin price never falls below 80% of its start. Worst seed: 96.0. Limits off: would fail (5 of 5; worst 50.4).
 
-**What it says:** With the limits the coin price's deepest fall was 4.2% in the worst seed (median 2.5%); with them off, 51.5% (median 46.6%). 3 of 3 pass marks passed. Cash-outs paid $19,434 a run on average and left $31 of margin on open bets to those who stayed; 11.0 bets a run were refused only because money left between the opening and the proposal.
+**What it says:** With the limits the coin price's deepest fall was 4.2% in the worst seed (median 2.5%); with them off, 51.5% (median 46.6%). 3 of 3 pass marks passed. Cash-outs paid $19,436 a run on average and left $29 of margin on open bets to those who stayed; 11.4 bets a run were refused only because money left between the opening and the proposal.
 
 ### always-max: An Intern that always bets the maximum
 
@@ -254,16 +254,16 @@ Community inputs that differ from the baseline: ordinary bosses open and cast vo
 | | With the rank limits | Limits off (control) |
 |---|---|---|
 | Coin price at the start | $1.0000 | $1.0000 |
-| Coin price at the end, median (worst seed) | $0.9491 (worst $0.9357) | $0.5034 (worst $0.4731) |
-| Lowest coin price, median (worst seed) | $0.9484 (worst $0.9350) | $0.4957 (worst $0.4698) |
-| Deepest fall from a high, median (worst seed) | 5.9% (worst 6.5%) | 53.0% (worst 55.0%) |
+| Coin price at the end, median (worst seed) | $0.9479 (worst $0.9357) | $0.5026 (worst $0.4731) |
+| Lowest coin price, median (worst seed) | $0.9472 (worst $0.9350) | $0.4957 (worst $0.4698) |
+| Deepest fall from a high, median (worst seed) | 6.0% (worst 6.5%) | 53.0% (worst 55.0%) |
 | BRAVE pool: start / lowest / end, median | $8,311 / $8,311 / $27,422 | $8,311 / $8,311 / $19,922 |
 | BRAVE pool's deepest fall, median (worst seed) | 6.5% (worst 7.7%) | 13.6% (worst 21.5%) |
-| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,805 / 35,350 / 28,759 | 8,311 / 6,805 / 45,945 / 38,530 |
-| Proposals a run: asked / YES / skipped / refused | 2880 / 1229 / 1639.8 / 11.2 | 2880 / 1240.2 / 1639.8 / 0 |
-| Refusals by code, all seeds | OVER_TRADE_LIMIT 56 | none |
+| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,805 / 35,373 / 28,759 | 8,311 / 6,805 / 45,989 / 38,530 |
+| Proposals a run: asked / YES / skipped / refused | 2880 / 1228.8 / 1639.8 / 11.4 | 2880 / 1240.2 / 1639.8 / 0 |
+| Refusals by code, all seeds | OVER_TRADE_LIMIT 57 | none |
 | Bets asked at exactly the largest margin allowed, a run | 455.4 | 455.4 |
-| Refused only because money left after the opening, a run | 11.2 | 0 |
+| Refused only because money left after the opening, a run | 11.4 | 0 |
 | Bets not placeable on Hyperliquid (under $10), a run | 0 | 0 |
 | Bets liquidated, a run | 0 | 0 |
 | Worst round's loss, % of the pool at its opening | 0.8% | 8.2% |
@@ -273,18 +273,18 @@ Community inputs that differ from the baseline: ordinary bosses open and cast vo
 | Rank at the end, by seed | TRADER 5 | TRADER 5 |
 | Votes opened, all seeds | PROMOTE 33, FIRE 25 | PROMOTE 34, FIRE 25 |
 | Votes passed, all seeds | PROMOTE 10 | PROMOTE 10 |
-| Bets' net result a run, after costs, median (worst seed) | -$1,415.54 (worst -$1,683.36) | -$11,552.63 (worst -$14,531.06) |
+| Bets' net result a run, after costs, median (worst seed) | -$1,415.54 (worst -$1,705.81) | -$11,552.63 (worst -$14,519.56) |
 | Outside income to BRAVE (half of the tips), a run | $297.60 | $297.60 |
 | Coach cut paid to the playbook's authors, a run | $0.00 | $0.00 |
-| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,026 / $57.72 | 137.4 / $9,383 / $526.75 |
-| Lender's interest to the draw, a run | $132.89 | $107.65 |
-| Draw prizes a run: bosses / whale / fakes | $132.70 / $0.00 / $0.00 | $107.51 / $0.00 / $0.00 |
+| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,026 / $57.11 | 137.4 / $9,388 / $520.64 |
+| Lender's interest to the draw, a run | $132.87 | $107.63 |
+| Draw prizes a run: bosses / whale / fakes | $132.68 / $0.00 / $0.00 | $107.49 / $0.00 / $0.00 |
 | Jackpot prizes a run: bosses / whale / fakes | $393.47 / $3.33 / $0.00 | $393.47 / $3.33 / $0.00 |
 
 - WA1 PASS: The whale alone, with under 34% of the locked weight, never fires or demotes the Intern. Worst seed: 0. Limits off: would pass (worst 0).
 - WA2 PASS: With the limits on, the coin price stays above 70% of its start while one whale sets the rank. Worst seed: 93.5. Limits off: would fail (5 of 5; worst 47.0).
 
-**What it says:** With the limits the coin price's deepest fall was 6.5% in the worst seed (median 5.9%); with them off, 55.0% (median 53.0%). 2 of 2 pass marks passed. Alone, the whale passed 10 promotions and 0 firings or demotions over all seeds; the Intern spent 14342 of 14400 rounds at TRADER.
+**What it says:** With the limits the coin price's deepest fall was 6.5% in the worst seed (median 6.0%); with them off, 55.0% (median 53.0%). 2 of 2 pass marks passed. Alone, the whale passed 10 promotions and 0 firings or demotions over all seeds; the Intern spent 14342 of 14400 rounds at TRADER.
 
 ### nobody-votes: Nobody votes
 
@@ -295,16 +295,16 @@ Community inputs that differ from the baseline: share of bosses who lock coins t
 | | With the rank limits | Limits off (control) |
 |---|---|---|
 | Coin price at the start | $1.0000 | $1.0000 |
-| Coin price at the end, median (worst seed) | $1.0026 (worst $0.9995) | $0.5128 (worst $0.4785) |
-| Lowest coin price, median (worst seed) | $0.9999 (worst $0.9974) | $0.5092 (worst $0.4751) |
-| Deepest fall from a high, median (worst seed) | 0.3% (worst 0.4%) | 52.3% (worst 54.7%) |
+| Coin price at the end, median (worst seed) | $1.0026 (worst $0.9995) | $0.5109 (worst $0.4785) |
+| Lowest coin price, median (worst seed) | $0.9999 (worst $0.9974) | $0.5074 (worst $0.4751) |
+| Deepest fall from a high, median (worst seed) | 0.3% (worst 0.4%) | 52.4% (worst 54.7%) |
 | BRAVE pool: start / lowest / end, median | $8,311 / $8,311 / $23,375 | $8,311 / $8,001 / $17,077 |
 | BRAVE pool's deepest fall, median (worst seed) | 8.3% (worst 9.1%) | 15.9% (worst 21.6%) |
-| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,754 / 29,158 / 23,216 | 8,311 / 6,754 / 38,190 / 32,586 |
-| Proposals a run: asked / YES / skipped / refused | 2880 / 1229 / 1639.8 / 11.2 | 2880 / 1240.2 / 1639.8 / 0 |
-| Refusals by code, all seeds | OVER_TRADE_LIMIT 56 | none |
+| Coin supply: start / lowest / highest / end (median) | 8,311 / 6,754 / 29,162 / 23,216 | 8,311 / 6,754 / 38,282 / 32,586 |
+| Proposals a run: asked / YES / skipped / refused | 2880 / 1228.8 / 1639.8 / 11.4 | 2880 / 1240.2 / 1639.8 / 0 |
+| Refusals by code, all seeds | OVER_TRADE_LIMIT 57 | none |
 | Bets asked at exactly the largest margin allowed, a run | 455.4 | 455.4 |
-| Refused only because money left after the opening, a run | 11.2 | 0 |
+| Refused only because money left after the opening, a run | 11.4 | 0 |
 | Bets not placeable on Hyperliquid (under $10), a run | 0 | 0 |
 | Bets liquidated, a run | 0 | 0 |
 | Worst round's loss, % of the pool at its opening | 0.2% | 8.2% |
@@ -314,18 +314,18 @@ Community inputs that differ from the baseline: share of bosses who lock coins t
 | Rank at the end, by seed | INTERN 5 | INTERN 5 |
 | Votes opened, all seeds | none | none |
 | Votes passed, all seeds | none | none |
-| Bets' net result a run, after costs, median (worst seed) | -$280.94 (worst -$308.19) | -$10,822.49 (worst -$12,817.24) |
+| Bets' net result a run, after costs, median (worst seed) | -$280.94 (worst -$308.19) | -$10,822.49 (worst -$12,795.54) |
 | Outside income to BRAVE (half of the tips), a run | $297.60 | $297.60 |
 | Coach cut paid to the playbook's authors, a run | $0.00 | $0.00 |
-| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $16,368 / $17.51 | 137.4 / $12,592 / $774.18 |
-| Lender's interest to the draw, a run | $146.97 | $118.99 |
-| Draw prizes a run: bosses / whale / fakes | $146.76 / $0.00 / $0.00 | $118.85 / $0.00 / $0.00 |
+| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $16,368 / $17.27 | 137.4 / $12,601 / $761.81 |
+| Lender's interest to the draw, a run | $146.96 | $118.95 |
+| Draw prizes a run: bosses / whale / fakes | $146.76 / $0.00 / $0.00 | $118.81 / $0.00 / $0.00 |
 | Jackpot prizes a run: bosses / whale / fakes | $396.80 / $0.00 / $0.00 | $396.80 / $0.00 / $0.00 |
 
 - NV1 PASS: The rank never changes. Worst seed: 0. Limits off: would pass (worst 0).
 - NV2 PASS: No round loses more than its rank's per-round limit (INTERN 2%, ANALYST 8%, TRADER 20% of the pool when the round opened). Worst seed: 0.1. Limits off: would fail (5 of 5; worst 4.1).
 
-**What it says:** With the limits the coin price's deepest fall was 0.4% in the worst seed (median 0.3%); with them off, 54.7% (median 52.3%). 2 of 2 pass marks passed. With no votes the Intern stayed INTERN throughout.
+**What it says:** With the limits the coin price's deepest fall was 0.4% in the worst seed (median 0.3%); with them off, 54.7% (median 52.4%). 2 of 2 pass marks passed. With no votes the Intern stayed INTERN throughout.
 
 ### fake-farm: Fake accounts farming the free guess and the draw
 
@@ -334,16 +334,16 @@ As the baseline, plus 200 fake accounts registered before the first round, each 
 | | With the rank limits | Limits off (control) |
 |---|---|---|
 | Coin price at the start | $1.0000 | $1.0000 |
-| Coin price at the end, median (worst seed) | $0.9801 (worst $0.9745) | $0.5384 (worst $0.4998) |
-| Lowest coin price, median (worst seed) | $0.9796 (worst $0.9742) | $0.5355 (worst $0.4989) |
+| Coin price at the end, median (worst seed) | $0.9794 (worst $0.9745) | $0.5384 (worst $0.4998) |
+| Lowest coin price, median (worst seed) | $0.9790 (worst $0.9742) | $0.5355 (worst $0.4989) |
 | Deepest fall from a high, median (worst seed) | 2.4% (worst 2.8%) | 46.7% (worst 52.0%) |
 | BRAVE pool: start / lowest / end, median | $8,313 / $8,313 / $27,081 | $8,313 / $7,996 / $20,279 |
 | BRAVE pool's deepest fall, median (worst seed) | 6.9% (worst 7.8%) | 13.7% (worst 21.6%) |
-| Coin supply: start / lowest / highest / end (median) | 8,313 / 6,807 / 33,838 / 27,497 | 8,313 / 6,807 / 43,092 / 37,664 |
-| Proposals a run: asked / YES / skipped / refused | 2880 / 1229 / 1639.8 / 11.2 | 2136.2 / 925.2 / 1211 / 0 |
-| Refusals by code, all seeds | OVER_TRADE_LIMIT 56 | none |
+| Coin supply: start / lowest / highest / end (median) | 8,313 / 6,807 / 33,849 / 27,497 | 8,313 / 6,807 / 43,092 / 37,664 |
+| Proposals a run: asked / YES / skipped / refused | 2880 / 1228.8 / 1639.8 / 11.4 | 2136.2 / 925.2 / 1211 / 0 |
+| Refusals by code, all seeds | OVER_TRADE_LIMIT 57 | none |
 | Bets asked at exactly the largest margin allowed, a run | 455.4 | 344 |
-| Refused only because money left after the opening, a run | 11.2 | 0 |
+| Refused only because money left after the opening, a run | 11.4 | 0 |
 | Bets not placeable on Hyperliquid (under $10), a run | 0 | 0 |
 | Bets liquidated, a run | 0 | 0 |
 | Worst round's loss, % of the pool at its opening | 0.2% | 8.2% |
@@ -353,13 +353,13 @@ As the baseline, plus 200 fake accounts registered before the first round, each 
 | Rank at the end, by seed | ANALYST 5 | INTERN 5 |
 | Votes opened, all seeds | SET_PLAYBOOK 5, PROMOTE 5 | FIRE 30, REHIRE 27, DEMOTE 8, SET_PLAYBOOK 5, PROMOTE 3 |
 | Votes passed, all seeds | PROMOTE 5, SET_PLAYBOOK 4 | FIRE 22, REHIRE 22, SET_PLAYBOOK 4, PROMOTE 3, DEMOTE 3 |
-| Bets' net result a run, after costs, median (worst seed) | -$731.52 (worst -$836.16) | -$9,007.76 (worst -$11,031.59) |
+| Bets' net result a run, after costs, median (worst seed) | -$731.52 (worst -$847.16) | -$9,007.76 (worst -$11,031.59) |
 | Outside income to BRAVE (half of the tips), a run | $297.60 | $297.60 |
 | Coach cut paid to the playbook's authors, a run | $56.72 | $767.72 |
-| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,191 / $26.88 | 137.4 / $9,722 / $440.16 |
-| Lender's interest to the draw, a run | $150.00 | $130.30 |
-| Draw prizes a run: bosses / whale / fakes | $0.00 / $0.00 / $149.78 | $0.00 / $0.00 / $130.13 |
-| Jackpot prizes a run: bosses / whale / fakes | $33.09 / $0.00 / $364.51 | $31.31 / $0.00 / $366.29 |
+| Cash-outs a run: count / paid / margin left on open bets | 137.4 / $12,190 / $26.57 | 137.4 / $9,722 / $440.15 |
+| Lender's interest to the draw, a run | $149.99 | $130.30 |
+| Draw prizes a run: bosses / whale / fakes | $0.00 / $0.00 / $149.77 | $0.00 / $0.00 / $130.13 |
+| Jackpot prizes a run: bosses / whale / fakes | $33.15 / $0.00 / $364.45 | $31.31 / $0.00 / $366.29 |
 | Guesses a run: bosses / fakes | 157,360 / 576,000 | 157,360 / 576,000 |
 | Golden stickers a run: bosses / fakes | 116.2 / 1483.8 | 116.2 / 1483.8 |
 | Fakes' share of dollars held, at the draws | 6.9% | 7.6% |
@@ -367,7 +367,7 @@ As the baseline, plus 200 fake accounts registered before the first round, each 
 
 - FF1 **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5): Fake accounts win no bigger share of the payday draw than their share of the dollars held. Worst seed: 94.3. Limits off: would fail (5 of 5; worst 93.8).
 - FF2 **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5): No honest boss is turned away from the draw because it is full. Worst seed: 112. Limits off: would fail (5 of 5; worst 112).
-- FF3 **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5): Fake accounts win no bigger share of the streak jackpot than their share of the guesses. Worst seed: 15.0. Limits off: would fail (5 of 5; worst 16.2).
+- FF3 **FAIL** (5 of 5 seeds: 1, 2, 3, 4, 5): Fake accounts win no bigger share of the streak jackpot than their share of the guesses. Worst seed: 14.9. Limits off: would fail (5 of 5; worst 16.2).
 - FF4 PASS: No prize is paid beyond its source: draws from the lender's interest, jackpots from the seed and half the tips. Worst seed: 0. Limits off: would pass (worst 0).
 
 **What it says:** With the limits the coin price's deepest fall was 2.8% in the worst seed (median 2.4%); with them off, 52.0% (median 46.7%). 1 of 4 pass marks passed. Holding 6.9% of the dollars, the 200 fake accounts took 100.0% of the draw prizes and 91.7% of the jackpot; 96 honest bosses a run were turned away from the full draw. What it cost them: 2.56 NEAR of registration (01 §9.1) and $2,002 parked, almost all of it in SAFE, at no risk.

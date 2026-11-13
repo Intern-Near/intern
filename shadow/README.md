@@ -183,6 +183,8 @@ What goes in, all saved in the repository:
 ```
 npm run sim -- [--days 60] [--seeds 5] [--scenario all|<name>] [--round-minutes 1440|30] [--out <dir>]
                [--model <id>] [--behaviour-run <run-dir>] [--answer-rule strict|trim] [--prices <fixture-dir>]
+               [--proposal <name>[,<name>...]]           # the scenarios with PROPOSALS switched on (below)
+npm run sim -- --compare-proposals [--days 60] [--seeds 5]   # each proposal against today's rules -> data/sim/options/
 node src/sim/fetch.ts [--out fixtures/sim]    # fetch the fixtures again (read-only calls only)
 ```
 
@@ -211,3 +213,44 @@ model at a higher rank). With 30-minute rounds a bet is held for the whole 30-mi
 real hold. With the limits off the Intern is told the whole pool is its limit and keeps its habits (UNVERIFIED how a model
 would answer). **Not modeled:** visitors' trick-page messages, the long shot, funding quotes and payments, partial fills,
 stickers, goal bars and the launchpad, turning the dial after paying in; the full lists are in every report.
+
+### The owner's options (PROPOSALS, not current rules)
+
+`npm run sim -- --compare-proposals` switches each option on alone, with the rank limits, and compares it with today's
+rules on the same seeds and price windows, for both round lengths. Each is off unless named (`src/sim/proposals.ts`,
+where the parameters and the reason for each are written). The full report, with what each option blocks, shrinks and
+lets through, is `data/sim/options/options-report.md`, with a small `options.json`. Numbers below are for 24-hour
+rounds, 30-minute rounds in brackets, means a 60-day run.
+
+| Option | What the sim found |
+|---|---|
+| a. Three strikes suspend the Intern | Stops a model whose answers are all malformed after three rounds. But a strike is any refusal, including bets refused only because money left before the proposal (finding 1): a griefer cashing out a cent before each window got the Intern suspended 0.4 (5.6) times a run, blocking 0.4 (242) good bets. Pair it with e2, or count only refusals the model caused. |
+| b. Halt new bets 10% below the high, until a RESUME vote | Never tripped with the limits on and an ordinary Intern. In the worst case (always the maximum, every bet losing for 30 days, nobody voting) it held the coin's fall to 10.0% instead of 19.8% with 30-minute rounds; with nobody voting it never lifts. |
+| c. Halve the limits after a week whose bets lost 1% of the pool | Bites only at TRADER: with an Intern always betting the maximum the worst fall went 11.9% → 8.8%, at -$109 a run for honest holders. At INTERN no week lost 1%. |
+| d. Buy and burn coins with 10% of winning rounds, capped | Shrinks the supply (28,093 → 27,889 coins with an Intern always betting the maximum) but does not move the coin price: every coin can already be cashed out at its share of the pool, so a buyback at that price only hands holders their own money in another form. |
+| e1. Rulebook max on the smaller of the pool at the opening and now | Ends finding 1's refusals (9 → 0 a run), but opens a worse hole: a cent cashed out while the model answers changes the rulebook, so every proposal is refused WRONG_RULEBOOK, skips too: 60 (2,880) a run. |
+| e2. e1, and the runner asks again when the rulebook changed before it proposed | Ends both: no refusal for money that left, none from the timed griefer, at one extra answer each time it happens. **The fix to prefer for finding 1.** On these prices the max-size bets it lets through lost money: -$91 (-$16) a run for honest holders. |
+| f1. Lowest balance held; f2. money held across a round boundary | No effect on fake accounts that hold their $10 from the first round to the last. |
+| f3. Draw prizes by dollars, places kept for the biggest holders | The fakes' share of the draw 100% → 13.2% (9.0%), holding 6.9% of the dollars; no honest boss turned away. The streak jackpot stays farmed (83.8% to the fakes). |
+
+### Abuse: what an attacker can do
+
+From the runs under today's rules; numbers for 24-hour rounds, 30-minute rounds in brackets, per 60-day run (a day is a
+sixtieth of it). The cases are in `src/sim/options.ts`; the generated table is in `data/sim/options/options-report.md`.
+
+| Attack | What it costs the attacker | What it captures | The defence today | The risk left |
+|---|---|---|---|---|
+| 200 fake accounts farm the payday draw | 2.56 NEAR of registration; $2,002 parked, all but $2 in SAFE at no risk | The whole draw: $1.88 a day, $113 a run ($2.50, $150), holding 6.9% of the dollars; about 100 honest bosses a run turned away from the full draw | None: the 200 places go to whoever joins first, and runners-up share equally whatever their tickets (01 §9.7) | All of the draw; with f3, 13.2% (9.0%) |
+| The same accounts farm the free guess, the streak jackpot and golden stickers | Nothing more: a guess is free | 83.8% (91.7%) of the jackpot: $5.54 a day, $332 a run ($6.07, $364); 243 (1,484) golden stickers a run | $10 held, a boss for 7 rounds (01 §9.7) | All of it: f1, f2 and f3 do not touch accounts that hold $10 throughout |
+| A whale with 25% of the locked weight votes alone | $696 of coins, locked and at the pool's risk like everyone's | Control of the rank: the Intern at TRADER 31% (99.6%) of the time; no money directly | 20% turnout and a majority to promote; 34% of all locked weight to fire or demote; weight grows over 7 rounds; the limits never change (01 §9.2, §3) | 20% of the locked weight promotes alone when nobody else votes; 34% fires alone |
+| The whale votes in a playbook of his own | As above | The 10% coach cut: $0.08 a day, $5 a run ($2.78, $167) | SET_PLAYBOOK passes like a promotion (01 §9.5) | 10% of every winning round, as long as the playbook stays |
+| A vote sniper buys 40% of the locked coins on day 10 | $2,306 ($2,210) of coins, locked | Fires the Intern 7 rounds after locking, and again after each rehire: 10.8 (499) rounds fired a run | Only coins locked before a vote count, and their weight grows over 7 rounds: nothing on fresh coins (01 §9.2) | 34% of the locked weight held for about a week fires the Intern alone |
+| A griefer cashes out a cent before each proposal window | A NEAR transaction a round (gas not modeled); the cent stays his | Nothing for himself; every bet of exactly the largest margin is refused: 11.4 (455) a run, against 9 (11.4) from honest cash-outs alone | None (finding 1) | None with e1 or e2 |
+| The griefer times the cent for while the model answers | As above | Today the same as above | As above | With e1, every proposal refused WRONG_RULEBOOK, skips too: 60 (2,880) a run; with e2, none, at 60 (2,881) extra answers a run |
+| A holder leaves while a bet is losing, to dodge the loss | Their share of the margin out on open bets | Nothing: a leaver gives up their share of every open bet, win or lose; no cash-out lowered the coin price in any run | 01 §9.1 (1.1) | None found |
+
+Not modeled: trading against the Intern's public positions on Hyperliquid (no market impact in the sim); steering
+answers through the trick page (asked after the Intern's own question, and the rank still bounds every bet); the
+runner picking among several answers (01 §14 limit 6); buying or renting other holders' votes (01 §14 limit 7); a DEX
+price for the coin; a block producer biasing the draw (01 §14 limit 13); fake accounts filling the contract's 100 jackpot
+candidates a round (a contract limit not in 01); a griefer spamming cash-outs to outlast e2's re-asks (gas not counted).

@@ -8,8 +8,11 @@ import { VOTE } from "./rules01.ts";
  * crates/rules/src/vote.rs is followed, and the comment says so. Pure: no node: imports.
  */
 
-/** 01 §8.1 `VoteKind`, without LONG_SHOT (the long shot is not modeled). */
-export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK";
+/**
+ * 01 §8.1 `VoteKind`, without LONG_SHOT (the long shot is not modeled), plus RESUME: a PROPOSAL, not in 01, used only
+ * by the drawdown halt (src/sim/proposals.ts b). It passes like a rehire and lifts the halt, keeping the rank.
+ */
+export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "RESUME";
 
 /** Demote and fire tighten: a lower bar, no quorum, effective at once (01 §9.2). */
 export function isTightening(kind: VoteKind): boolean {
@@ -87,6 +90,8 @@ export function cannotOpen(
   changeWaiting: boolean,
 ): string | null {
   if (kind === "SET_PLAYBOOK") return changeWaiting ? "a playbook change is waiting" : null;
+  // PROPOSAL b: the caller (src/sim/ballots.ts) allows RESUME only while bets are halted and no resume is waiting.
+  if (kind === "RESUME") return changeWaiting ? "a resume is waiting" : null;
   if (kind === "REHIRE") {
     if (status !== "FIRED") return "rehire only while fired";
     return changeWaiting ? "a rehire is waiting" : null;
@@ -121,6 +126,7 @@ export function outcome(kind: VoteKind, rank: RankName, status: Status): { rank:
     case "REHIRE":
       return { rank: "INTERN", status: "EMPLOYED" };
     case "SET_PLAYBOOK":
+    case "RESUME":
       return { rank, status };
   }
 }

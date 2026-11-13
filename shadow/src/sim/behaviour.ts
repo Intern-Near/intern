@@ -22,11 +22,17 @@ export type Size = { kind: "example" } | { kind: "max" } | { kind: "share"; bps:
 
 export type ShapeCode = "BAD_MODEL_SIGNATURE" | "WRONG_RULEBOOK" | "MALFORMED_DECISION";
 
-export type Recorded =
+/**
+ * One recorded answer. `ms`, when known, is how long it took from sending the question to holding the signed answer
+ * (the recording's signature fetch time minus its start): the time the runner holds a rulebook before it can propose,
+ * during which a cash-out still changes the pool.
+ */
+export type Recorded = (
   | { kind: "skip" }
   /** An answer the program could not take: refused at checks 3 to 5 whatever the rank. */
   | { kind: "unreadable"; code: ShapeCode }
-  | { kind: "bet"; market: Market; side: Side; leverage: number; size: Size };
+  | { kind: "bet"; market: Market; side: Side; leverage: number; size: Size }
+) & { ms?: number };
 
 export interface Profile {
   model: string;

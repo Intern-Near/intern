@@ -183,6 +183,14 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run attestation-check` | Checks a fresh NEAR AI attestation report for the pinned model (below). Read-only, no key |
 | `npm run fills-check -- [--coin <account>] [--rounds N] [--rpc <url>] [--json <file>]` | Read-only. The results the runner reported against Hyperliquid's own fills ("fills-check" below) |
 | `npm run key-scope -- <account> [--expect runner\|relayer] [--key <public key>]` | Read-only. The key an account signs with against what is declared, and its other keys ("key-scope" below) |
+| `npm run books -- [--coin <account>] [--json <file>]` | Read-only. Whether the coin holds and has lent exactly what it owes, bucket by bucket ("books" below) |
+| `npm run supply-log -- [--coin <account>] [--json <file>] [--csv <file>]` | Read-only. Every mint and burn of $INTERN, rebuilt from the feed, against `ft_total_supply` ("supply-log" below) |
+| `npm run quote -- --market PEPE --side long --margin 20 [--leverage 1]` | Read-only. "Why NOPE?": the verdict a bet would get from checks 6 to 12 right now, with the rule, its 01 section and the numbers ("quote" below) |
+| `npm run --silent mcp` | The read-only MCP server for other AI agents, over stdio ("mcp" below) |
+| `npm run mcp-check` | Starts that server the way an MCP client does, lists its tools, calls `intern_status` and `intern_quote`. Read-only |
+| `npm run contract-scan -- [--accounts a,b,...] [--json <file>]` | Read-only. Who can change each contract: keys, the host functions its code imports, the code hash against the recorded one ("contract-scan" below) |
+| `npm run refusals -- [--coin <account>] [--json <file>]` | Read-only. The sixteen NOPE codes, each with its count, first example and that example's transaction ("refusals" below) |
+| `npm run proof -- [--json <file>]` | Read-only. Everything above in one JSON bundle for a proof page ("proof" below) |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
 
@@ -378,6 +386,483 @@ verdict on which key the runner uses, and 1 key would pass as its signing key, t
 code 0. The relayer `intern-relayer-ed25519.testnet` with `--expect relayer --key
 ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT`: its one full-access key, `AS DECLARED`, 9.91 NEAR.
 
+## books: do the coin's dollars add up?
+
+```
+npm run books -- [--coin <account>] [--lender <account>] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; it needs no key and reads no `.env`. It pins one final block and reads every number at that block, so a
+payment cannot fall between two reads. What the coin owes comes from its own views, bucket by bucket; what holds
+that money is the test dollar's balance of the coin (`ft_balance_of` on `get_constants().usdc_token`) and what the
+lender's own books say the coin lent it (the lender's `get_account(<coin>).principal`, `crates/lender`). The rule is
+01 §9.7's, the one the contract's sandbox tests assert after every move:
+
+```
+USDC held by the coin = brave.total - brave.lent + brave.pending + safe.total + brave.income_waiting
+                        + jackpot + draw_pot + prizes_owed,      and brave.lent is at the lender
+```
+
+| Bucket | View field | Where the money is |
+|---|---|---|
+| BRAVE pool, split into idle, margin on open bets and lent | `get_pot.brave.total` (`idle`, `in_play`, `lent`) | the coin's USDC; `lent` at the lender |
+| BRAVE pending (paid in, coins at the next opening) | `get_pot.brave.pending` | the coin's USDC |
+| Outside income waiting for the next opening | `get_pot.brave.income_waiting` | the coin's USDC |
+| SAFE | `get_pot.safe.total` | the coin's USDC |
+| Streak jackpot, payday draw pot, prizes owed | `get_rewards.jackpot`, `.draw_pot`, `.prizes_owed` | the coin's USDC |
+
+`brave.interest` is shown but not added: it is a running total of interest collected, which since 01 1.4 sits in
+the draw pot or was paid as prizes. It prints the buckets, what holds them, each place's difference (the coin's
+USDC, the lender) and the total's, and two checks from 01: `idle + in_play + lent = brave.total` (§9.6) and
+`safe.lent` is 0 (the §9.7 rule counts all of SAFE as held by the coin).
+
+| Verdict | Means |
+|---|---|
+| `ADD UP` | Each place holds exactly what it should, to the micro-dollar |
+| `MOVING` | The total adds up, but the coin and the lender differ by the same amount: a loan or a repayment in flight |
+| `SURPLUS` | More is held and lent than is owed: dollars sent by a plain `ft_transfer`, or a payment in flight |
+| `SHORT` | Less is held and lent than is owed. A payment in flight can do this for a block or two; run it again |
+| `NOT CHECKED` | Money is lent and no lender was read (`--lender`) |
+
+Exit code: 0 `ADD UP` with both checks passing; 1 anything else; 2 a call failed. `--json` writes the same data;
+`--save <dir>` keeps every RPC exchange as received (the tests replay two such recordings).
+
+It says plainly what is not in these books. **Hyperliquid:** the bets' margin there was funded by hand, not by the
+contract (01 §14.3; the live coin's address got 100 test USDC once), so `brave.in_play` never leaves the coin's USDC
+and the Hyperliquid account is outside the books. **Results** are reported by the runner, and the contract mints or
+burns test dollars to match each round's result (01 §14.12), so the books add up whatever the bets did; `fills-check`
+is what checks the results against the fills. **The lender** is a stand-in: it pays interest out of the dollars it
+holds and mints any shortfall when it pays back (`crates/lender` `send`), so its own USDC can be below what it owes
+(on 2026-11-13 it held 0.000110 less than the two coins' principal, the same as the interest the live coin had
+collected from it). Its interest
+accrued and not yet collected is shown, not counted. `get_constants` does not name the lender; the default is
+`testnet.lender` in `interface/deployments.json`.
+
+Real runs (2026-11-13 15:09 UTC, read-only): the live coin at block 277526435 owes 1894.091972 (BRAVE pool 1572.985657,
+SAFE 221.106315, jackpot 100.000000, the rest 0); the coin holds 351.951646 and the lender 1542.140326 for it:
+`ADD UP`, difference 0.000000. `coin-fast` at block 277526441: owes 703.800000, holds 28.800000 and lent 675.000000:
+`ADD UP`.
+
+## supply-log: every mint and burn of $INTERN
+
+```
+npm run supply-log -- [--coin <account>] [--rpc <url>] [--json <file>] [--csv <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. It reads the whole feed (`get_feed`, every page) at one final block, rebuilds the coin
+supply event by event, and compares the total with `ft_total_supply` at the same block. What changes the supply is
+taken from the contract's code (`crates/coin`, `crates/rules`, read only):
+
+| In the feed | What it does to the supply | Kind |
+|---|---|---|
+| `round_opened` | The dollars waiting become coins at that moment: `floor(waiting × supply / pool)` (`shares.rs` `open_round_mint`). The first conversion ever makes as many coins as dollars and locks 1,000 units for ever in the contract's own balance. The event carries no coin count, so the count is worked out with that rule from the feed's own figures (`brave_at_open`, the dollars waiting) | MINT |
+| `coins_minted` | Nothing: one account's share of an opening, written to its balance the next time it acts (01 §5). Checked against what the rule gives that account | WRITE |
+| `cashed_out` from BRAVE with `coins` | Burns them | BURN |
+| `dial_turned` to SAFE | Burns `amount` coins | BURN |
+| `paid_in` to BRAVE, `dial_turned` to BRAVE | Dollars wait for the next opening | WAIT |
+| `cashed_out` from BRAVE with `coins: null` | Waiting dollars taken back | TAKEN BACK |
+
+Every other event in 01 §10 moves no coin. The output: one line per event (seq, time, round, kind, account, dollars,
+coins, the supply after it), one line per round that minted, wrote or burned coins (dollars in, coins minted, the
+price, written so far, not yet written, burned, the supply after), then the supply now: minted (locked for ever,
+written to accounts, not yet written, rounding dust), minus burned at cash-out and by the dial, against
+`ft_total_supply`. Checks: the rebuilt supply equals `ft_total_supply`; `ft_total_supply` equals
+`get_pot.coin_supply`; the locked units equal `ft_balance_of(<coin>)`; the dollars still waiting equal
+`get_pot.brave.pending`; every `coins_minted` gives its account exactly what the rule gives it. An opening that is
+due but not yet written by any transaction is counted as the views count it. `--csv` writes the event lines (amounts
+with 6 decimals), `--json` everything. Exit code: 0 the feed accounts for every coin; 1 a difference or a gap; 2 a
+call failed.
+
+**What the feed cannot account for** is listed, never filled in: a feed that no longer starts at seq 1 (it keeps the
+latest 1,000 events; then the supply before its first event is unknown, so the openings' coins cannot be worked out
+and nothing is compared), an event 01 §10 does not list, an event that disagrees with the rule, or a difference with
+`ft_total_supply`. A cash-out or dial turn in flight at the block burns its coins before the feed logs it: run again.
+
+Real runs (2026-11-13 15:09 UTC): the live coin at block 277526446, feed seq 1 to 313, all of it. Four openings made
+coins: round 2 (100.000000, of which 0.001000 locked), round 3 (900.000000), round 5 (49.947423), round 12
+(824.695144). Two cash-outs burned 474.999250 and two dial turns 101.000000. Rebuilt 1298.643317 = `ft_total_supply`
+1298.643317; the three `coins_minted` events match the rule. `coin-fast` at block 277526452: 700.000000 =
+`ft_total_supply`, its round 23 due and not yet written. Findings for the owner, printed by the tool:
+
+- `round_opened` carries no coin count and the 1,000 locked units have no event, so the log depends on the share
+  rule; a `minted` and `locked` field on `round_opened` would make the feed state it (an interface change).
+- 824.695144 coins (63.5% of the live supply), boss1's $1,000 of round 12, have no `coins_minted` event yet, because
+  that account has not acted since (by design, 01 §5). The contract emits its NEP-141 `ft_mint` log at that same later
+  moment, so adding up `ft_mint` and `ft_burn` logs gives 473.948173, not `ft_total_supply` (from the code; how an
+  explorer counts is UNVERIFIED).
+- The feed has used 313 of its 1,000 places, about 5.9 a round: in about 116 more rounds (around 2.4 days at 30-minute
+  rounds) seq 1 drops out and the log can no longer be rebuilt from the feed alone.
+
+## quote: "Why NOPE?", a free dry run of a bet
+
+```
+npm run quote -- --market PEPE --side long --margin 20 [--leverage 1] [--coin <account>] [--rpc <url>] [--json] [--save <file>]
+```
+
+The verdict a bet would get from checks 6 to 12 (01 §7) right now: YES, or the NOPE code, with the rule in plain
+words, its 01 section, and the numbers it hit (asked against limit, and where the limit comes from). Each check is
+listed; the ones after the deciding check are "not reached", with what each would say on its own. It is free: it only
+reads the contract's views (`get_constants`, `get_rank`, `get_round`, `get_pot`, `get_rulebook`, `get_positions`),
+all at the latest final block. Nothing is signed or sent, no key is needed, no `.env` is read. `--margin` is in
+dollars (up to 6 decimals). Exit code: 0 YES; 1 NOPE; 2 no quote.
+
+**Checks 1 to 5 are not part of a dry run**: the proposal window (1), the firing (2), the AI's signature (3), the
+request carrying the exact rulebook (4) and the decision line (5). The output says where checks 1 and 2 stood when the
+views were read, for information only.
+
+- **The verdict is `rules.ts`'s.** `src/explain.ts` calls `rankChecks` for it and never works it out again; it only
+  lists checks 6 to 12 with their numbers, every limit taken from `ranks.ts` and `rules.ts` (none typed in it). If its
+  own list ever disagreed with `rankChecks`, it would throw rather than give a wrong reason.
+- **The state is the one `propose` uses** (`crates/coin/src/round.rs`): the rank and status now (`get_rank`: a
+  demotion applies at once, while `get_round().rank` is the rank at round open), the pool at round open and now (the
+  limit base is the smaller), the round's counters, `min_notional`, and the long-shot ticket the rulebook states
+  (`rulebook.ts` `longShotOf`).
+- **It refuses rather than guess** (exit 2): the contract's rank limits differ from `ranks.ts`, the rulebook is for
+  another round, or the network is not testnet. A bet that cannot be written as a decision line (01 §6.2: an unknown
+  market, leverage 0, more than 6 decimals) is refused with check 5's own reason, from `decision.ts`.
+- **Browser-safe**, so the website can bundle it: `explain.ts` loads only `rules.ts` and `ranks.ts`; `quote.ts` (views
+  to state, the bet, the text) adds `contract.ts`, `decision.ts`, `rulebook.ts`, `pricing.ts`, `markets.ts` and
+  `json.ts`. No `node:` import and no package in either; the one Node global among them is `Buffer` inside
+  `rulebook.ts`'s `buildRulebook`, which they never call. `test/explain.test.ts` walks their imports to keep it so.
+- **Parity tests** (`test/explain.test.ts`): Engine 1's vectors in `interface/vectors/checks.json`. 22 of the 26 rule
+  cases apply and give the expected verdict, code, asked and limit. Cases 21, 22, 23 and 26 do not apply: checks 1 and
+  2 decide them (`FIRED`, `OUTSIDE_WINDOW`), and a dry run never runs those (for them the test still checks that the
+  explainer equals `rankChecks`). The decision-line cases test check 5's reader and the rulebook cases pin the §6.1
+  text, so neither applies; two decision-line notes name what the rank checks do next (D10, D13), and those are checked.
+  Then 5,000 random states against `rankChecks` (long-shot tickets, counters above the rank's limits as after a
+  demotion, pools that shrank, other `min_notional`s), covering every code of checks 6 to 12, YES and SKIP.
+- `quote.test.ts` replays one real run (`test/data/quote-2026-11-13T151111Z.json`).
+
+Real run, 2026-11-13 15:11 UTC (the live coin, round 54, in its proposal window, just after the runner's bet #35):
+
+```
+$ npm run quote -- --market PEPE --side long --margin 20 --leverage 1
+quote: a free dry run of checks 6 to 12 (01 §7) for coin.desk-lab-2026.testnet. Read-only: views at block 277526635 (2026-11-13T15:11:10.223Z); nothing signed or sent.
+the bet:    PEPE long, margin $20.00 × 1 = notional $20.00
+the round:  54, phase PROPOSE, 17:10 in; rank INTERN (EMPLOYED); bets so far 1 of 1, $15.00 at risk
+            #35 PEPE long $15.00 ×1 (OPEN_SIGNED)
+the pool:   $1,572.985657 when the round opened, $1,572.985657 now
+
+VERDICT of checks 6 to 12: NOPE TOO_MANY_TRADES (check 10)
+  rule:     Each rank allows max_bets bets per round; once they are used, another bet is refused. (01 §7 check 10; §3)
+  numbers:  asked 2 (bets_used + 1) against limit 1 (max_bets)
+  limits:   INTERN's max_bets, 1 per round (01 §3).
+  checks:
+     6 NOT_ON_LIST        pass                             PEPE is on INTERN's list (DOGE, SHIB, PEPE, PENGU)
+     ...
+    10 TOO_MANY_TRADES    fail                             INTERN allows 1 bet per round and 1 is used: this would be bet 2
+    11 OVER_TRADE_LIMIT   not reached (alone: pass)        margin $20.00 is within the per-bet limit $31.459713
+    12 OVER_ROUND_LIMIT   not reached (alone: fail)        at risk this round $15.00 + this margin $20.00 = $35.00, above the per-round limit $31.459713
+
+Checks 1 to 5 are not part of a dry run: the proposal window (1) and the firing (2) come before the rank checks, and the AI's signature (3), the request carrying the exact rulebook (4) and the decision line (5) need a real signed answer from the AI. This verdict is checks 6 to 12 only, on the state read now.
+For information, when the views were read: check 1 would pass now (17:10 into the round, phase PROPOSE; proposals are taken from 15:00 to 20:00 into the round); check 2 would pass (the Intern is EMPLOYED).
+```
+
+Not done: checks 13 to 16 (the funding quote; nothing attaches one on testnet). The state can change between the
+dry run and a real proposal (another bet, a cash-out, a vote, a new round); the output says so.
+
+## mcp: a read-only MCP server for other AI agents
+
+```
+npm run --silent mcp -- [--coin <account>] [--rpc <url>]      # or: node src/cli/mcp.ts [--coin …] [--rpc …]
+npm run mcp-check -- [--market PEPE --side long --margin 20 --leverage 1] [--coin <account>] [--rpc <url>]
+```
+
+An MCP server over stdio, built with the official TypeScript SDK (`@modelcontextprotocol/sdk` 1.32.2), so that other
+AI agents can look at the Intern. Six tools:
+
+| Tool | What it answers |
+|---|---|
+| `intern_status` | Rank and status, the round (id, phase, times, counters), the pool (BRAVE: idle, lent, in play, pending; SAFE; coin price; bosses), the limits in force now from `get_constants`, this round's bets |
+| `intern_rulebook` | The exact rulebook text `get_rulebook` serves now (the AI's system message), with round and nonce |
+| `intern_quote` | `quote` above for a hypothetical bet: `market`, `side` (`long`/`short`), `margin_usd`, `leverage` (default 1) |
+| `intern_feed` | Recent events from `get_feed`, oldest first: `after_seq` (optional), `limit` (1 to 100, default 20) |
+| `intern_verify_round` | `verify-round` above for one propose transaction: `tx_hash`, `sender` (default: the contract's runner) |
+| `intern_fills_check` | `fills-check` above for the last N rounds: `rounds` (1 to 200, default 10) |
+
+**Every tool only reads. No tool signs, sends or spends anything, and none reads a key or `.env`.** Each tool's
+description says so, and each is marked `readOnlyHint`. They read the coin's views (01 §8) at the latest final block
+over NEAR RPC, public transactions (verify-round, with the archival fallback) and Hyperliquid testnet's public
+`/info` (fills-check). The server reads no environment variable and no file but `interface/deployments.json` (the
+default coin); `mcp-check` starts it with the SDK's default environment (`HOME`, `LOGNAME`, `PATH`, `SHELL`, `TERM`,
+`USER`). Its code loads no module that holds a key or can sign a NEAR transaction (no `near.ts`,
+`chain.ts`, `secret.ts` or near-api-js; a test walks its imports). It loads `hl-exchange.ts` for the `/info` readers;
+no tool calls that file's `/exchange` delivery, and the tests record every request the tools make: views only, NEAR
+RPC `status`, `block`, `query` and `tx`, and `/info` `userFillsByTime` and `userFunding`.
+
+Each answer is plain text first, then the same data as JSON (also as `structuredContent`). Amounts ending in `_e6`
+are dollars times 1,000,000. A bet that cannot be quoted, or a quote the explainer cannot give, comes back as a tool
+error with the reason.
+
+**Add it to an MCP client.** It needs Node 24.11 or newer (it runs the `.ts` files directly) and absolute paths.
+stdout carries only the protocol: plain `npm run mcp` prints npm's own banner on stdout first, so let the client
+start `node` itself. Claude Desktop, in `claude_desktop_config.json` (the shape from MCP's own guide,
+https://modelcontextprotocol.io/docs/develop/connect-local-servers, read 2026-11-13):
+
+```json
+{
+  "mcpServers": {
+    "intern": {
+      "command": "node",
+      "args": ["/absolute/path/to/intern/runner/src/cli/mcp.ts"]
+    }
+  }
+}
+```
+
+Claude Code (the form `claude mcp add --help` gives: `claude mcp add [options] <name> <commandOrUrl> [args...]`):
+
+```
+claude mcp add intern -- node /absolute/path/to/intern/runner/src/cli/mcp.ts
+```
+
+Add `--coin coin-fast.desk-lab-2026.testnet` after the path for the test copy with 5-minute rounds. Run `npm ci`
+in `runner/` first: the SDK and `zod` are dev dependencies (below).
+
+**Dependencies.** `@modelcontextprotocol/sdk` 1.32.2 (published 2026-10-23) and its required peer `zod` 4.6.7
+(2026-10-12), pinned exactly and installed with `npm install --before=2026-10-30`, so every package in their tree is
+at least two weeks old. That adds 81 packages, among them the SDK's HTTP and auth parts (express, hono, ajv, jose),
+which the stdio server does not load. They are **dev dependencies on purpose**: the runner's Docker image (`npm ci
+--omit=dev`) holds the runner's keys, and it gets nothing new.
+
+**Tests** (`test/mcp.test.ts`, offline): the SDK's own client over its in-memory transport, against a fake chain
+(`test/support/fake-coin-views.ts`, the coin's views from memory; it throws on anything that is not a view) and
+against recorded real replies (verify-round's and fills-check's). They list the tools, call every one (with errors
+too), and check the requests above.
+
+Real run, 2026-11-13 15:18 UTC (read-only, against `coin.desk-lab-2026.testnet`; round 54 in HOLD):
+
+```
+$ npm run --silent mcp-check -- --market PEPE --side long --margin 20 --leverage 1
+mcp: the Intern's read-only MCP server is running on stdio (coin coin.desk-lab-2026.testnet, RPC https://test.rpc.fastnear.com)
+server: intern-testnet 0.1.0, over stdio (…/node …/runner/src/cli/mcp.ts )
+tools (6):
+  intern_status: The Intern now [readOnlyHint=true, destructiveHint=false, idempotentHint=true, openWorldHint=true]
+  intern_rulebook: The rulebook now [readOnlyHint=true, …]
+  intern_quote: Why NOPE? A free dry run of a bet [readOnlyHint=true, …]
+  intern_feed: Recent events [readOnlyHint=true, …]
+  intern_verify_round: Re-check a proposal from public data [readOnlyHint=true, …]
+  intern_fills_check: Reported results against Hyperliquid's fills [readOnlyHint=true, …]
+
+=== intern_status {}
+$INTERN, coin.desk-lab-2026.testnet on testnet, block 277527377 (2026-11-13T15:18:22.706Z). Read-only: it signs nothing, sends no transaction and spends nothing, and it reads no key and no .env.
+rank INTERN, EMPLOYED since round 1
+round 54: phase HOLD, 24:22 in; proposals 15:00 to 20:00, closing from 25:00; ends 2026-11-13T15:24:00.000Z; skipped 2, refused 0
+pool: BRAVE $1,572.985657 (at round open $1,572.985657; idle $15.845331, lent $1,542.140326, in play $15.00, pending $0.00); SAFE $221.106315; coin price $1.199702; 2 boss(es)
+limits now (INTERN, from get_constants): per bet $31.459713, per round $31.459713 ($16.459713 left), bets 1 of 1, leverage up to 1x, DOGE, SHIB, PEPE, PENGU, long; min notional $11.00; limit base $1,572.985657
+bets this round: #35 PEPE long $15.00 ×1 OPEN_SIGNED
+
+=== intern_quote {"market":"PEPE","side":"long","margin_usd":"20","leverage":1}
+quote: a free dry run of checks 6 to 12 (01 §7) for coin.desk-lab-2026.testnet. Read-only: views at block 277527380 (2026-11-13T15:18:24.630Z); nothing signed or sent.
+…
+VERDICT of checks 6 to 12: NOPE TOO_MANY_TRADES (check 10)
+…
+For information, when the views were read: check 1 would refuse a proposal now with OUTSIDE_WINDOW (24:24 into the round, phase HOLD; proposals are taken from 15:00 to 20:00 into the round); check 2 would pass (the Intern is EMPLOYED).
+```
+
+The other four tools were also called once, live and read-only, the same minute: `intern_feed` (events 315 to 318),
+`intern_rulebook` (round 54), `intern_verify_round` on the round-51 proposal (verified, as above) and
+`intern_fills_check` for rounds 52 to 54 (2 OK, 1 NOT REPORTED: bet #35 was still open).
+
+Not done, and what to know:
+- **SDK v1.** The SDK's README calls 1.x "the maintenance line" (bug and security fixes for at least six months after
+  2026-07-27): it implements the MCP spec up to 2025-11-25. The current stable line is v2, in separate packages
+  (`@modelcontextprotocol/server` and `/client`, 2.4.0), for the 2026-07-28 spec. This uses the package the brief
+  names; a client and server agree on a protocol version when they connect, so a client that still speaks 2025-11-25
+  or older works. Moving to v2 would be a separate change.
+- **stdio only**: it runs next to the client, on the client's machine. No HTTP transport, so nothing to host and no
+  auth; it holds nothing worth protecting.
+- Each call reads a fresh final block (a second or two behind the chain), through public RPCs with their rate limits.
+  `intern_fills_check` reads the whole feed and outbox each time, as the command does: a few seconds.
+
+## contract-scan: who can change the contracts
+
+```
+npm run contract-scan -- [--accounts a,b,...] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. Without `--accounts` it scans every account under `testnet` in
+`interface/deployments.json` that holds a contract (an account with no code, such as the runner's, is listed as
+skipped). For each account it reads, at the latest final block:
+
+- `view_account`: the code hash, the balance and the storage used. With the storage price from
+  `EXPERIMENTAL_protocol_config` (10^19 yocto per byte on testnet) it says how much NEAR the storage holds and how much
+  room is left (NEAR requires balance + locked ≥ storage × price: nearcore `check_storage_stake`);
+- `view_access_key_list`: every key, described as `key-scope` does;
+- `view_code`: the deployed wasm. It checks that the bytes hash to the code hash, then lists the NEAR host functions the
+  wasm imports, read with a small parser of the WebAssembly binary format (`src/wasm-imports.ts`: the header and the
+  import section; no new dependency);
+- the code hash against the one the repository records: the "expected hashes" table of `docs/REPRODUCIBLE-BUILD.md`.
+  `verify.sh` records none of its own: it builds the wasm and compares its sha256 with the chain.
+
+It flags the 11 host functions that can change who controls an account or its code (`src/host-functions.ts`, names
+exactly as nearcore's `runtime/near-vm-runner/src/imports.rs` and near-sdk's `near-sys/src/lib.rs` give them, both in
+the owner's `Cargo.lock`): `promise_batch_action_deploy_contract`, `promise_batch_action_add_key_with_full_access`,
+`promise_batch_action_add_key_with_function_call`, `promise_batch_action_add_gas_key_with_full_access`,
+`promise_batch_action_add_gas_key_with_function_call`, `promise_batch_action_delete_key`,
+`promise_batch_action_delete_account`, `promise_batch_action_deploy_global_contract`,
+`promise_batch_action_deploy_global_contract_by_account_id`, `promise_batch_action_use_global_contract` and
+`promise_batch_action_use_global_contract_by_account_id`. Why those and nothing else: nearcore refuses deploying code,
+adding or deleting keys, deleting an account and using a global contract unless the account itself acts
+(`check_actor_permissions` in `runtime/runtime/src/actions.rs`), and a function-call key can only send one function
+call with no deposit (`verify_function_call_permission` in `runtime/runtime/src/verifier.rs`). So an account changes only
+through a full-access key or through its own code calling one of those 11; a code that follows another account's
+global contract changes when that account republishes it. The verdict per account says which applies, for example
+`1 full-access key: the holder can change it`, or `0 full-access keys and no code path that deploys code, changes
+keys or deletes the account: nobody can change it`. Exit code: 0 nothing failed (a key that can still change a contract
+is a caveat, not a failure); 1 a hash differs from the recorded one, the code read does not match its hash, or an
+account could not be read; 2 a bad option or a network other than testnet.
+
+**What the code part can and cannot show.** A wasm module can only call the host functions it imports, so "imports
+none of the 11" proves there is no such path. Importing them proves nothing either way: near-sdk 5.30.1 handles every
+kind of action in one function (`PromiseAction::add` in `src/promise.rs`), so any contract that uses its `Promise` type
+(as cross-contract calls do) imports all 11, used or not. That is the case for all six contracts today; the scan reports "cannot rule out a
+code path" for them, and it does not try to follow the code. (By hand, 2026-11-13: none of the contracts' sources under
+`crates/` calls the SDK functions that build those actions; the sandbox tests aside.) While each account keeps its
+full-access key, the key decides it anyway.
+
+Real run, 2026-11-13 15:23 UTC (trimmed):
+
+```
+$ npm run contract-scan
+coin.desk-lab-2026.testnet (coin)
+  code       9oufg5viW3x5eQ49p8zBkZMNvdLzyQFT7Pd4GRjuBoZK, 632,157 bytes; the bytes read hash to it
+  recorded   SAME: the same hash as docs/REPRODUCIBLE-BUILD.md records (The expected hashes (2026-11-13, interface 1.5)): the code on chain is that build
+  storage    738,077 bytes (7.380 NEAR held for it); balance 7.972 NEAR: 0.591 NEAR free, room for about 59,158 more bytes
+  keys       ed25519:86fbY6YwRaJMcYMCtw6YcRixD21QdqaSsnDWPXrTtNSY: a full-access key
+  imports    43 NEAR host functions; 11 of the 11 that can change control: deploy_contract, add_key_with_full_access, …
+             the others: read_register, sha256, keccak256, value_return, ed25519_verify, prepaid_gas, attached_deposit, …
+  verdict    1 full-access key: the holder can change it (deploy new code, add or delete keys, delete the account); its code also imports all 11 host functions that can deploy code, change keys or delete the account, so this scan cannot rule out a code path that does
+…
+intern-runner-ed25519.testnet (runner): skipped, no contract code deployed
+
+SUMMARY  6 account(s) scanned, 6 with a contract: 0 nobody can change, 6 changeable by a full-access key, 6 whose code imports control host functions; code hash 6 same as recorded, 0 different, 0 not recorded
+```
+
+The other five (`stub`, `usdc`, `stickers`, `launch`, `lender`) read the same: their recorded build, one full-access
+key, all 11 imported.
+
+**The live coin's storage room** (measured by hand on 2026-11-13 with `view_account` at older blocks on the archival
+node, not by this tool): its storage grew from 712,087 bytes (block 277,497,910, 10:29 UTC) to 738,077 (block
+277,527,910, 15:23 UTC), about 5.3 KB an hour, and its balance did not change. The 0.591 NEAR beyond its storage holds
+about 59 KB more: at that rate it is used up around 02:30 UTC on 14 November. NEAR checks the balance against the
+storage after every receipt and fails one that leaves too little (`LackBalanceForState`; nearcore
+`runtime/runtime/src/lib.rs`), so from then on calls that grow the coin's storage would fail until someone sends it
+NEAR; anyone can, with or without its keys. The owner's call (`docs/ACCESS-KEYS.md`, step 2).
+
+## refusals: the refusal catalogue
+
+```
+npm run refusals -- [--coin <account>]... [--no-tx] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. Default: the live coin (`testnet.coin` of `deployments.json`) and its test copy
+`coin-fast.desk-lab-2026.testnet`. For each it reads every refusal with `get_refusals` (01 §8: newest first, `from` is
+the highest id to return, 100 per page) and lists the sixteen codes of `interface/refusal-codes.json` in check order:
+how many refusals each has, and the first one (round, time, the bet, `asked` and `limit` with their meaning; dollars for
+`ZERO_MARGIN`, `OVER_TRADE_LIMIT` and `OVER_ROUND_LIMIT`, whose numbers are dollars), then the codes with no example yet.
+
+For each first example it also finds the transaction, read-only. NEAR's RPC cannot list an account's transactions, so
+it asks NearBlocks' public API (`GET https://api-testnet.nearblocks.io/v3/accounts/<coin>/receipts?method=propose&
+before_ts=<ns>`, checked against its `openapi.json` and by running it, 2026-11-13) for the `propose` receipts at the
+refusal's millisecond (`at` is the block time of the proposal), then reads each candidate with the RPC `tx` method (an
+archival node when the regular one no longer has it) and keeps the one that returned this very refusal (`refusal_id`
+and `code`), with its `refused` event. The explorer link is `https://testnet.nearblocks.io/txns/<hash>`: the form NEAR's
+own explorer page links to (the NearBlocks page itself sits behind a browser check and was not fetched). `--no-tx`
+skips NearBlocks. A transaction that cannot be found is a line, not a failure. NearBlocks asks for attribution
+("Powered by Nearblocks.io APIs") when its data is shown; its free rate limit is not stated (UNVERIFIED): an HTTP 429
+is reported, never retried in a loop. Exit code: 0 read; 2 a refusal list could not be read, a bad option, or a network
+other than testnet.
+
+Real run, 2026-11-13 15:23 UTC (trimmed):
+
+```
+$ npm run refusals
+coin.desk-lab-2026.testnet: 1 refusal(s), ids 1 to 1
+  11 OVER_TRADE_LIMIT       1  first: refusal 1, round 2, 2026-11-11T18:43:13.911Z: DOGE long $10.000000 at 1x; asked $10.000000 (margin); limit $1.000010 (per-bet limit in dollars)
+                             tx https://testnet.nearblocks.io/txns/5JND4cTbyXHN5FMEMURukEt2HVnWtjmgRky4fvWBzmtW: confirmed on https://archival-rpc.testnet.fastnear.com, it returned NOPE OVER_TRADE_LIMIT, refusal 1, and logged the refused event
+  no example yet (15): OUTSIDE_WINDOW, FIRED, BAD_MODEL_SIGNATURE, …
+
+coin-fast.desk-lab-2026.testnet: 3 refusal(s), ids 1 to 3
+   2 FIRED                  1  first: refusal 1, round 7, 2026-11-12T06:40:28.244Z: no decision recorded
+   6 NOT_ON_LIST            1  first: refusal 2, round 16, 2026-11-12T12:15:15.310Z: WIF long $11.000000 at 1x; credited to boss2.desk-lab-2026.testnet
+   9 OVER_LEVERAGE          1  first: refusal 3, round 22, 2026-11-13T08:10:12.792Z: DOGE long $3.514000 at 10x; asked 10 (leverage); limit 1 (max_leverage)
+  (each with its transaction, confirmed: DuTxFWRf…, 4VoxFZW9…, 2VzPaXTJ…)
+
+SUMMARY  4 refusal(s) on 2 coin(s); 4 of 16 codes have an example (FIRED, NOT_ON_LIST, OVER_LEVERAGE, OVER_TRADE_LIMIT); no example anywhere yet: OUTSIDE_WINDOW, BAD_MODEL_SIGNATURE, WRONG_RULEBOOK, MALFORMED_DECISION, SHORT_NOT_UNLOCKED, ZERO_MARGIN, TOO_MANY_TRADES, OVER_ROUND_LIMIT, BAD_QUOTE_SIGNATURE, STALE_QUOTE, QUOTE_MISMATCH, TOO_EXPENSIVE. First examples' transactions: 4 confirmed, 0 found but not confirmed, 0 not found.
+```
+
+The live coin's only refusal is Engine 1's step-4 test with the stand-in signature (`fixtures/chain/testnet-accounts.md`);
+no proposal on it has been refused since (`get_refusals` holds only that one).
+
+## proof: one bundle for the proof page
+
+```
+npm run proof -- [--json <file>] [--coin <account>] [--relayer <account>] [--rounds N] [--proposals N] [--rpc <url>]
+```
+
+Read-only; no key, no `.env`. It calls the libraries of the read-only tools directly (no subprocess), one after another,
+and writes one JSON file (`--json`) with a section per check; a section that fails is recorded with its error and the
+others still run. About 35 seconds. Defaults: the live coin, the relayer `intern-relayer-ed25519.testnet`, the last 10
+rounds, the last 3 proposals. Exit code: 0 no section failed; 1 a section failed; 2 a bad option or a network other
+than testnet. A real bundle, with its own times, is `test/data/proof-bundle-2026-11-13T152437Z.json`.
+
+| Section `id` | What it runs | `data` |
+|---|---|---|
+| `contract-scan` | The scan above, default list | `contract-scan`'s report (as `--json` writes it) |
+| `key-scope` | `key-scope` on `get_constants().runner` (as runner) and the relayer, with no signing key named (no `.env` is read): the keys, and which would pass | A list of two key scopes (`src/key-scope.ts` `KeyScope`) |
+| `fills-check` | `fills-check` over the last `--rounds` rounds | `fills-check`'s report (as its `--json` writes it) |
+| `verify-round` | The coin's latest `--proposals` `propose` transactions, found with NearBlocks (as above), each through `verify-round` | A list of `{tx_hash, link, sender, block_height, at, failures, unverified, fatal, result, lines}` |
+| `attestation` | `attestation-check` for 01's pinned model, with a fresh random nonce | `{model, signing_algo, lines, failures, callFailures, unverified_parts}` |
+| `refusals` | The catalogue above, both coins, with transactions | `refusals`' report (as `--json` writes it) |
+
+The shape, for the website (`bundleShapeProblems` in `src/proof.ts` checks it; the tests run it on the sample):
+
+```ts
+type Bundle = {
+  kind: "intern-proof-bundle";
+  version: 1;
+  generated_at: string;              // ISO time the run started; finished_at when it ended
+  finished_at: string;
+  network: "testnet";
+  coin: string;                      // the coin contract
+  git: { commit: string; ref: string | null } | null;   // read from .git files; null where there is no .git
+  endpoints: {                       // every service the bundle read
+    near_rpc: string; near_archival_rpcs: string[]; hyperliquid_info: string; near_ai: string;
+    nvidia_attestation: string[]; nearblocks_api: string; explorer: string;
+  };
+  summary: { ok: number; warn: number; fail: number; sentence: string };
+  sections: Section[];               // in the order of the table above
+};
+type Section = {
+  id: "contract-scan" | "key-scope" | "fills-check" | "verify-round" | "attestation" | "refusals";
+  title: string;                     // a heading for the page
+  status: "ok" | "warn" | "fail";    // warn: true, with a caveat to show (e.g. the contracts still have their keys)
+  sentence: string;                  // one plain sentence for the page
+  started_at: string;                // ISO time
+  took_ms: number;
+  data: unknown;                     // the tool's own output, unchanged (table above); null when the section failed
+  error: string | null;              // why the section could not run
+};
+```
+
+Real run, 2026-11-13 15:24 UTC (the sample):
+
+```
+$ npm run proof -- --json bundle.json
+  WARN  contract-scan 6 contracts, each running exactly the build docs/REPRODUCIBLE-BUILD.md records; each still has a full-access key, so its holder can change it; all import the host functions that deploy code or change keys (near-sdk links them), so the code alone does not show it never will.
+  OK    key-scope     The runner intern-runner-ed25519.testnet: a function-call key for coin.desk-lab-2026.testnet (propose, sign_next, report_result; allowance 0.862 NEAR) would pass as its signing key; it also holds a full-access key, normally the owner's. The relayer intern-relayer-ed25519.testnet: a full-access key would pass as its signing key. No private key was read, so which key actually signs is not shown.
+  OK    fills-check   Rounds 46 to 55: 9 bets (9 OK); every fill on the contract's Hyperliquid address is tied to an order the contract signed.
+  OK    verify-round  The last 3 proposals re-checked from public data: in each, NEAR AI's pinned key signed the exact request and answer, the request carried the rulebook of that moment, and the contract's verdict fits.
+  OK    attestation   NEAR AI's z-ai/glm-5.3-flash ed25519 key is bound to a fresh Intel TDX quote carrying our nonce, and the GPU evidence with the same nonce passed NVIDIA's attestation; 6 parts stay UNVERIFIED (listed).
+  OK    refusals      4 refusals on 2 coins: 4 of the 16 codes have an example (FIRED, NOT_ON_LIST, OVER_LEVERAGE, OVER_TRADE_LIMIT), 12 have none yet; each code's first example is tied to its transaction, confirmed on chain.
+SUMMARY  6 checks: 5 ok, 1 with a caveat, 0 failed.
+```
+
+Not done: the bundle is a snapshot made where the repository is (it reads `interface/` and `docs/`, which the runner's
+Docker image does not have); nothing publishes it or runs it on a schedule. `git` says which commit, not whether the
+working tree had uncommitted changes.
+
 ## What is in `src/`
 
 | File | What it is |
@@ -408,6 +893,15 @@ ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT`: its one full-access key, 
 | `verify-round.ts`, `near-rpc.ts`, `pinned.ts` | `verify-round`: the re-check of one proposal; a small read-only NEAR JSON-RPC client with the archival fallback; 01's pin, and the four models' recorded ed25519 keys (to name a signer that is not the pin) |
 | `attestation-check.ts`, `tdx-quote.ts`, `nvidia-gpu.ts` | `attestation-check`: the report's checks; the TDX quote and its signature chain; NVIDIA's GPU verdict and tokens |
 | `seed-temperature.ts`, `cli/seed-temperature.ts` | The fixed question of the seed and temperature research (`docs/seed-and-temperature.md`) |
+| `books-check.ts`, `books-text.ts` | `books`: the coin's buckets and what holds them, at one block; 01 §9.7's rule, the verdict, the text |
+| `supply-log.ts`, `supply-text.ts` | `supply-log`: the feed at one block, the supply rebuilt with the contract's share rule, the text and CSV |
+| `at-block.ts`, `view-fields.ts`, `deployed.ts` | Views read at one final block (testnet only); strict readers for view answers; any name from `deployments.json` |
+| `explain.ts`, `quote.ts`, `chain-snapshot.ts`, `cli/quote.ts` | `quote`: the explanation of checks 6 to 12 (browser-safe; the verdict is `rules.ts`'s), the views turned into the round's state and the bet (browser-safe), the views at one final block, the command |
+| `mcp.ts`, `cli/mcp.ts`, `cli/mcp-check.ts` | The read-only MCP server's six tools, its stdio entry point, and a client that starts it and calls two tools |
+| `contract-scan.ts`, `wasm-imports.ts`, `host-functions.ts` | `contract-scan`: the scan and its verdicts; the WebAssembly import-section reader; the NEAR host functions that can change control, with their sources |
+| `refusals.ts`, `nearblocks.ts` | `refusals`: the catalogue and the transaction lookup; NearBlocks' receipts endpoint and the explorer link |
+| `proof.ts`, `git-head.ts` | `proof`: the sections, their sentences and the bundle's shape check; the commit read from the `.git` files |
+| `rpc-read.ts` | Read-only RPC queries at the latest final block over `near-rpc.ts` (so every reply can be recorded and replayed) |
 
 Tests drive the round loop against test doubles in `test/support/`: an in-memory stand-in for the contract and a
 `fetch` answering like NEAR AI and Hyperliquid testnet. They are labelled as test doubles, live only under `test/`,
@@ -428,6 +922,19 @@ and no command can select them. Hyperliquid's market data in them is a real test
   After that it logs `STUCK` and a person has to look.
 - **Gas** attached to each call is a guess (`TERA_GAS` in `src/chain.ts`, UNVERIFIED). Every call logs the gas it
   really burnt (`tgas`); the first real round's numbers are under "What is checked live".
+- **`contract-scan` reads imports, not code paths.** All six contracts import the 11 host functions that can change
+  control (near-sdk links them), so for each it can only say a path is not ruled out; it does not follow the code.
+  **`refusals` and `proof` find transactions through NearBlocks**, a third-party index (each find is then confirmed
+  on NEAR RPC); its free rate limit is UNVERIFIED.
 - `check` reads each model's signer from NEAR AI's attestation report without verifying the hardware evidence.
   `attestation-check` verifies part of that evidence for the pinned model; what it leaves UNVERIFIED is listed
   above. The runner itself does not run it before proposing.
+- **`books` checks the contract's books, not Hyperliquid's**: the bets' margin there is a hand-funded stand-in and is
+  outside them. The lender is the one `deployments.json` names, because `get_constants` names none (if it were the
+  wrong one, its principal for the coin would not match `brave.lent`). It cannot see a payment in flight; one shows
+  as a difference for a block or two.
+- **`supply-log` needs the whole feed**: once the feed drops seq 1 (it keeps 1,000 events) it says so and stops
+  short of a total. It works each opening's coins out with the contract's share rule, because `round_opened` does not
+  state them; if a round opened while a cash-out's payment was still in flight, that opening's count could be off
+  and the comparison with `ft_total_supply` would show it. The coin contract's NEP-141 logs (`ft_mint`, `ft_burn`)
+  are not read: RPC gives a transaction's logs only by its hash, so reading them all needs an indexer.

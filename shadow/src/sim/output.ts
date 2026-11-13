@@ -22,6 +22,8 @@ export interface ReportInput {
   profile_summary: ProfileSummary;
   cost_bps: number;
   runner_asks: number;
+  /** PROPOSALS switched on with the limits (src/sim/proposals.ts); none: today's rules. */
+  proposals?: string[];
   scenarios: ScenarioResult[];
   global: MarkOutcome[];
 }
@@ -193,12 +195,19 @@ export function formatMarkdown(r: ReportInput, base: CommunityInputs): string {
   const L: string[] = [];
   const kind =
     r.round_minutes === 1440 ? "24-hour rounds, as in the product" : "30-minute rounds, as in the demo";
-  L.push(`# $INTERN: ${r.days} days simulated, ${kind}`);
+  const proposals = r.proposals ?? [];
+  L.push(`# $INTERN: ${r.days} days simulated, ${kind}${proposals.length > 0 ? ", with PROPOSALS" : ""}`);
   L.push("");
   L.push(
     `Generated ${r.generated_at} by \`npm run sim\` (shadow/src/sim). **A simulation, not a forecast:** real past Hyperliquid prices and the AI's real recorded answers, with assumed community behaviour; test dollars only. ${r.seeds} seeds per scenario, each run twice: with the rank limits and, as a control, with them switched off.`,
   );
   L.push("");
+  if (proposals.length > 0) {
+    L.push(
+      `**PROPOSALS switched on with the limits, not current rules:** ${proposals.join(", ")} (src/sim/proposals.ts). The control runs today's rules without the limits.`,
+    );
+    L.push("");
+  }
   L.push("## Pass marks (set before the results)");
   L.push("");
   L.push(
@@ -313,6 +322,7 @@ export function formatJson(r: ReportInput, base: CommunityInputs): string {
     windows_possible: r.windows_possible,
     cost_bps: r.cost_bps,
     runner_asks: r.runner_asks,
+    proposals: r.proposals ?? [],
     intern: { profile: { ...r.profile, decisions: undefined }, summary: r.profile_summary },
     baseline_community: base,
     pass_marks: {
