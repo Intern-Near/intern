@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="$INTERN: an AI trader, and a NEAR contract that says NOPE" width="100%">
+  <img src="docs/assets/banner.png" alt="$INTERN: the memecoin with an AI intern. You are its boss." width="100%">
 </p>
 
 <p align="center">
@@ -13,16 +13,22 @@
 
 # $INTERN
 
-**$INTERN is a memecoin with an AI trader, the "Intern", and a NEAR contract that checks every bet it proposes
-before anything is signed.** The contract answers YES or NOPE, and keeps a public record of every answer. Holders
-of the coin are the Intern's bosses: they vote its rank, and the rank sets how much it may risk.
+**$INTERN is a memecoin whose meme has a job.** The meme is an overconfident AI intern that trades memecoin
+perps (DOGE, SHIB, PEPE, PENGU, WIF, TRUMP). The coin is how you become its boss. Holders vote the Intern's
+rank, a NEAR contract enforces that rank on every bet it proposes, and the coin's supply follows what the
+holders and the Intern do.
 
-Everything here is **live on NEAR testnet and Hyperliquid testnet, with test dollars**. Nothing is real money.
-Built at NEAR HACKATHON.
+The contract answers each bet with YES or NOPE, and keeps a public record of every answer. Each kind of NOPE
+is a sticker.
+
+Everything here is **live on NEAR testnet and Hyperliquid testnet, with test dollars**. Nothing is real money,
+and the coin has no market and no chart: this is about the mechanic. Built at NEAR HACKATHON, for the track
+**Memecoins With Mechanics**.
 
 ## Contents
 
-- [The problem](#the-problem)
+- [The meme, and what it does](#the-meme-and-what-it-does)
+- [The problem it answers](#the-problem-it-answers)
 - [What is live right now](#what-is-live-right-now)
 - [Try it in the browser](#try-it-in-the-browser-2-minutes-no-install)
 - [Check it in 5 minutes](#check-it-in-5-minutes-no-keys-no-funds)
@@ -32,14 +38,30 @@ Built at NEAR HACKATHON.
 - [What is real and what is a stand-in](#what-is-real-and-what-is-a-stand-in)
 - [Abuse, in numbers](#abuse-in-numbers)
 - [Future scope](#future-scope-not-built)
+- [Set it up locally](#set-it-up-locally)
 - [Run it yourself](#run-it-yourself)
 - [What is in this repository](#what-is-in-this-repository)
 - [How it was built](#how-it-was-built)
 
-## The problem
+## The meme, and what it does
 
-An AI agent that trades a shared pool of money is usually trusted, not checked. Its limits live in a prompt or on
-the operator's server. Holders cannot see them and cannot change them.
+| A memecoin with mechanics needs | In $INTERN | Where it has run |
+|---|---|---|
+| **A meme that does something** | The Intern is a character with a job: each round it proposes one bet on a memecoin perp. Holding $INTERN makes you one of its bosses. It talks, it gets stamped YES or NOPE, and it can be promoted, demoted or fired | Live coin |
+| **Supply that reacts to the community** | $INTERN is minted only when holders' money enters the BRAVE pool at a round's opening, and burned when they cash out. Each coin is a share of that pool. The first 1,000 units are locked for ever. The Intern has a stake of its own: 5% of a winning round becomes new coins for it, and those coins are burned first when a round loses | Minting and burning: live coin. The Intern's stake: tests only (no round has won since it was added) |
+| **A treasury with rules** | The BRAVE pool is the treasury. The Intern may bet a slice of it, and sixteen checks in the contract decide each bet: 2% a bet at Intern rank, 5% at Analyst, 10% at Trader. No vote can raise those numbers. The SAFE pool is never bet. The contract signs the orders itself, so nothing leaves without passing the checks | Live coin |
+| **Onchain rituals** | Every round ("shift"): the contract publishes a rulebook, holders guess what the stamp will say, the Intern answers, the stamp rules. Every 7 rounds: a payday draw, and a weekly review the contract writes and holders stamp. Every 30 days: the Intern's term ends unless the bosses vote to renew it | Live coin |
+| **Challenges** | Trick the Intern: anyone may try to talk it past its limits, and the first visitor to cause each kind of NOPE earns that reason's sticker. Guess seven stamps in a row for the jackpot. Weekly leagues against three labelled bots. A bounty for a trick that gets refused. A bond to challenge a reported result | Tricks, guesses, leagues: live coin. Bounty and challenge: test copy |
+| **Holders decide** | Lock coins to vote: promote, demote, fire, rehire, renew, choose a playbook, or allow one long shot. Voting weight grows over 7 rounds, so a vote cannot be bought for a day | Live coin |
+| **Coins that launch coins** | A small launchpad on a bonding curve. Its 1% fee goes to the BRAVE pool, so every launch pays $INTERN holders | Live coin |
+
+The coin's value is not set by a market here. It is the BRAVE pool's test dollars divided by the coins, kept by
+the contract's books (`get_pot().coin_price_e6`).
+
+## The problem it answers
+
+Most memecoins do nothing, and most AI trading agents are trusted, not checked. An agent's limits usually live
+in a prompt or on the operator's server. Holders cannot see them and cannot change them.
 
 Here the limits are in a NEAR contract that anyone can read:
 
@@ -332,6 +354,51 @@ None of this exists yet. It is what we would build next, in this order.
    bet, then read out on the stream page.
 7. **A video stream.** The stream page broadcast as video. Today it is a web page that follows the feed.
 8. **A second runner.** Anyone able to run the off-chain Intern, so the runner is not one trusted party.
+
+## Set it up locally
+
+Nothing below needs a key, a wallet or funds. The website reads the live testnet contracts.
+
+**You need**
+
+| Tool | Version | For |
+|---|---|---|
+| Git, Python 3, curl | any recent | Cloning, `tools/view.py`, the checks |
+| Rust, through [rustup](https://rustup.rs) | 1.95.0 with `wasm32-unknown-unknown` (picked up from `rust-toolchain.toml`) | The contracts and their tests |
+| `cargo-near` | 0.23.0 | Building the contracts exactly as deployed |
+| Node.js and npm | 24.11 or later (`.nvmrc` says 24) | The website, the runner's tests |
+
+**Steps**
+
+```bash
+# 1. Get the code
+git clone https://github.com/Intern-Near/intern.git
+cd intern
+
+# 2. The Rust toolchain (rustup reads rust-toolchain.toml) and cargo-near
+rustup show
+cargo install cargo-near --version 0.23.0 --locked
+
+# 3. Build every contract, run every test, and compare the builds with what runs on testnet
+./verify.sh --quick          # ends with: ALL CHECKS PASSED
+
+# 4. Run the website
+cd web
+npm ci
+npm run dev                  # open the address it prints, usually http://localhost:5173
+```
+
+| Then | How |
+|---|---|
+| See the site on made-up sample data instead of testnet | Add `?source=sample` to any page, for example `http://localhost:5173/?page=desk&source=sample` (a pink badge marks it). `&scene=REFUSED` or `&scene=APPROVED` plays a NOPE or a YES |
+| Point the site at another contract | Copy `web/.env.example` to `web/.env.local` and set `VITE_CONTRACT_ID`, or add `?contract=coin-fast.desk-lab-2026.testnet` to the address |
+| Run the site as it is hosted | `npm run build && npm run serve`, then open `http://localhost:8787`. Without an ElevenLabs key in `web/.env.local` (`ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`) the Intern uses the browser's own voice |
+| Check the website's code | `npm run typecheck && npm run lint && npm test` (in `web/`) |
+| Ask the live contract a question | From the repository's root: `python3 tools/view.py get_rank` |
+| Run the local-node tests too | `./verify.sh` from the root (10 to 15 minutes; it downloads a NEAR node) |
+
+Using the site's buttons needs a NEAR **testnet** wallet with a little test NEAR for fees. Running the off-chain
+Intern itself needs keys we do not publish: see [`runner/README.md`](runner/README.md).
 
 ## Run it yourself
 
