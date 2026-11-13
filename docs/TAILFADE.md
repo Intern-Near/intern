@@ -69,3 +69,13 @@ account, at most `FAUCET_MAX` accounts in all (9 while it holds $300), and never
   chip quickly.
 - **Not enforced by a contract.** The browser key trades; nothing of ours checks a visitor's size. The app sets it.
 - **Testnet.** Test dollars from the faucet; nothing here is worth money.
+
+## Following the Intern with one rule (01 1.7, copy trading)
+
+`src/follow.ts`: a visitor sets one rule (`{ choice: "TAIL" | "FADE", chipUsd: 10 | 25, leverage: 2 | 5 | 10,
+maxPerDay }`) and uses the trading key they already approved. `nextFollow(feed, rule, done, placedAt, now)` returns
+the open window to follow (a bet not followed yet, while fewer than `maxPerDay` chips were placed in the last 24
+hours), and the page places the chip with `placeChip`. On the website this runs while the page is open;
+`node scripts/follow.ts` (with `AGENT_KEY` set to the approved trading key) does it from a terminal. Nothing of ours
+holds the money or the key; the key can trade, never withdraw. Cancelling is turning it off, or revoking the key.
+The contract does not place these orders.

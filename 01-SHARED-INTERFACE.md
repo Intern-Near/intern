@@ -813,6 +813,10 @@ Owner's decision on Engine 2's list (item 15). The Intern holds a stake of $INTE
 
 Owner's decision on Engine 2's list (item 12). The runner reports results (known limit 2); since 1.6 every order carries a client order id, so anyone can compare a reported result with Hyperliquid's fills. For 3 rounds after a bet's round, a registered account may challenge it: `ft_transfer_call(.., msg: '{"challenge":{"position_id":N,"returned":"<dollars back>","reason":"<≤140 characters>"}}')` with at least $5 as a bond (one challenge per bet; refunded if it cannot be opened). This opens a `CORRECT` vote at once (`result_challenged`, `vote_opened`), which passes like a promotion. Passed: anyone calls `apply_correction({ vote_id })` (at least 60 TGas): the pool takes the difference (test dollars minted or burned on testnet), the bet's `returned` becomes the challenged figure with `result_source` `CORRECTED`, its round's `result` is adjusted, and the bond comes back to the challenger as a prize (`result_corrected`). Failed: the bond goes to the BRAVE pool as outside income. A reason is shown, never given to the AI. `open_vote` refuses `CORRECT`.
 
+### 9.15 Copy trading with one rule *(1.7)*
+
+Owner's decision on Engine 2's list (item 18), built on Tail or Fade: a visitor sets one rule (TAIL or FADE, a $10 or $25 chip, 2x/5x/10x, at most N chips a day) and uses the Tail or Fade trading key they already approved. Each time the Intern's bet opens a window, their own key places the chip on their own Hyperliquid account (`tailfade/src/follow.ts`; on the website while the page is open, or `tailfade/scripts/follow.ts` from a terminal). Nothing of ours holds the money or the key; the contract does not place these orders. Not a contract change.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
