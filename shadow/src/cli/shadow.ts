@@ -8,8 +8,13 @@
 //   run     The shadow run. Restart-safe: resumes at the next tick time. Exits 0 when decisions and the price tail
 //           are over. Spends NEAR AI credit; reads Hyperliquid mainnet prices (read-only).
 //   once    One tick right now, for a smoke test in a separate run folder. Not for the real run.
-//   report  The report, rebuilt from the raw files. Options: --answer-rule strict|trim --scheme ecdsa|ed25519
-//           --write (also writes report.md and report.json into the run folder)
+//   report  The report, rebuilt from the raw files. Options: --answer-rule strict|trim --scheme ed25519|ecdsa
+//           --write (also writes report.md and report.json into the run folder; report-trim.md and
+//           report-trim.json with --answer-rule trim, so the two readings sit side by side)
+//   site    The website's file, counted as agreed with the owner (src/site.ts): --run-dir is the pressure run (the
+//           headline), --plain-run-dir the plain run. Prints it; --out <file> writes it, e.g.
+//           npm run shadow -- site --run-dir data/2026-11-11-intern-pressure --plain-run-dir data/2026-11-11-intern
+//             --out ../web/public/shadow-run.json
 import { randomBytes } from "node:crypto";
 import { existsSync, readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -41,6 +46,7 @@ import { runLoop } from "../loop.ts";
 import { PRESSURE_SETS } from "../pressure.ts";
 import { buildReport, formatReport, loadRun } from "../report.ts";
 import { floorTick, tickId } from "../schedule.ts";
+import { buildSiteFile } from "../site.ts";
 import { appendEvent, tickDir } from "../store.ts";
 import { runTick, type TickDeps } from "../tick.ts";
 
@@ -64,7 +70,9 @@ function die(message: string): never {
 const command = process.argv[2];
 const runDirFlag = flag("--run-dir");
 if (command === undefined || runDirFlag === undefined) {
-  die("usage: npm run shadow -- <init|run|once|report> --run-dir <dir> [options]   (see src/cli/shadow.ts)");
+  die(
+    "usage: npm run shadow -- <init|run|once|report|site> --run-dir <dir> [options]   (see src/cli/shadow.ts)",
+  );
 }
 const runDir = resolve(runDirFlag);
 
@@ -185,20 +193,35 @@ async function once(): Promise<void> {
 
 async function report(): Promise<void> {
   const answerRule = (flag("--answer-rule") ?? "strict") as AnswerRule;
-  const scheme = (flag("--scheme") ?? "ecdsa") as SigningAlgo;
+  // ed25519 by default: the scheme 01 pins for the program (z-ai/glm-5.3-flash, signer 5a0210f2…caff).
+  const scheme = (flag("--scheme") ?? "ed25519") as SigningAlgo;
   if (answerRule !== "strict" && answerRule !== "trim") die("--answer-rule must be strict or trim");
   if (!SIGNING_ALGOS.includes(scheme)) die("--scheme must be ecdsa or ed25519");
   const data = buildReport(loadRun(runDir), { answerRule, scheme, now: Date.now() });
   const text = formatReport(data);
   console.log(text);
   if (process.argv.includes("--write")) {
-    await writeFile(join(runDir, "report.md"), text);
-    await writeFile(join(runDir, "report.json"), `${JSON.stringify(data, null, 2)}\n`);
-    console.error(`wrote ${join(runDir, "report.md")} and report.json`);
+    const name = answerRule === "strict" ? "report" : "report-trim";
+    await writeFile(join(runDir, `${name}.md`), text);
+    await writeFile(join(runDir, `${name}.json`), `${JSON.stringify(data, null, 2)}\n`);
+    console.error(`wrote ${join(runDir, `${name}.md`)} and ${name}.json`);
   }
 }
 
-const commands: Record<string, () => Promise<void>> = { init, run, once, report };
+async function site(): Promise<void> {
+  const plainDir = flag("--plain-run-dir") ?? die("--plain-run-dir <the plain run's folder> is required");
+  const file = buildSiteFile(loadRun(runDir), loadRun(resolve(plainDir)), Date.now());
+  const text = `${JSON.stringify(file, null, 2)}\n`;
+  const out = flag("--out");
+  if (out === undefined) {
+    process.stdout.write(text);
+    return;
+  }
+  await writeFile(out, text);
+  console.error(`wrote ${out}`);
+}
+
+const commands: Record<string, () => Promise<void>> = { init, run, once, report, site };
 const handler = commands[command];
-if (!handler) die(`unknown command ${command}; use init, run, once or report`);
+if (!handler) die(`unknown command ${command}; use init, run, once, report or site`);
 await handler();

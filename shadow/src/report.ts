@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { parsePrices } from "../../runner/src/hyperliquid.ts";
 import { isRecord } from "../../runner/src/json.ts";
 import { type AnswerRule, aiCheck, judge, type Pinned, type Proposal } from "../../runner/src/judge.ts";
@@ -254,7 +254,10 @@ export interface RowData {
 
 export interface ReportData {
   generatedAt: string;
-  runDir: string;
+  /** The run folder's name only: a report never carries a path from the machine it was made on. */
+  runFolder: string;
+  /** When the decisions end (first tick + duration_hours), or null before the first tick. */
+  decisionsEnd: string | null;
   cfg: RunConfig;
   answerRule: AnswerRule;
   scheme: SigningAlgo;
@@ -286,6 +289,8 @@ export function buildReport(
   // Ticks: what was planned so far, what ran, the gaps.
   const [first] = run.tickIds;
   const firstMs = first === undefined ? null : parseTickId(first);
+  const decisionsEnd =
+    firstMs === null ? null : new Date(firstMs + cfg.duration_hours * HOUR_MS).toISOString();
   let decideTicksPlanned = 0;
   const decideGaps: string[] = [];
   const tailGaps: string[] = [];
@@ -379,7 +384,8 @@ export function buildReport(
   const lastTick = run.tickIds[run.tickIds.length - 1] ?? null;
   return {
     generatedAt: new Date(opts.now).toISOString(),
-    runDir: run.runDir,
+    runFolder: basename(run.runDir),
+    decisionsEnd,
     cfg,
     answerRule: opts.answerRule,
     scheme: opts.scheme,
@@ -428,6 +434,18 @@ function ranges(ids: string[], intervalMinutes: number): string[] {
   return out;
 }
 
+/** "2026-11-14T16:45:00.000Z" -> "2026-11-14 16:45 UTC". */
+function utcMinute(iso: string): string {
+  return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
+}
+
+/** A signer shortened for reading: 5a0210f2…caff, 0x3b753b44…fa0c. */
+function shortSigner(address: string | undefined): string {
+  if (!address) return "none";
+  const head = address.startsWith("0x") ? 10 : 8;
+  return address.length > head + 5 ? `${address.slice(0, head)}…${address.slice(-4)}` : address;
+}
+
 export function formatReport(d: ReportData): string {
   const c = d.cfg;
   const L: string[] = [];
@@ -435,7 +453,7 @@ export function formatReport(d: ReportData): string {
   L.push(`# Shadow run ${c.run_id}: report`);
   L.push("");
   L.push(
-    `Generated ${d.generatedAt} from the raw files in \`${d.runDir}\`. Regenerate any time with the report command.`,
+    `Generated ${d.generatedAt} from the raw files in the run folder \`${d.runFolder}\`. Regenerate any time with the report command.`,
   );
   L.push("");
   L.push(
@@ -455,7 +473,10 @@ export function formatReport(d: ReportData): string {
     `- Prices in the user message: ${c.prompt_markets === "six" ? "all six markets" : "only the rank's markets"}; thinking: ${c.thinking === "off" ? "switched off for Qwen models" : "as each model does by default"}`,
   );
   L.push(
-    `- Answer rule: ${d.answerRule === "strict" ? "strict, 01 §6.2 as written (nothing before or after the line)" : "blank lines around the line ignored (one option for issue H)"}; signature checked with the pinned ${d.scheme} signer`,
+    `- Answer rule: ${d.answerRule === "strict" ? "strict, 01 §6.2 as written (nothing before or after the line)" : "blank lines around the line ignored (one option for issue H)"}; signature checked with each model's pinned ${d.scheme} signer`,
+  );
+  L.push(
+    `- Pinned ${d.scheme} signers, from each model's attestation report when the run was set up${d.scheme === "ed25519" ? " (ed25519 is the scheme 01 pins)" : ""}: ${c.models.map((m) => `\`${m}\` ${shortSigner(c.pinned[m]?.[d.scheme]?.signing_address)}`).join("; ")}`,
   );
   L.push(`- Paper positions: held ${c.hold_hours} h; ${c.cost_bps} bps round-trip cost`);
   if (c.pressure) {
@@ -473,7 +494,7 @@ export function formatReport(d: ReportData): string {
   } else {
     L.push(`- First tick ${d.firstTick}, last tick ${d.lastTick}.`);
     L.push(
-      `- Decision ticks run: ${d.decideTicksRun} of ${d.decideTicksPlanned} due so far (${hours.toFixed(2)} hours of decisions; ${c.duration_hours} h planned).`,
+      `- Decision ticks run: ${d.decideTicksRun} of ${d.decideTicksPlanned} due so far (${hours.toFixed(2)} hours of decisions run${d.decisionsEnd ? `; decisions end ${utcMinute(d.decisionsEnd)}` : ""}).`,
     );
     L.push(
       `- Gaps in decision ticks: ${d.decideGaps.length === 0 ? "none" : ranges(d.decideGaps, c.interval_minutes).join("; ")}`,

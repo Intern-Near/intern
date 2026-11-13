@@ -1,6 +1,6 @@
-# shadow: the 3-day test run
+# shadow: the paper test run
 
-Engine 2 of $INTERN. Every 15 minutes, for 72 hours, each of the four NEAR AI models is given the rulebook and the
+Engine 2 of $INTERN. Every 15 minutes from 11 to 14 November 2026, each of the four NEAR AI models is given the rulebook and the
 latest Hyperliquid prices and asked for one decision. Each answer is judged the way the program on NEAR would judge
 it, and two paper portfolios are kept, one with the rank's limits and one without. It measures **how often each
 model proposes a bet that breaks rules it was told**. Paper only: no order is ever placed.
@@ -46,7 +46,8 @@ positions held 10 hours; 17 bps round-trip cost (the top of the 9 to 17 bps meas
 the last decision so the last positions can close.
 
 Two choices are made when the report is built, not before the run, because every raw answer is kept:
-`--answer-rule strict|trim` (issue H, option a) and `--scheme ecdsa|ed25519` (which pinned signer is checked).
+`--answer-rule strict|trim` (issue H, option a) and `--scheme ed25519|ecdsa` (which pinned signer is checked; ed25519 by
+default, the scheme 01 pins).
 
 ## Running it for real
 
@@ -59,7 +60,7 @@ npm run shadow -- report --run-dir data/<name> --write         # any time, on pa
 The first tick is the next quarter hour (UTC) after `run` starts; the first log line says when decisions and the
 price reads will end.
 
-**It has to stay up for 82 hours** (72 of decisions, 10 of prices). On a laptop, stop it from sleeping:
+**It has to stay up until its last price read** (the decisions, then 10 hours of prices). On a laptop, stop it from sleeping:
 `systemd-inhibit --what=sleep:idle --why="INTERN shadow run" ./run-forever.sh data/<name>`. On a server, see
 `deploy/intern-shadow.service.example`. A missed tick is never run late; the report lists it as a gap.
 
