@@ -734,8 +734,9 @@ impl Coin {
         let (slot, settled, closed) = match self.current {
             None => (None, true, None),
             Some(r) if r.settled => (Some(r.slot), true, None),
-            // A round with no bet settles itself when the next one opens.
-            Some(r) if r.bets_used == 0 => (
+            // A round with no bet settles itself when the next one opens. (1.6: "no bet" means nothing at risk: a
+            // round whose only bet is a long-shot ticket uses none of the rank's bets but must settle like any other.)
+            Some(r) if r.bets_used == 0 && r.at_risk == 0 => (
                 Some(r.slot),
                 true,
                 Some(RoundRec {

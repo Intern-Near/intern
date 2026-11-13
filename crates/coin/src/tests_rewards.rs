@@ -501,6 +501,30 @@ fn a_passed_long_shot_allows_one_extra_ticket_at_10x_in_its_round_only() {
 }
 
 #[test]
+fn a_round_whose_only_bet_is_the_ticket_does_not_close_itself_unsettled() {
+    // 1.6 fix (found by Engine 2 reading the code): the ticket uses none of the rank's bets, so `bets_used` stays 0;
+    // the round must still wait for its result like any round with a bet, not settle itself with 0.
+    let mut c = long_shot_passed();
+    goto(&mut c, 7, 1_000);
+    let margin = rules::limits::long_shot_margin(c.current.unwrap().brave_at_open);
+    let v = propose(&mut c, 7, &ticket_bet(margin, 10));
+    let wire::Verdict::Yes { position_id } = v else { panic!("the ticket: {v:?}") };
+    assert_eq!((c.get_round().bets_used, c.get_round().at_risk.0), (0, margin));
+    // The next slot comes and the ticket is not settled: round 7 stays the current round, unsettled.
+    ctx(at(8, 5_000), "anyone.test", 0);
+    c.tick();
+    assert_eq!(c.current.unwrap().id, 7);
+    assert!(!c.get_round_by_id(7).unwrap().settled);
+    assert_eq!(c.get_pot().brave.in_play.0, margin, "the ticket's margin is still in play");
+    // Reported and settled late, it settles normally; then round 8 opens.
+    ctx(at(8, 6_000), RUNNER, 0);
+    c.report_result(position_id, U128(margin));
+    let _ = c.settle(7);
+    assert!(c.get_round_by_id(7).unwrap().settled);
+    assert_eq!(c.get_pot().brave.in_play.0, 0);
+}
+
+#[test]
 fn a_new_long_shot_vote_waits_seven_rounds_after_the_last_ticket() {
     let mut c = long_shot_passed();
     goto(&mut c, 8, 1_000);
