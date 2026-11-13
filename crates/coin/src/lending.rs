@@ -243,10 +243,11 @@ impl Coin {
             Ok(b) => serde_json::from_slice::<U128>(&b).map(|u| u.0).unwrap_or(0),
             Err(_) => 0,
         };
-        self.books.brave_total += paid;
+        // 1.4: interest is held for the payday draw (every 7 rounds) instead of joining the pool.
+        self.rw.draw_pot += paid;
         self.s9.interest_total += paid;
         env::log_str(&format!(
-            "interest collected: {paid} (STAND-IN lender, a fixed test rate)"
+            "interest collected for the payday draw: {paid} (STAND-IN lender, a fixed test rate)"
         ));
         U128(paid)
     }

@@ -42,6 +42,11 @@ export interface Chain {
    * moved as the program returned them (negative when brought back).
    */
   rebalance(): Promise<Sent<string>>;
+  /**
+   * 01 1.4 §9.7: settles the streak jackpots of closed rounds and holds a payday draw that is due. Anyone may call
+   * it; the runner does once each round, after rebalance (relayer).
+   */
+  rewardsTick(): Promise<Sent<unknown>>;
   /** The signed action, or null when NEAR's signing network failed this time: call again (Engine 1's note, 1.2). */
   signNext(positionId: number, pxE8: bigint): Promise<Sent<SignedAction | null>>;
   close(positionId: number, pxE8: bigint): Promise<Sent<SignedAction | null>>;
@@ -81,6 +86,8 @@ export const TERA_GAS = {
   settle: 100,
   /** 01 1.3 §9.6 and Engine 1's note: attach 300 TGas (it may call the lender). */
   rebalance: 300,
+  /** 01 1.4: a due draw walks the entrants (at most 200). */
+  rewards_tick: 150,
 } as const;
 
 /**
@@ -179,6 +186,17 @@ export class NearChain implements Chain {
     if (p.credited_to !== undefined) args.credited_to = p.credited_to;
     const r = await call(this.#as("runner"), this.contractId, "propose", args, { teraGas: TERA_GAS.propose });
     return { txHash: r.txHash, value: readVerdict(r.value), tgas: r.tgas };
+  }
+  /** Sent by the relayer, like rebalance. */
+  async rewardsTick(): Promise<Sent<unknown>> {
+    const r = await call(
+      this.#as("relayer"),
+      this.contractId,
+      "rewards_tick",
+      {},
+      { teraGas: TERA_GAS.rewards_tick },
+    );
+    return { txHash: r.txHash, value: r.value, tgas: r.tgas };
   }
   /** Sent by the relayer: anyone may call `rebalance`, and the runner's key stays limited to its three calls. */
   async rebalance(): Promise<Sent<string>> {

@@ -228,7 +228,7 @@ fn rebalance_keeps_the_interns_slice_idle_and_the_pot_adds_up() {
     assert!(
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(c.rebalance()))).is_err()
     );
-    // Interest collected goes into the pool.
+    // Interest collected is held for the payday draw (1.4), not added to the pool.
     ctx_full(
         at(2, 5_000),
         ME,
@@ -239,8 +239,9 @@ fn rebalance_keeps_the_interns_slice_idle_and_the_pot_adds_up() {
     let p = c.get_pot().brave;
     assert_eq!(
         (p.total, p.interest),
-        (U128(1_001_500_000), U128(1_500_000))
+        (U128(1_000_000_000), U128(1_500_000))
     );
+    assert_eq!(c.get_rewards().draw_pot, U128(1_500_000));
 }
 
 #[test]
@@ -650,11 +651,13 @@ fn tips_fill_the_jar_with_overflow_and_the_tippers_may_claim() {
         .get_claimable(acct("alice.test"))
         .goal_fills
         .contains(&fill.id));
+    // 1.4: half of every tip goes to the streak jackpot, half to the pool as outside income.
     assert_eq!(
         c.get_pot().brave.income_waiting,
-        U128(130_000_000),
-        "tips are outside income"
+        U128(65_000_000),
+        "half of the tips is outside income"
     );
+    assert_eq!(c.get_rewards().jackpot, U128(65_000_000));
     ctx(at(2, 5_000), "t1.test", 20_000_000_000_000_000_000_000);
     let _ = c.claim_goal_sticker(fill.id);
     assert!(!c

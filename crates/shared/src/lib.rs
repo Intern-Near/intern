@@ -14,7 +14,7 @@ use core::fmt;
 use core::str::FromStr;
 
 /// The interface version this crate follows.
-pub const INTERFACE_VERSION: &str = "1.3";
+pub const INTERFACE_VERSION: &str = "1.4";
 
 // ---------------------------------------------------------------------------------------------
 // As printed in section 11.

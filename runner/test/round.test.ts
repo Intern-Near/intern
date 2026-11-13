@@ -89,7 +89,9 @@ describe("startup checks", () => {
     assert.deepEqual(checkConstants(c), []);
     assert.match(checkConstants({ ...c, network: "mainnet" }).join(), /testnet only/);
     assert.match(checkConstants({ ...c, hl: { ...c.hl, testnet: false } }).join(), /testnet only/);
-    assert.match(checkConstants({ ...c, interface_version: "1.2" }).join(), /follows 1\.3/);
+    assert.match(checkConstants({ ...c, interface_version: "1.2" }).join(), /follows 1\.3 or 1\.4/);
+    assert.deepEqual(checkConstants({ ...c, interface_version: "1.3" }), []);
+    assert.deepEqual(checkConstants({ ...c, interface_version: "1.4" }), []);
     assert.match(checkConstants({ ...c, min_notional: "10000000" }).join(), /warning: min_notional/);
     const moved = c.markets.map((m) => (m.market === "DOGE" ? { ...m, hl_asset: 12 } : m));
     assert.match(checkConstants({ ...c, markets: moved }).join(), /DOGE differs from 01/);
@@ -611,5 +613,20 @@ describe("settling", () => {
     assert.equal(await t.runner.runRound("full"), "settled");
     assert.equal(t.chain.calls.filter((c) => c.startsWith("settle")).length, 1);
     assert.equal(find(t.log.lines, "error"), undefined);
+  });
+});
+
+describe("the reward ladder (01 1.4)", () => {
+  it("calls rewards_tick once a round, before rebalance, on a 1.4 contract only", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    assert.equal(await t.runner.runRound("full"), "settled");
+    assert.deepEqual(t.chain.rewardTicks, [7]);
+    assert.ok(t.log.lines.some((l) => l.step === "rewards tick"));
+
+    const old = setup((round, nonce) => skipLine(round, nonce));
+    const c13 = { ...(await old.chain.constants()), interface_version: "1.3" };
+    const r13 = new Runner(old.deps, DEFAULT_SETTINGS, c13);
+    assert.equal(await r13.runRound("full"), "settled");
+    assert.deepEqual(old.chain.rewardTicks, []);
   });
 });

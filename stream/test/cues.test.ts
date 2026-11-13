@@ -70,6 +70,21 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   goal_filled: { fill_id: 1, goal: "TIP_JAR", level: 1, round_id: 8 },
   hype_level: { train: 2, level: 3, points: 12 },
   sticker_claimed: { account_id: "visitor.testnet", token_id: "original:OVER_TRADE_LIMIT" },
+  // 1.4: the reward ladder
+  guessed: { round_id: 13, account_id: "boss1.desk-lab-2026.testnet" },
+  guess_settled: { round_id: 13, verdict: "SKIP", right: 4, wrong: 2 },
+  golden_dropped: { account_id: "boss2.desk-lab-2026.testnet", code: "OVER_TRADE_LIMIT", serial: 1 },
+  jackpot_grew: { amount: "10000000", source: "tips", jackpot: "110000000" },
+  jackpot_won: { round_id: 20, winners: ["boss1.desk-lab-2026.testnet"], each: "110000000" },
+  draw_held: {
+    period: 2,
+    winner: "boss1.desk-lab-2026.testnet",
+    prize: "4900000",
+    runners_up: ["boss2.desk-lab-2026.testnet"],
+    each: "2100000",
+    tickets_total: "9000000000",
+  },
+  prize_paid: { account_id: "boss1.desk-lab-2026.testnet", amount: "114900000" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,
@@ -133,6 +148,30 @@ describe("every feed event of 01 §10 has a cue", () => {
     assert.match(
       cueFor(item("playbook_activated", { playbook_id: 0, effective_round: 9 }), LINES)?.system ?? "",
       /cleared/,
+    );
+  });
+
+  it("the payday draw: a winner, or a rollover when nobody was in it", () => {
+    const won = cueFor(item("draw_held", SAMPLES.draw_held ?? {}), LINES);
+    assert.match(won?.intern ?? "", /\$4\.90/);
+    assert.match(won?.system ?? "", /^DRAW — period 2: boss1/);
+    const rolled = cueFor(
+      item("draw_held", {
+        period: 3,
+        winner: null,
+        prize: "0",
+        runners_up: [],
+        each: "0",
+        tickets_total: "0",
+        rolled_over: "120",
+      }),
+      LINES,
+    );
+    assert.equal(rolled?.intern_pose, "idle");
+    assert.match(rolled?.system ?? "", /nobody in it; \$0\.00 rolls over/);
+    assert.match(
+      cueFor(item("jackpot_grew", SAMPLES.jackpot_grew ?? {}), LINES)?.system ?? "",
+      /from half of a tip, now \$110\.00/,
     );
   });
 
@@ -214,8 +253,13 @@ describe("the voice (spec 24.14)", () => {
   it("the program's captions: no exclamation marks, and they name the thing first, in capitals", () => {
     const systems = [
       ...Object.values(LINES.events).map((e) => (e as { system: string }).system),
+      ...Object.values(LINES.events).flatMap((e) =>
+        Object.values((e as { by_outcome?: Record<string, { system: string }> }).by_outcome ?? {}).map(
+          (o) => o.system,
+        ),
+      ),
       ...Object.values(LINES.refusals).map((r) => r.system),
-    ].filter((s) => !s.startsWith("by code"));
+    ].filter((s) => !s.startsWith("by "));
     for (const s of systems) {
       assert.doesNotMatch(s, /!/, s);
       assert.match(s.replace(/\{[a-z_]+\}/g, "N"), /^[A-Z][A-Z0-9 _]+ —/, s);

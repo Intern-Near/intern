@@ -45,6 +45,8 @@ interface EventLines {
   by_kind?: Record<string, Variants>;
   by_direction?: Record<"up" | "down", { intern_pose: string; intern: Variants }>;
   by_cleared?: Record<"yes" | "no", Variants>;
+  /** 1.4: the payday draw, with a winner or rolled over. */
+  by_outcome?: Record<"won" | "rolled", { intern_pose: string; intern: Variants; system: string }>;
 }
 type Units = "usd" | "ms_into_round" | "x" | "count" | "ms" | "bps" | null;
 interface RefusalLines {
@@ -139,6 +141,7 @@ const words: Record<string, Record<string, string>> = {
   goal: { BOSS: "boss goal", TIP_JAR: "tip jar", HYPE: "hype train" },
   state: { PASSED: "It passed", FAILED: "It didn't pass", OPEN: "It's still open" },
   source: { launchpad: "launchpad's fees" },
+  jackpot_source: { tips: "half of a tip", added: "a direct addition" },
 };
 const word = (table: string, v: unknown): string => words[table]?.[String(v)] ?? String(v ?? "?");
 
@@ -149,7 +152,18 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(d)) if (v === null || typeof v !== "object") out[k] = String(v);
   // Money and coins, formatted.
-  for (const k of ["amount", "paid", "margin", "returned", "brave_at_open", "brave_after"])
+  for (const k of [
+    "amount",
+    "paid",
+    "margin",
+    "returned",
+    "brave_at_open",
+    "brave_after",
+    "prize",
+    "each",
+    "jackpot",
+    "rolled_over",
+  ])
     if (k in d) out[k] = usd(d[k]);
   if ("result" in d) out.result = signedUsd(d.result);
   if ("coins" in d) out.coins = coins(d.coins);
@@ -171,6 +185,11 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
       : `, effective round ${s("effective_round")}`;
   out.closes_at = "closes_at" in d ? clock(d.closes_at) : "?";
   out.author_count = Array.isArray(d.authors) ? String(d.authors.length) : "?";
+  // 1.4: the reward ladder.
+  out.jackpot_source = word("jackpot_source", d.source);
+  out.winner = d.winner ? account(d.winner) : "nobody";
+  out.winner_count = Array.isArray(d.winners) ? String(d.winners.length) : "?";
+  out.runner_count = Array.isArray(d.runners_up) ? String(d.runners_up.length) : "?";
   out.playbook_state = String(d.playbook_id) === "0" ? "cleared" : `playbook ${s("playbook_id")} active`;
   return out;
 }
@@ -222,6 +241,11 @@ export function cueFor(item: FeedItem, lines: Lines, ctx: CueContext = {}): Cue 
     variants = b.intern;
   } else if (ev.by_cleared) {
     variants = ev.by_cleared[String(item.data.playbook_id) === "0" ? "yes" : "no"];
+  } else if (ev.by_outcome) {
+    const b = ev.by_outcome[item.data.winner ? "won" : "rolled"];
+    pose = b.intern_pose;
+    variants = b.intern;
+    system = b.system;
   }
 
   const line = ev.speak ? pick(variants, item.seq) : null;

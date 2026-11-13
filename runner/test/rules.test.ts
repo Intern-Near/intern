@@ -104,7 +104,7 @@ function show(v: Verdict): string {
 
 describe("rank checks, the 26 rule cases of checks.json (01 1.2 §12)", () => {
   it("reads version 1.2 with the $11 minimum and all 26 cases", () => {
-    assert.equal(CHECKS.interface_version, "1.3");
+    assert.equal(CHECKS.interface_version, "1.4");
     assert.equal(BigInt(CHECKS.min_notional), MIN_NOTIONAL_E6);
     assert.deepEqual(
       CHECKS.rule_cases.map((c) => c.id),

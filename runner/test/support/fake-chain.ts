@@ -35,7 +35,7 @@ const DUMMY_SIG = { r: `0x${"11".repeat(32)}`, s: `0x${"22".repeat(32)}`, v: 27 
 
 export function fakeConstants(model: Constants["model"]): Constants {
   return {
-    interface_version: "1.3",
+    interface_version: "1.4",
     network: "testnet",
     ranks: (["INTERN", "ANALYST", "TRADER"] as const).map((r) => ({
       ...RANKS[r],
@@ -222,6 +222,12 @@ export class FakeChain implements Chain {
   /** The `credited_to` of each proposal, in order (null when none was sent). */
   readonly credited: (string | null)[] = [];
 
+  /** Rounds in which `rewards_tick` was called (kept apart from `calls`, whose order the tests check). */
+  readonly rewardTicks: number[] = [];
+  async rewardsTick(): Promise<Sent<unknown>> {
+    this.rewardTicks.push(this.#round.id);
+    return { txHash: this.#tx(), value: null, tgas: null };
+  }
   async rebalance(): Promise<Sent<string>> {
     this.calls.push("rebalance");
     if (this.rebalanceReply instanceof Error) throw this.rebalanceReply;

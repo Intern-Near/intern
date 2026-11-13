@@ -86,7 +86,7 @@ describe("01 1.2 §6.1, against Engine 1's rulebook cases in checks.json", () =>
   };
 
   it("has the three cases R1 to R3 of version 1.2", () => {
-    assert.equal(checks.interface_version, "1.3");
+    assert.equal(checks.interface_version, "1.4");
     assert.deepEqual(
       checks.rulebook_cases.cases.map((c) => c.id),
       ["R1", "R2", "R3"],

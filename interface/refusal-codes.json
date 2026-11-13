@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.3",
+  "interface_version": "1.4",
   "about": "The sixteen NOPE reasons of 01-SHARED-INTERFACE.md section 7, in check order. Checks stop at the first failure, so one proposal gets one code. 'asked' and 'limit' describe the two numbers a refusal carries; null where the table shows a dash.",
   "codes": [
     { "check": 1,  "code": "OUTSIDE_WINDOW",      "light": 1, "fails_when": "The phase is not PROPOSE", "asked": "ms into the round", "limit": "propose_from_ms if too early, propose_until_ms if too late" },

@@ -16,7 +16,7 @@ use near_sdk::AccountId;
 pub use shared::{Market, Rank, Refusal, Side, Status};
 
 /// The interface version these shapes follow.
-pub const INTERFACE_VERSION: &str = "1.3";
+pub const INTERFACE_VERSION: &str = "1.4";
 
 // ----- numbers --------------------------------------------------------------------------------
 
@@ -139,6 +139,14 @@ wire_enum!(
         GoalFilled,
         HypeLevel,
         StickerClaimed,
+        // 1.4
+        Guessed,
+        GuessSettled,
+        GoldenDropped,
+        JackpotGrew,
+        JackpotWon,
+        DrawHeld,
+        PrizePaid,
     }
 );
 

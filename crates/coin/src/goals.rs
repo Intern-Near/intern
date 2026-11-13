@@ -114,8 +114,10 @@ impl Coin {
     /// A tip: a gift to the BRAVE pool. Like all outside income (step 8) it is credited at the next
     /// round's opening. It fills the tip jar and adds a hype point. The caller checked the minimum.
     pub(crate) fn take_tip(&mut self, who: &AccountId, amount: u128) {
-        self.s9.income_waiting += amount;
-        self.s9.outside_income_total += amount;
+        // 1.4: half of every tip goes to the streak jackpot; the rest to the pool, as before.
+        let to_pool = self.rw_tip(amount);
+        self.s9.income_waiting += to_pool;
+        self.s9.outside_income_total += to_pool;
         self.feed.push(
             EventName::Tipped,
             json!({"account_id": who, "amount": U128(amount)}),

@@ -93,7 +93,9 @@ const stamp = (ms: number): string =>
     .replace(/\.\d+Z$/, "Z");
 
 /** The version of 01-SHARED-INTERFACE.md this runner follows. */
-export const INTERFACE_VERSION = "1.3";
+export const INTERFACE_VERSION = "1.4";
+/** Versions of 01 this runner works with: 1.4 added only the reward ladder, so a 1.3 contract still works. */
+export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4"];
 
 /**
  * A NEAR account id (NEAR's account-id rules: 2 to 64 characters, lower-case letters and digits in parts joined by
@@ -106,8 +108,10 @@ export function isAccountId(s: string): boolean {
 /** Startup checks: the runner only works on testnet and on 01 version 1.3, with 01's market table. */
 export function checkConstants(c: Constants): string[] {
   const problems: string[] = [];
-  if (c.interface_version !== INTERFACE_VERSION)
-    problems.push(`interface_version is ${c.interface_version}; this runner follows ${INTERFACE_VERSION}`);
+  if (!ACCEPTED_VERSIONS.includes(c.interface_version))
+    problems.push(
+      `interface_version is ${c.interface_version}; this runner follows ${ACCEPTED_VERSIONS.join(" or ")}`,
+    );
   if (c.network !== "testnet") problems.push(`network is ${c.network}; the runner is for testnet only`);
   if (!c.hl.testnet)
     problems.push("hl.testnet is false; the runner sends orders to Hyperliquid testnet only");
@@ -345,6 +349,8 @@ export class Runner {
   async #rebalance(roundId: number): Promise<void> {
     if (this.#rebalanced.has(roundId)) return;
     this.#rebalanced.add(roundId);
+    // 01 1.4: the reward ladder's jackpots and draws, once a round (a 1.3 contract has no rewards_tick).
+    if (this.#c.interface_version === "1.4") await this.#rewardsTick(roundId);
     try {
       const sent = await this.#d.chain.rebalance();
       const pot = await this.#d.chain.pot();
@@ -365,6 +371,18 @@ export class Runner {
           reason,
           note: "the round goes on; the program decides what may be bet",
         });
+    }
+  }
+
+  async #rewardsTick(roundId: number): Promise<void> {
+    try {
+      const sent = await this.#d.chain.rewardsTick();
+      this.#log("rewards tick", roundId, { tx: sent.txHash, tgas: sent.tgas });
+    } catch (e) {
+      this.#log("rewards tick failed", roundId, {
+        reason: e instanceof Error ? e.message : String(e),
+        note: "the round goes on; anyone may call rewards_tick",
+      });
     }
   }
 

@@ -269,6 +269,7 @@ impl Coin {
                     json!({"position_id": id, "round_id": r.id, "market": bet.market, "side": bet.side,
                            "margin": U128(bet.margin), "leverage": bet.leverage}),
                 );
+                self.rw_ruling(r.id, crate::rewards::YES); // 1.4
                 wire::Verdict::Yes { position_id: id }
             }
             Ruling::Skip => {
@@ -276,6 +277,7 @@ impl Coin {
                 self.save_round(r);
                 self.feed
                     .push(EventName::Skipped, json!({"round_id": r.id}));
+                self.rw_ruling(r.id, crate::rewards::SKIP); // 1.4
                 wire::Verdict::Skip
             }
             Ruling::Nope { refused, decision } => {
@@ -318,6 +320,7 @@ impl Coin {
                     EventName::Refused,
                     json!({"refusal_id": id, "round_id": r.id, "code": refused.code, "asked": asked, "limit": limit, "is_first": is_first}),
                 );
+                self.rw_ruling(r.id, crate::rewards::NOPE); // 1.4
                 wire::Verdict::Nope {
                     refusal_id: id,
                     code: refused.code,

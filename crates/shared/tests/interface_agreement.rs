@@ -224,8 +224,12 @@ fn deployments_file_has_the_section_13_keys() {
     let testnet = file["testnet"].as_object().expect("testnet object");
     let mut keys: Vec<&str> = testnet.keys().map(|k| k.as_str()).collect();
     keys.sort();
-    // 1.3 added stickers, launchpad and lender.
-    assert_eq!(keys, ["coin", "launchpad", "lender", "rpc", "runner", "stickers", "stub", "usdc"]);
+    // 1.3 added stickers, launchpad and lender; 1.4 the two off-chain services (the trick page's API, the
+    // Tail or Fade faucet).
+    assert_eq!(
+        keys,
+        ["coin", "launchpad", "lender", "rpc", "runner", "stickers", "stub", "tailfade_faucet", "trick_api", "usdc"]
+    );
 }
 
 // ----- the test cases -----------------------------------------------------------------------

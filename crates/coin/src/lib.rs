@@ -24,6 +24,7 @@ pub mod goals;
 pub mod host;
 pub mod lending;
 pub mod playbook;
+pub mod rewards;
 mod round;
 mod safe;
 pub mod sign;
@@ -59,7 +60,14 @@ pub const GAS_CASH_OUT_MIN: Gas = Gas::from_tgas(60);
 
 /// Storage one boss's records may use, paid by their NEP-145 registration: the coin balance, the
 /// pending entry, and room for SAFE (step 6) and vote locks (step 5). Measured in the tests.
-pub const ACCOUNT_STORAGE_BYTES: u64 = 640;
+/// 1.4: 640 bytes for the boss's own records (the coin balance, pending money, SAFE, vote locks; 596 measured)
+/// plus `REWARDS_ACCOUNT_BYTES` for the reward ladder's. Accounts registered before 1.4 paid for 640; the contract
+/// covers their reward records from its own balance.
+pub const ACCOUNT_STORAGE_BYTES: u64 = 640 + REWARDS_ACCOUNT_BYTES;
+
+/// 1.4: what one account's reward records may add: the guessing record with four unclaimed golden stickers, a
+/// draw entry and its place among the entrants, a prize owed (597 bytes measured for a 64-character account).
+pub const REWARDS_ACCOUNT_BYTES: u64 = 640;
 
 /// (step 10) Any single payment above this ($1 trillion) is refunded: every total stays far from
 /// the top of u128 (about 3.4·10³⁸).
@@ -91,6 +99,16 @@ enum Key {
     GoalClaims,
     JarTippers,
     HypeRiders,
+    // 1.4: the reward ladder (appended: the keys above keep their places)
+    RwRoundVerdict,
+    RwRoundCounts,
+    RwPlayers,
+    RwCandidates,
+    RwPrizes,
+    RwEntries,
+    RwEntrants,
+    RwDraws,
+    RwJackpotWins,
 }
 
 // ----- configuration ----------------------------------------------------------------------------------
@@ -401,6 +419,74 @@ pub struct Coin {
     goal_claims: LookupSet<(u64, AccountId)>,
     jar_tippers: LookupSet<(u64, AccountId)>,
     hype_riders: LookupSet<(u64, AccountId)>,
+    // ----- 1.4: the reward ladder
+    rw: rewards::Rewards,
+}
+
+/// The layout before 1.4 (steps 8 and 9), read once by `migrate_rewards`.
+#[near(serializers = [borsh])]
+pub struct CoinV8 {
+    cfg: Cfg,
+    token: FungibleToken,
+    extras: LookupMap<AccountId, Extra>,
+    /// epoch -> (rate.pool, rate.supply, round id of that opening)
+    rates: LookupMap<u64, (u128, u128, u64)>,
+    rounds: LookupMap<u64, RoundRec>,
+    current: Option<RoundRec>,
+    books: PoolBooks,
+    feed: Feed,
+    // ----- step 4
+    rank: RankRec,
+    /// Moves after every ruling; with the round id it makes the nonce (section 6.1).
+    nonce_counter: u64,
+    positions: LookupMap<u64, PositionRec>,
+    /// round id -> its position ids (at most `max_bets`, 3)
+    round_positions: LookupMap<u64, Vec<u64>>,
+    next_position_id: u64,
+    refusals: LookupMap<u64, RefusalRec>,
+    next_refusal_id: u64,
+    /// For each of the sixteen codes, in check order: the round of its first refusal ever.
+    firsts: Vec<Option<u64>>,
+    /// A round whose settlement is waiting for the test dollars to be minted or burned.
+    settling: Option<u64>,
+    // ----- step 5
+    locks: LookupMap<AccountId, LockRec>,
+    locked_total: u128,
+    /// round -> coins locked in that round and still locked (for the weight of all locked coins)
+    locked_by_round: LookupMap<u64, u128>,
+    votes: LookupMap<u64, VoteRec>,
+    next_vote_id: u64,
+    /// The open vote of each kind, in `rules::vote::VoteKind::ALL` order.
+    open_by_kind: Vec<Option<u64>>,
+    // ----- step 6
+    /// Each boss's SAFE dollars.
+    safe: LookupMap<AccountId, u128>,
+    /// All SAFE dollars. Not lent yet (step 8): all idle.
+    books_safe: u128,
+    // ----- step 7
+    pins: Pins,
+    /// Signed actions, the last `sign::OUTBOX_KEEP`: ids outbox_first..outbox_next.
+    outbox: LookupMap<u64, ActionRec>,
+    outbox_first: u64,
+    outbox_next: u64,
+    /// position -> how far its signing has got (sign.rs)
+    sign_stage: LookupMap<u64, u8>,
+    last_hl_nonce: u64,
+    // ----- step 9 (1.3)
+    s9: Step9,
+    playbooks: LookupMap<u64, PlaybookRec>,
+    /// round -> the playbook active in it (for the coach cut)
+    round_playbook: LookupMap<u64, u64>,
+    /// SET_PLAYBOOK vote -> its playbook (0: clear)
+    vote_playbook: LookupMap<u64, u64>,
+    /// refusal -> the visitor the runner credited it to
+    refusal_credit: LookupMap<u64, AccountId>,
+    /// accounts whose badge is minted (or being minted)
+    badges: LookupSet<AccountId>,
+    goal_fills: LookupMap<u64, GoalFillRec>,
+    goal_claims: LookupSet<(u64, AccountId)>,
+    jar_tippers: LookupSet<(u64, AccountId)>,
+    hype_riders: LookupSet<(u64, AccountId)>,
 }
 
 /// The step 7 layout, read once by `migrate`.
@@ -496,6 +582,13 @@ struct TipMsg {
 #[derive(Deserialize)]
 #[serde(crate = "near_sdk::serde", deny_unknown_fields)]
 struct TipBody {}
+/// 1.4: `{"jackpot":{}}`, a direct addition to the streak jackpot (the team's seed, a gift).
+#[derive(Deserialize)]
+#[serde(crate = "near_sdk::serde", deny_unknown_fields)]
+struct JackpotMsg {
+    #[allow(dead_code)]
+    jackpot: TipBody,
+}
 
 fn rank_code(r: Rank) -> u8 {
     r as u8
@@ -911,6 +1004,7 @@ impl Coin {
             goal_claims: LookupSet::new(Key::GoalClaims),
             jar_tippers: LookupSet::new(Key::JarTippers),
             hype_riders: LookupSet::new(Key::HypeRiders),
+            rw: rewards::Rewards::new(0),
         };
         c.tick(); // round 1
         c
@@ -966,6 +1060,61 @@ impl Coin {
             goal_claims: LookupSet::new(Key::GoalClaims),
             jar_tippers: LookupSet::new(Key::JarTippers),
             hype_riders: LookupSet::new(Key::HypeRiders),
+            rw: rewards::Rewards::new(o.current.map_or(0, |r| r.id)),
+        }
+    }
+
+    /// Upgrades a 1.3 contract in place (testnet), keeping everything, and adds the reward ladder (1.4): the
+    /// free guess, golden stickers, the streak jackpot and the payday draw. Only the contract account may call it.
+    #[private]
+    #[init(ignore_state)]
+    pub fn migrate_rewards() -> Self {
+        let o: CoinV8 =
+            env::state_read().unwrap_or_else(|| env::panic_str("no 1.3 state to migrate"));
+        let start = o.current.map_or(0, |r| r.id);
+        Coin {
+            cfg: o.cfg,
+            token: o.token,
+            extras: o.extras,
+            rates: o.rates,
+            rounds: o.rounds,
+            current: o.current,
+            books: o.books,
+            feed: o.feed,
+            rank: o.rank,
+            nonce_counter: o.nonce_counter,
+            positions: o.positions,
+            round_positions: o.round_positions,
+            next_position_id: o.next_position_id,
+            refusals: o.refusals,
+            next_refusal_id: o.next_refusal_id,
+            firsts: o.firsts,
+            settling: o.settling,
+            locks: o.locks,
+            locked_total: o.locked_total,
+            locked_by_round: o.locked_by_round,
+            votes: o.votes,
+            next_vote_id: o.next_vote_id,
+            open_by_kind: o.open_by_kind,
+            safe: o.safe,
+            books_safe: o.books_safe,
+            pins: o.pins,
+            outbox: o.outbox,
+            outbox_first: o.outbox_first,
+            outbox_next: o.outbox_next,
+            sign_stage: o.sign_stage,
+            last_hl_nonce: o.last_hl_nonce,
+            s9: o.s9,
+            playbooks: o.playbooks,
+            round_playbook: o.round_playbook,
+            vote_playbook: o.vote_playbook,
+            refusal_credit: o.refusal_credit,
+            badges: o.badges,
+            goal_fills: o.goal_fills,
+            goal_claims: o.goal_claims,
+            jar_tippers: o.jar_tippers,
+            hype_riders: o.hype_riders,
+            rw: rewards::Rewards::new(start),
         }
     }
 
@@ -994,6 +1143,16 @@ impl Coin {
                 return refund;
             }
             self.take_income(&income.source, amount.0);
+            return PromiseOrValue::Value(U128(0));
+        }
+        if serde_json::from_str::<JackpotMsg>(&msg).is_ok() {
+            // 1.4: anyone may add to the jackpot (it stores nothing per account), at least 1 USDC.
+            if amount.0 < goals::MIN_TIP {
+                env::log_str("an addition to the jackpot is at least 1 USDC: refunded");
+                return refund;
+            }
+            self.tick();
+            self.rw_add(&sender_id, amount.0);
             return PromiseOrValue::Value(U128(0));
         }
         if !self.registered(&sender_id) {
@@ -1542,6 +1701,8 @@ impl Coin {
 mod tests;
 #[cfg(test)]
 mod tests_later;
+#[cfg(test)]
+mod tests_rewards;
 #[cfg(test)]
 mod tests_round;
 #[cfg(test)]

@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.3",
+  "interface_version": "1.4",
   "about": "Test cases every implementation must pass: 01-SHARED-INTERFACE.md section 12. rule_cases are checks 1, 2 and 6-12 (signature and rulebook assumed good, no funding quote). decision_line_cases are for ai-check's check 5. rulebook_cases pin the section 6.1 text byte for byte.",
 
   "round": {

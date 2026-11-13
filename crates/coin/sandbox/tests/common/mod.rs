@@ -191,6 +191,8 @@ impl World {
     /// sent outside the pay-in path, which the books ignore).
     pub async fn books_match(&self, ignored: u128) -> anyhow::Result<()> {
         let pot = self.pot().await?;
+        // 1.4: the reward ladder holds its money apart from both pools.
+        let rw = self.view(&self.coin, "get_rewards", json!({})).await?;
         let held = self.usdc_of(self.coin.id()).await?;
         assert_eq!(
             held,
@@ -198,8 +200,11 @@ impl World {
                 + u(&pot["brave"]["pending"])
                 + u(&pot["safe"]["total"])
                 + u(&pot["brave"]["income_waiting"])
+                + u(&rw["jackpot"])
+                + u(&rw["draw_pot"])
+                + u(&rw["prizes_owed"])
                 + ignored,
-            "USDC held vs books: {pot}"
+            "USDC held vs books: {pot} {rw}"
         );
         Ok(())
     }

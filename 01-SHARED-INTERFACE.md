@@ -1,6 +1,6 @@
 # $INTERN — the shared interface
 
-**Version 1.3, 2026-11-12.** Read `00-HOW-WE-WORK.md` first.
+**Version 1.4, 2026-11-13.** Read `00-HOW-WE-WORK.md` first.
 
 This is the one rulebook that the program (Engine 1), the off-chain Intern (Engine 2) and the website all follow. If any other file disagrees with this one, this one wins. To change it, see `00-HOW-WE-WORK.md` section 7.
 
@@ -298,6 +298,10 @@ Read-only and free. The site and the runner use only these.
 | `get_playbooks` *(1.3)* | `{ from?: number, limit?: number }` | `Playbook[]`, newest first |
 | `get_goals` *(1.3)* | — | `Goals` |
 | `get_goal_fills` *(1.3)* | `{ from?: number, limit?: number }` | `GoalFill[]`, newest first |
+| `get_rewards` *(1.4)* | — | `Rewards` (section 9.7) |
+| `get_player` *(1.4)* | `{ account_id: AccountId }` | `PlayerView` (section 9.7) |
+| `get_draw_results` *(1.4)* | `{ from?: number, limit?: number }` | `DrawResult[]`, newest first |
+| `get_jackpot_wins` *(1.4)* | `{ limit?: number }` | `JackpotWin[]`, newest first |
 | `get_claimable` *(1.3)* | `{ account_id: AccountId }` | `Claimable` |
 | `ft_balance_of`, `ft_total_supply`, `ft_metadata`, `storage_balance_of` | standard | standard NEP-141 / NEP-145 / NEP-148 |
 
@@ -502,7 +506,7 @@ Calls that change something. Each row says who may call.
 
 | Action | Who | Call | What happens |
 |---|---|---|---|
-| Register | Anyone | `storage_deposit` on the coin contract (NEP-145), with the deposit `storage_balance_bounds` names | Required once before holding the coin or a SAFE balance |
+| Register | Anyone | `storage_deposit` on the coin contract (NEP-145), with the deposit `storage_balance_bounds` names | Required once before holding the coin or a SAFE balance, or guessing. *(1.4)* 1,280 bytes (0.0128 NEAR): the boss's records and the reward ladder's. Read the amount from `storage_balance_bounds`; never hard-code it |
 | Pay in | Anyone registered | On the **USDC token**: `ft_transfer_call({ receiver_id: <coin contract>, amount, msg })`, 1 yocto. `msg` is `{"pool":"BRAVE"}` or `{"pool":"SAFE"}` | SAFE is credited at once. BRAVE waits as `pending` and becomes coins when the next round opens. A bad `msg`, an unregistered sender or any token other than the pinned USDC is refunded in full |
 | Cash out | The holder | `cash_out({ pool: Pool, amount, pending?: boolean })`, 1 yocto. For BRAVE `amount` is coins; for SAFE it is dollars | BRAVE: burns the coins, pays the pro-rata share of what the pool holds. SAFE: pays dollars. With `pending: true` and pool BRAVE, `amount` is dollars taken back from money still waiting for the next round |
 | Turn the dial | The holder | `turn_dial({ to: Pool, amount })`, 1 yocto. To SAFE, `amount` is coins; to BRAVE, dollars | The same as cashing out of one side and paying into the other, without the money leaving |
@@ -611,7 +615,7 @@ A separate NFT contract (`get_constants().stickers`), NEP-171 with metadata (NEP
 |---|---|---|
 | Tip | Anyone registered | On the USDC token: `ft_transfer_call({ receiver_id: <coin>, amount, msg: '{"tip":{}}' })`, at least `min_tip` (`PROPOSED` 1 USDC) |
 
-- A tip is a gift to the BRAVE pool. Like all outside income (section 9.6) it is credited at the next round's opening and counted in `outside_income_total`. It buys no influence over the Intern.
+- *(1.4)* **Half of a tip goes to the streak jackpot** (section 9.7). The other half is a gift to the BRAVE pool: like all outside income (section 9.6) it is credited at the next round's opening and counted in `outside_income_total`. The tip jar counts the whole tip. A tip buys no influence over the Intern.
 - **Boss goal.** Targets from `boss_ladder` (`PROPOSED` 10, 25, 50, 100, 250, 500, 1000). When `get_pot().bosses` reaches the next target, the goal fills. Eligible: every account that holds coins when it claims and joined no later than the round the goal filled in.
 - **Tip jar.** Fills when the tips since the last jar reach `tip_jar_target` (`PROPOSED` 100 USDC); a tip that overflows starts the next jar with the rest. Eligible: every account that tipped into that jar.
 - **Hype train.** Each tip, and each BRAVE pay-in of at least `min_notional`, is one point (one per account per train). A train starts with the first point and ends `hype_window_ms` (`PROPOSED` 300,000) after its latest point. It climbs through `hype_levels` (`PROPOSED` 3, 6, 10, 15, 25 points). Each new level is a goal fill; reaching the top level makes every account that added a point to that train eligible.
@@ -641,7 +645,7 @@ A separate contract (`get_constants().launchpad`) on NEAR. Someone launches a ne
 | Action | Who | Call | What happens |
 |---|---|---|---|
 | Rebalance | Anyone (the runner, each round) | `rebalance()` | Keeps exactly the Intern's slice idle (its rank's per-round limit on the pool): lends what is idle beyond it (at least $10), or brings back what it lacks (at least $1). Returns the dollars moved, negative when brought back |
-| Collect interest | Anyone | `collect_interest()` | The interest the lender owes goes into the BRAVE pool (`brave.interest`) |
+| Collect interest | Anyone | `collect_interest()` | *(1.4)* The interest the lender owes is held for the payday draw (`get_rewards().draw_pot`, section 9.7), not added to the pool. `brave.interest` still counts all interest collected |
 
 - Money waiting as `pending`, SAFE money and margin in play are never lent.
 - A BRAVE cash-out or a dial turn to SAFE that needs more than is idle first brings the difference back from the lender, plus what the slice then lacks, and then pays. **Such a call needs 150 TGas: attach 300.** If the lender cannot pay, nothing changes and the call can be made again.
@@ -649,6 +653,47 @@ A separate contract (`get_constants().launchpad`) on NEAR. Someone launches a ne
 - Mainnet (not built): supply with `ft_transfer_call` to the lending contract with an empty `msg`, withdraw with `simple_withdraw`, after reading the market's free liquidity. A withdrawal fails outright when the market is short of liquidity, and the lender's owners can pause it (an exploit in April 2026 paused it). Both are reasons the slice stays idle.
 
 **Outside income.** Dollars sent on the USDC token with `ft_transfer_call({ receiver_id: <coin>, amount, msg: '{"income":{"source":"<label>"}}' })` (label: 1–32 of `a-z`, `0-9`, `_`, `-`) are credited to the BRAVE pool **at the next round's opening, before that opening turns pending money into coins**. So they go only to coins present for the whole round in which the income arrived, and new money pays a price that already includes them. The sender need not be registered (the launchpad sends its fees this way). Income is refused, and refunded, while the Intern is `FIRED`. Tips (section 9.5) are credited the same way.
+
+### 9.7 The reward ladder *(1.4)*
+
+The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid from a named source (tips, direct additions, the lender's interest); no coin is minted for it, and **no reward changes what the Intern may trade**.
+
+| Action | Who | Call | What happens |
+|---|---|---|---|
+| Guess | Anyone registered | `guess({ verdict: "YES" \| "NOPE" \| "SKIP" })`, free, once per round, before `guess_closes_at` | Judged on the round's **first ruling** (the runner asks the Intern's own question before any trick-page message). Right: a point, the streak grows. Wrong: the streak resets. A round with no ruling counts for nothing; a round not guessed pauses the streak. Returns `PlayerView` |
+| Claim a golden sticker | Its owner | `claim_golden({ code, serial })`, 0.02 NEAR (the rest refunded) | Mints `golden:<CODE>:<serial>` on the sticker contract. Transferable |
+| Join or leave the draw | A boss | `enter_draw()`, `leave_draw()` | At most 200 entrants |
+| Add to the jackpot | Anyone | On the USDC token: `ft_transfer_call({ receiver_id: <coin>, amount, msg: '{"jackpot":{}}' })`, at least 1 USDC | The team's seed, a gift. No registration needed |
+| Rewards tick | Anyone (the runner, each round) | `rewards_tick()`, 150 TGas | Settles the jackpots of closed rounds and holds a payday draw that is due |
+| Claim prizes | The winner | `claim_prizes()`, 1 yocto, at least 40 TGas | Pays every prize owed, in USDC. A failed transfer is owed again |
+
+- **Golden stickers (R2).** Each guess has a 1 in `golden_odds` (`PROPOSED` 50) chance of a golden sticker of one of the sixteen codes, at most `golden_cap` (100) of each code, ever.
+- **The streak jackpot (R3).** `jackpot_streak` (7) right guesses in a row win it, but only for a boss who holds at least `min_boss_usd` ($10) and became a boss at least `min_boss_rounds` (7) rounds earlier; everyone else plays for points. Several winners in one round split it equally; dust rolls over. It is filled by half of every tip (`tip_to_jackpot_bps` 5,000) and by direct additions.
+- **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest shared equally by up to `draw_runners` (10) runners-up; alone in the draw, the winner takes all; with nobody in it, it rolls over. A boss's tickets are **the smaller of the dollars held when the period began (or when joining) and at the draw** (BRAVE at today's value, pending, SAFE), times the rounds of the period they were in. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
+- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed`.
+- **The long shot (R6)** is not in 1.4 (it changes what the Intern may trade, and the rulebook).
+
+```ts
+type Verdict3 = "YES" | "NOPE" | "SKIP";
+type PlayerView = {
+  account_id: AccountId; points: number; right: number; wrong: number; streak: number; best: number;
+  guess: { round_id: number; verdict: Verdict3 } | null;   // this round's, or one still waiting for its ruling
+  jackpot_eligible: boolean; prize_owed: Usdc;
+  goldens: { code: RefusalCode; serial: number }[];         // won, not yet claimed
+  draw: { since_round: number; base_usd: Usdc; usd_now: Usdc; tickets: U128 } | null;
+};
+type Rewards = {
+  round_id: number; guess_closes_at: Ms; guesses_this_round: [number, number, number];  // YES, NOPE, SKIP
+  jackpot: Usdc; jackpot_added_total: Usdc; jackpot_from_tips_total: Usdc; jackpot_last_won_round: number | null;
+  draw_pot: Usdc; draw_period: number; draw_from_round: number; entrants: number; prizes_owed: Usdc;
+  golden_minted: number[];   // sixteen, in the order of section 7
+  constants: { golden_odds: number; golden_cap: number; jackpot_streak: number; min_boss_usd: Usdc; min_boss_rounds: number;
+               tip_to_jackpot_bps: number; draw_rounds: number; draw_top_bps: number; draw_runners: number; max_entrants: number };
+};
+type DrawResult = { period: number; held_at: Ms; held_in_round: number; prize: Usdc; winner: AccountId | null;
+                    winner_prize: Usdc; runners_up: [AccountId, Usdc][]; tickets_total: U128 };
+type JackpotWin = { round_id: number; winners: AccountId[]; each: Usdc };
+```
 
 ## 10. Events and the feed
 
@@ -688,6 +733,13 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `goal_filled` *(1.3)* | `{ fill_id, goal, level, round_id }` |
 | `hype_level` *(1.3)* | `{ train, level, points }` |
 | `sticker_claimed` *(1.3)* | `{ account_id, token_id }` |
+| `guessed` *(1.4)* | `{ round_id, account_id }` |
+| `guess_settled` *(1.4)* | `{ round_id, verdict, right, wrong }` |
+| `golden_dropped` *(1.4)* | `{ account_id, code, serial }` |
+| `jackpot_grew` *(1.4)* | `{ amount, source: "tips" \| "added", by?, jackpot }` |
+| `jackpot_won` *(1.4)* | `{ round_id, winners, each }` |
+| `draw_held` *(1.4)* | `{ period, winner \| null, prize, runners_up, each, tickets_total, rolled_over? }` |
+| `prize_paid` *(1.4)* | `{ account_id, amount }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
@@ -879,12 +931,16 @@ Decision-line cases, for `ai-check` (round 42, nonce `9f2c41d07ab35e16`):
     "stickers": "stickers.desk-lab-2026.testnet",
     "launchpad": "launch.desk-lab-2026.testnet",
     "lender": "lender.desk-lab-2026.testnet",
-    "rpc": "https://test.rpc.fastnear.com"
+    "rpc": "https://test.rpc.fastnear.com",
+    "trick_api": "https://intern-runner-production.up.railway.app",
+    "tailfade_faucet": "https://tailfade-faucet-production.up.railway.app"
   }
 }
 ```
 
 *(1.3)* `stickers` is the NFT contract, `launchpad` the launchpad, `lender` the STAND-IN lender (section 9.6). Registering on the launchpad costs 0.05 NEAR.
+
+*(1.4)* Two off-chain services, both on Railway: `trick_api`, the trick page's queue inside the runner (`intern/docs/TRICK-API.md`); `tailfade_faucet`, which sends a visitor's Tail or Fade address its test dollars once (`intern/docs/TAILFADE.md`).
 
 `usdc` is a stand-in test dollar worth nothing: call `storage_deposit` on it, then `mint({ account_id, amount })`. `runner` is Engine 2's account; the contract accepts `propose`, `sign_next` and `report_result` from it only. The stub's `propose` is open to any caller.
 
@@ -904,6 +960,9 @@ Accounts that already exist from the research, for reference only: the signing c
 10. **If NEAR AI changes a model's signing key, the pinned signer is wrong and every proposal is refused for good** on a contract that cannot be changed. Cash-out still works. The research saw one key per model and no change over ten days; how often keys change is `UNVERIFIED`.
 11. **Leaving during an open bet forfeits your share of that bet** (section 9.1).
 12. **On testnet a win or loss is booked with test dollars** minted or removed by the program so that its books match what it holds. That is a stand-in and is labelled as one.
+13. *(1.4)* **The draw and the golden stickers use NEAR's per-block random seed.** Nobody calling the program can choose it, but a block producer could in principle bias a single draw. Acceptable for test-dollar prizes; a real-money draw would need commit-then-reveal.
+14. *(1.4)* **Draw tickets are an approximation of "dollars held over time"**: the smaller of the dollars at the period's start and at the draw, times the rounds in it. Entry is opt-in (`enter_draw`), so the draw walks at most 200 entrants; all the pool's interest goes to the draw, and bosses who do not join do not win it.
+15. *(1.4)* **The jackpot's "held for 7 rounds"** is checked as: became a boss at least 7 rounds earlier and holds at least $10 now. A boss who left and came back keeps their first round.
 
 ## 15. Change log
 
@@ -912,4 +971,5 @@ Accounts that already exist from the research, for reference only: the signing c
 | 1.0 | 2026-11-11 | First version |
 | 1.1 | 2026-11-11 | From Engine 1's review. Limits use the smaller of the pool at round open and the pool now. Cash-out during an open bet excludes the margin in play. `sign_next` is runner-only and needs no deposit; `close` may be signed again. Pending money becomes coins lazily, per account. Demotion, vote timing and vote-opening rules spelled out. `ecrecover`: `v` is 0 or 1, high-s accepted. Rulebook example bet raised to $10. `"0"` is a well-formed margin. `stuck` defined. Paging defined. `OUTSIDE_WINDOW` limit for late proposals. Undecodable input is a NOPE, not an abort. Test cases 25, 26 and D13 added. Three known limits added |
 | 1.2 | 2026-11-12 | Owner's decisions, from Engine 1's vote work and Engine 2's open items. Demote and fire pass at 34% of all locked weight, not of the weight that voted. `min_notional` is $11, not $10. The rulebook gains a `min_notional_e6` line and one sentence on amounts; its example bet is $11. Blank lines around the decision line are `MALFORMED_DECISION` (unchanged rule, said plainly). Pinned model `z-ai/glm-5.3-flash`, `ed25519`. The request's allowed shape and two NEAR AI headers written down. `px_e8` is a decimal string (a number is also accepted). A signed action's `v` is 27 or 28. The contract calls `check_format` before `build`. Test cases 7, 8, 9, 18, 19, 20 and 24 moved to the $11 minimum. Deployments filled in. Clarified the same day (Engine 2's items P and Q): the TypeScript shape in 8.1 says "1.2"; `sign_next` and `close` return `null` when the signature failed |
+| 1.4 | 2026-11-13 | The reward ladder, owner's decisions: the free guess (YES, NOPE or SKIP, judged on the round's first ruling), golden stickers (1 in 50, 100 per code), the streak jackpot (7 in a row, eligible bosses only; half of every tip plus direct additions), the payday draw (every 7 rounds, the lender's interest, 70% to one winner, the rest to up to 10 runners-up), prizes claimed in USDC. Interest now goes to the draw, not the pool; half of each tip to the jackpot. Registration covers 1,280 bytes. New views, actions, events (9.7, 10); `rewards_tick` each round. Section 13 names the trick-page API and the Tail or Fade faucet. Known limits 13–15. The long shot is not in 1.4 |
 | 1.3 | 2026-11-12 | Owner's decisions on the later phases: playbooks with a 10% coach cut, the boss badge and the sixteen originals (NEP-171, in a separate contract), tips and goal bars (boss goal, tip jar, hype train), the launchpad (a separate NEAR contract). `propose` takes an optional `credited_to`; `Refusal` and `get_sticker_firsts` show it. New views, events, constants and two deployment names. Nothing here changes what the Intern may trade. Also Engine 1's step 8 (section 9.6): lending to a STAND-IN lender on testnet (`rebalance`, `collect_interest`), outside income credited at the next round's opening (tips too), `brave.interest` and `brave.income_waiting` in the pot, a cash-out or dial that must first bring money back needs 150 TGas, and `lender` in the deployments. Known limit 8 updated: the first bet has filled |

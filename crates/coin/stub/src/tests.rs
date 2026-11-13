@@ -288,7 +288,7 @@ fn check_all_views(s: &Stub, scene: &str) {
             "launchpad",
         ],
     );
-    assert_eq!(c["interface_version"], "1.3");
+    assert_eq!(c["interface_version"], "1.4");
     has_keys(
         "Constants.round",
         &c["round"],

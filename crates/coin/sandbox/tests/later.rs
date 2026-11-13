@@ -187,11 +187,13 @@ async fn steps_8_and_9_with_the_real_contracts() -> anyhow::Result<()> {
         .view(&l.stickers, "nft_token", json!({"token_id": token_id}))
         .await?;
     assert_eq!(t["owner_id"], bob.id().to_string());
+    // 1.4: half of the tip goes to the streak jackpot; the other half counts for the pool from the next round.
     assert_eq!(
         u(&w.pot().await?["brave"]["income_waiting"]),
-        100_000_000,
-        "the tip counts from the next round"
+        50_000_000,
+        "half the tip counts from the next round"
     );
+    assert_eq!(u(&w.view(&w.coin, "get_rewards", json!({})).await?["jackpot"]), 50_000_000);
     w.books_match(0).await?;
     println!("a $100 tip filled tip jar 1; {token_id} minted to the tipper");
 

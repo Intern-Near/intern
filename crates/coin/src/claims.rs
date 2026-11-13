@@ -20,6 +20,8 @@ pub const GAS_CLAIM_MIN: Gas = Gas::from_tgas(60);
 const KIND_BADGE: u8 = 0;
 const KIND_ORIGINAL: u8 = 1;
 const KIND_GOAL: u8 = 2;
+/// 1.4: a golden sticker won by guessing; `key` is code << 16 | serial.
+pub(crate) const KIND_GOLDEN: u8 = 3;
 
 /// The sticker contract (crates/stickers).
 #[ext_contract(ext_stickers)]
@@ -72,7 +74,7 @@ impl Coin {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn start_claim(
+    pub(crate) fn start_claim(
         &mut self,
         who: AccountId,
         token_id: String,
@@ -235,6 +237,7 @@ impl Coin {
                     s.2 = false;
                 }
             }
+            KIND_GOLDEN => self.rw_golden_restore(&account_id, (key >> 16) as u8, (key & 0xffff) as u16),
             _ => {
                 self.goal_claims.remove(&(key, account_id.clone()));
             }
