@@ -12,10 +12,13 @@
 //!   chain id 1337, verifying contract 0x0.
 //!
 //! Only two fixed-shape actions can be built: an isolated `updateLeverage` and an immediate-or-cancel limit
-//! order. Nothing that moves money or hands over trading rights can be expressed.
+//! order, which may carry a client order id ([`Cloid`]). Nothing that moves money or hands over trading rights can
+//! be expressed.
 //!
 //! The function signatures are fixed in 01-SHARED-INTERFACE.md section 11.2 (version 1.2). The contract calls
 //! [`check_format`] with the market's size decimals before [`build`], since `Action::Order` carries none (01 1.2).
+//! [`Cloid`], [`build_with_cloid`] and [`HlError::CloidOnLeverage`] are additions that 01 does not have yet: the
+//! contract can use them once the owner adds them to 01. [`build`] is unchanged.
 #![no_std]
 #![forbid(unsafe_code)]
 
@@ -45,6 +48,30 @@ pub enum Action {
     },
 }
 
+/// A client order id ("cloid"): 16 bytes Hyperliquid keeps with an order and returns with each of its fills.
+///
+/// Hyperliquid's API docs (exchange endpoint, "Place an order"): "Client Order ID (cloid) is an optional 128 bit
+/// hex string, e.g. `0x1234567890abcdef1234567890abcdef`". The order carries it as its key `"c"`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Cloid(pub [u8; 16]);
+
+impl Cloid {
+    /// "0x" and 32 lower-case hex digits: what the official SDK's `Cloid.from_int` writes, and how Hyperliquid
+    /// returns a cloid in fills. Never upper case: Hyperliquid's signing docs advise lower case for address fields
+    /// ("sometimes the field is parsed as bytes, causing it to be lowercased automatically"), which would break
+    /// the signature. Whether a cloid is handled the same way is UNVERIFIED, so lower case is the safe form.
+    pub fn to_hex(&self) -> String {
+        const DIGITS: &[u8; 16] = b"0123456789abcdef";
+        let mut s = String::with_capacity(34);
+        s.push_str("0x");
+        for b in self.0 {
+            s.push(char::from(DIGITS[usize::from(b >> 4)]));
+            s.push(char::from(DIGITS[usize::from(b & 0x0f)]));
+        }
+        s
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Built {
     /// The exact JSON Hyperliquid expects as "action".
@@ -58,6 +85,9 @@ pub enum HlError {
     BadPriceFormat,
     BadSizeFormat,
     Zero,
+    /// A cloid was given for a leverage change. Hyperliquid's `updateLeverage` has no such field; only orders
+    /// carry one. Only [`build_with_cloid`] can return this.
+    CloidOnLeverage,
 }
 
 /// 1e8: prices and sizes are whole numbers scaled by this (01 §2).
@@ -77,7 +107,24 @@ pub fn build<H: Host>(
     expires_after_ms: u64,
     testnet: bool,
 ) -> Result<Built, HlError> {
-    let (action_json, packed) = encode(action)?;
+    build_with_cloid(host, action, None, nonce_ms, expires_after_ms, testnet)
+}
+
+/// [`build`], with an optional client order id on an order.
+///
+/// `None` gives exactly what [`build`] gives, byte for byte. `Some` adds `"c"` as the order's last key, after
+/// `"t"`, as the official SDK's `order_request_to_order_wire` does; the cloid is then inside the signed hash, so
+/// it cannot be changed or removed without breaking the signature. A cloid on a leverage change is refused
+/// (`CloidOnLeverage`). Every other refusal is [`build`]'s.
+pub fn build_with_cloid<H: Host>(
+    host: &H,
+    action: &Action,
+    cloid: Option<Cloid>,
+    nonce_ms: u64,
+    expires_after_ms: u64,
+    testnet: bool,
+) -> Result<Built, HlError> {
+    let (action_json, packed) = encode(action, cloid)?;
     let (_, digest) = l1_digest(host, &packed, nonce_ms, Some(expires_after_ms), testnet);
     Ok(Built {
         action_json,
@@ -177,9 +224,12 @@ fn wire(v_e8: u64) -> String {
 }
 
 /// The action's JSON and its msgpack bytes. Both list the fields in the same order.
-fn encode(action: &Action) -> Result<(String, Vec<u8>), HlError> {
+fn encode(action: &Action, cloid: Option<Cloid>) -> Result<(String, Vec<u8>), HlError> {
     match *action {
         Action::Leverage { asset, leverage } => {
+            if cloid.is_some() {
+                return Err(HlError::CloidOnLeverage);
+            }
             if leverage == 0 {
                 return Err(HlError::Zero);
             }
@@ -202,10 +252,17 @@ fn encode(action: &Action) -> Result<(String, Vec<u8>), HlError> {
                 return Err(HlError::BadPriceFormat);
             }
             let (px, sz) = (wire(px_e8), wire(sz_e8));
+            let cloid_hex = cloid.map(|c| c.to_hex());
+            // Without a cloid this is empty, and the JSON is exactly what it was before cloids existed.
+            let c = cloid_hex
+                .as_deref()
+                .map(|hex| format!(r#","c":"{hex}""#))
+                .unwrap_or_default();
             let json = format!(
-                r#"{{"type":"order","orders":[{{"a":{asset},"b":{is_buy},"p":"{px}","s":"{sz}","r":{reduce_only},"t":{{"limit":{{"tif":"Ioc"}}}}}}],"grouping":"na"}}"#
+                r#"{{"type":"order","orders":[{{"a":{asset},"b":{is_buy},"p":"{px}","s":"{sz}","r":{reduce_only},"t":{{"limit":{{"tif":"Ioc"}}}}{c}}}],"grouping":"na"}}"#
             );
-            Ok((json, order_msgpack(asset, is_buy, &px, &sz, reduce_only)))
+            let packed = order_msgpack(asset, is_buy, &px, &sz, reduce_only, cloid_hex.as_deref());
+            Ok((json, packed))
         }
     }
 }
@@ -218,13 +275,13 @@ fn put_str(o: &mut Vec<u8>, s: &str) {
     if n < 32 {
         o.push(0xa0 | n as u8); // fixstr
     } else if n <= 0xff {
-        o.push(0xd9); // str 8
+        o.push(0xd9); // str 8: a cloid (34 bytes) is the only string this crate writes that is this long
         o.push(n as u8);
     } else if n <= 0xffff {
         o.push(0xda); // str 16
         o.extend_from_slice(&(n as u16).to_be_bytes());
     } else {
-        o.push(0xdb); // str 32; unreachable here: every string this crate writes is under 32 bytes
+        o.push(0xdb); // str 32; unreachable here: no string this crate writes is over 34 bytes
         o.extend_from_slice(&(n as u32).to_be_bytes());
     }
     o.extend_from_slice(b);
@@ -253,16 +310,24 @@ fn put_uint(o: &mut Vec<u8>, v: u64) {
     }
 }
 
-/// msgpack of {"type":"order","orders":[{"a","b","p","s","r","t":{"limit":{"tif":"Ioc"}}}],"grouping":"na"},
-/// the shape of the SDK's `order_wires_to_order_action(order_request_to_order_wire(...))`.
-fn order_msgpack(asset: u32, is_buy: bool, px: &str, sz: &str, reduce_only: bool) -> Vec<u8> {
-    let mut o = Vec::with_capacity(96);
+/// msgpack of {"type":"order","orders":[{"a","b","p","s","r","t":{"limit":{"tif":"Ioc"}}[,"c"]}],"grouping":"na"},
+/// the shape of the SDK's `order_wires_to_order_action(order_request_to_order_wire(...))`. `cloid` is the
+/// cloid's hex string ("0x" and 32 digits).
+fn order_msgpack(
+    asset: u32,
+    is_buy: bool,
+    px: &str,
+    sz: &str,
+    reduce_only: bool,
+    cloid: Option<&str>,
+) -> Vec<u8> {
+    let mut o = Vec::with_capacity(136);
     o.push(0x83); // map of 3
     put_str(&mut o, "type");
     put_str(&mut o, "order");
     put_str(&mut o, "orders");
     o.push(0x91); // array of 1
-    o.push(0x86); // map of 6
+    o.push(if cloid.is_some() { 0x87 } else { 0x86 }); // map of 7 with a cloid, else 6
     put_str(&mut o, "a");
     put_uint(&mut o, u64::from(asset));
     put_str(&mut o, "b");
@@ -279,6 +344,11 @@ fn order_msgpack(asset: u32, is_buy: bool, px: &str, sz: &str, reduce_only: bool
     o.push(0x81);
     put_str(&mut o, "tif");
     put_str(&mut o, "Ioc");
+    if let Some(c) = cloid {
+        // Last: the SDK's order_request_to_order_wire adds "c" after "t", and msgpack.packb keeps that order.
+        put_str(&mut o, "c");
+        put_str(&mut o, c);
+    }
     put_str(&mut o, "grouping");
     put_str(&mut o, "na");
     o

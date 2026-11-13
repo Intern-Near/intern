@@ -1,0 +1,227 @@
+{
+  "generated_by": "hyperliquid-python-sdk 0.24.0",
+  "cases": [
+    {
+      "id": "r7-open",
+      "source": "round 7's opening order as signed by the coin contract through NEAR's signing network and filled on Hyperliquid testnet (../exchange/20261112T113940Z-*)",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.067076",
+        "sz": "268",
+        "reduce_only": false,
+        "cloid": null
+      },
+      "cloid_parts": null,
+      "nonce": 1794483574065,
+      "expires_after": 1794483694065,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.067076\",\"s\":\"268\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303637303736a173a3323638a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xf2c406865128b1b0f79aee92f6811efe1bee1bc52d3276243343fd5b678880c6",
+      "digest": "0x29e8a87e380df9de6ce4ad12f8144d4e83370f4c58ae81bfe01b04593723bd3c"
+    },
+    {
+      "id": "r7-open-cloid",
+      "source": "r7-open with the proposed cloid (round 7, position 3, its nonce)",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.067076",
+        "sz": "268",
+        "reduce_only": false,
+        "cloid": "0x0000000700000003000001a1cf8e5531"
+      },
+      "cloid_parts": {
+        "round_id": 7,
+        "position_id": 3,
+        "nonce": 1794483574065
+      },
+      "nonce": 1794483574065,
+      "expires_after": 1794483694065,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.067076\",\"s\":\"268\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x0000000700000003000001a1cf8e5531\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a161ccada162c3a170a8302e303637303736a173a3323638a172c2a17481a56c696d697481a3746966a3496f63a163d92230783030303030303037303030303030303330303030303161316366386535353331a867726f7570696e67a26e61",
+      "connection_id": "0xbb30e9841cf51ec8a80fa5d9b00a3d44c1f42f338c9ff3c245fb991054386743",
+      "digest": "0x0e2e34d999f1c32374c5c6b754787c31fac909f58242cc30446c4cc9c78b682a"
+    },
+    {
+      "id": "r7-open-mainnet",
+      "source": "r7-open hashed with mainnet's source \"a\"",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.067076",
+        "sz": "268",
+        "reduce_only": false,
+        "cloid": null
+      },
+      "cloid_parts": null,
+      "nonce": 1794483574065,
+      "expires_after": 1794483694065,
+      "testnet": false,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.067076\",\"s\":\"268\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c3a170a8302e303637303736a173a3323638a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0xf2c406865128b1b0f79aee92f6811efe1bee1bc52d3276243343fd5b678880c6",
+      "digest": "0x3e3beb96cde6fa01e18a173f14c903aa18ee6521a49d5ff1f1ce9a4415a56278"
+    },
+    {
+      "id": "r7-open-cloid-mainnet",
+      "source": "r7-open-cloid hashed with mainnet's source \"a\"",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": true,
+        "px": "0.067076",
+        "sz": "268",
+        "reduce_only": false,
+        "cloid": "0x0000000700000003000001a1cf8e5531"
+      },
+      "cloid_parts": {
+        "round_id": 7,
+        "position_id": 3,
+        "nonce": 1794483574065
+      },
+      "nonce": 1794483574065,
+      "expires_after": 1794483694065,
+      "testnet": false,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":true,\"p\":\"0.067076\",\"s\":\"268\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x0000000700000003000001a1cf8e5531\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a161ccada162c3a170a8302e303637303736a173a3323638a172c2a17481a56c696d697481a3746966a3496f63a163d92230783030303030303037303030303030303330303030303161316366386535353331a867726f7570696e67a26e61",
+      "connection_id": "0xbb30e9841cf51ec8a80fa5d9b00a3d44c1f42f338c9ff3c245fb991054386743",
+      "digest": "0x126111741eaa23861836cf0208faf3e0ecde7ccc93601c66c3eddba9b51d6bd4"
+    },
+    {
+      "id": "r7-close",
+      "source": "round 7's closing order as signed by the coin contract through NEAR's signing network and filled on Hyperliquid testnet (../exchange/20261112T114911Z-*)",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": false,
+        "px": "0.065767",
+        "sz": "268",
+        "reduce_only": true,
+        "cloid": null
+      },
+      "cloid_parts": null,
+      "nonce": 1794484145160,
+      "expires_after": 1794484265160,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":false,\"p\":\"0.065767\",\"s\":\"268\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}}}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739186a161ccada162c2a170a8302e303635373637a173a3323638a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "connection_id": "0x292ad00b0a03210f157e00756dbf5845eb740dacf9089c1a608941138507f14c",
+      "digest": "0x344ae5459365e837b12777eecd185303eeda537108810690efbeda14285cde09"
+    },
+    {
+      "id": "r7-close-cloid",
+      "source": "r7-close with the proposed cloid (round 7, position 3, its nonce)",
+      "inputs": {
+        "kind": "order",
+        "asset": 173,
+        "is_buy": false,
+        "px": "0.065767",
+        "sz": "268",
+        "reduce_only": true,
+        "cloid": "0x0000000700000003000001a1cf970c08"
+      },
+      "cloid_parts": {
+        "round_id": 7,
+        "position_id": 3,
+        "nonce": 1794484145160
+      },
+      "nonce": 1794484145160,
+      "expires_after": 1794484265160,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":173,\"b\":false,\"p\":\"0.065767\",\"s\":\"268\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x0000000700000003000001a1cf970c08\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a161ccada162c2a170a8302e303635373637a173a3323638a172c3a17481a56c696d697481a3746966a3496f63a163d92230783030303030303037303030303030303330303030303161316366393730633038a867726f7570696e67a26e61",
+      "connection_id": "0x93ef46cf9128e8d2f92b1bda73e2a0fc8708ef5e822dc0d8678781d4b9ecc27e",
+      "digest": "0xd4bb3645b906c141c8d25d32bc3e49c318190205018fa918e16464f25498d6bd"
+    },
+    {
+      "id": "cloid-zero",
+      "source": "probe-order-3's order (digests.json) with the all-zero cloid, Cloid.from_int(0)",
+      "inputs": {
+        "kind": "order",
+        "asset": 3,
+        "is_buy": false,
+        "px": "74921",
+        "sz": "0.000123",
+        "reduce_only": false,
+        "cloid": "0x00000000000000000000000000000000"
+      },
+      "cloid_parts": null,
+      "nonce": 1794375803046,
+      "expires_after": 1794375923046,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":3,\"b\":false,\"p\":\"74921\",\"s\":\"0.000123\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x00000000000000000000000000000000\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a16103a162c2a170a53734393231a173a8302e303030313233a172c2a17481a56c696d697481a3746966a3496f63a163d92230783030303030303030303030303030303030303030303030303030303030303030a867726f7570696e67a26e61",
+      "connection_id": "0xc0c8d44b6876e2ac5704f5232a718300d22c763e7825581492e4f676dccaa233",
+      "digest": "0xd614e22944bf88a580d523cf3100d26a0bb756d4286826bf1d9a60ced7cfe88c"
+    },
+    {
+      "id": "cloid-max-mainnet",
+      "source": "a reduce-only DOGE order on mainnet with the all-ones cloid",
+      "inputs": {
+        "kind": "order",
+        "asset": 12,
+        "is_buy": false,
+        "px": "0.067473",
+        "sz": "177",
+        "reduce_only": true,
+        "cloid": "0xffffffffffffffffffffffffffffffff"
+      },
+      "cloid_parts": null,
+      "nonce": 1794375801092,
+      "expires_after": 1794375921092,
+      "testnet": false,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":12,\"b\":false,\"p\":\"0.067473\",\"s\":\"177\",\"r\":true,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0xffffffffffffffffffffffffffffffff\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a1610ca162c2a170a8302e303637343733a173a3313737a172c3a17481a56c696d697481a3746966a3496f63a163d92230786666666666666666666666666666666666666666666666666666666666666666a867726f7570696e67a26e61",
+      "connection_id": "0x1b06a1dd7a450c4242c9d545f200d02fe25bc9cd4d82f0e681850df538a691d0",
+      "digest": "0x21bc7d787f5a667d8a4cf94782a4858a05370ca554193dbb6b371b5371b01960"
+    },
+    {
+      "id": "cloid-docs-example",
+      "source": "a TRUMP order with the example cloid of Hyperliquid's API docs",
+      "inputs": {
+        "kind": "order",
+        "asset": 150,
+        "is_buy": true,
+        "px": "7.1234",
+        "sz": "17.4",
+        "reduce_only": false,
+        "cloid": "0x1234567890abcdef1234567890abcdef"
+      },
+      "cloid_parts": null,
+      "nonce": 1794483600000,
+      "expires_after": 1794483720000,
+      "testnet": true,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":150,\"b\":true,\"p\":\"7.1234\",\"s\":\"17.4\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x1234567890abcdef1234567890abcdef\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a161cc96a162c3a170a6372e31323334a173a431372e34a172c2a17481a56c696d697481a3746966a3496f63a163d92230783132333435363738393061626364656631323334353637383930616263646566a867726f7570696e67a26e61",
+      "connection_id": "0x43b0433153d5ff20ba14502d33a559727879ea293a43449359ccfd1db83068f0",
+      "digest": "0x36b6b24c0161e9f750f95f574ef775bace930ac2095da163428544812fc1dbbd"
+    },
+    {
+      "id": "cloid-sdk-test-mainnet",
+      "source": "a kPEPE order on mainnet with the cloid of the SDK's own signing test",
+      "inputs": {
+        "kind": "order",
+        "asset": 15,
+        "is_buy": true,
+        "px": "0.005323",
+        "sz": "1878",
+        "reduce_only": false,
+        "cloid": "0x00000000000000000000000000000001"
+      },
+      "cloid_parts": null,
+      "nonce": 1794483600001,
+      "expires_after": 1794483720001,
+      "testnet": false,
+      "action_json": "{\"type\":\"order\",\"orders\":[{\"a\":15,\"b\":true,\"p\":\"0.005323\",\"s\":\"1878\",\"r\":false,\"t\":{\"limit\":{\"tif\":\"Ioc\"}},\"c\":\"0x00000000000000000000000000000001\"}],\"grouping\":\"na\"}",
+      "msgpack_hex": "83a474797065a56f72646572a66f72646572739187a1610fa162c3a170a8302e303035333233a173a431383738a172c2a17481a56c696d697481a3746966a3496f63a163d92230783030303030303030303030303030303030303030303030303030303030303031a867726f7570696e67a26e61",
+      "connection_id": "0xb62d22698d9f7ece373217003482c51da75008b43d5123781edb3e15dbfa23c3",
+      "digest": "0x353f718e46febb2c7082b443645237ecfcf9bee0e718d89ced51e22422fd206f"
+    }
+  ]
+}

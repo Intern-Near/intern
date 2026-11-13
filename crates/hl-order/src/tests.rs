@@ -105,7 +105,7 @@ fn reference_cases_match_the_official_sdk() {
         let expires = c["expires_after"].as_u64();
         let testnet = c["testnet"].as_bool().unwrap();
 
-        let (json, packed) = encode(&action).unwrap();
+        let (json, packed) = encode(&action, None).unwrap();
         assert_eq!(
             json,
             c["action_json"].as_str().unwrap(),
@@ -141,21 +141,149 @@ fn reference_cases_match_the_official_sdk() {
             let built = build(&TestHost, &action, nonce, e, testnet).unwrap();
             assert_eq!(built.action_json, json, "{id}: build() JSON");
             assert_eq!(built.digest, digest, "{id}: build() digest");
+            // No cloid: byte for byte what build() gives, and so what the contract signs today.
+            assert_eq!(
+                build_with_cloid(&TestHost, &action, None, nonce, e, testnet).unwrap(),
+                built,
+                "{id}: build_with_cloid(None)"
+            );
         }
     }
 }
 
 #[test]
 fn testnet_and_mainnet_share_the_connection_id_but_not_the_digest() {
-    let (_, packed) = encode(&Action::Leverage {
-        asset: 173,
-        leverage: 2,
-    })
+    let (_, packed) = encode(
+        &Action::Leverage {
+            asset: 173,
+            leverage: 2,
+        },
+        None,
+    )
     .unwrap();
     let (cid_t, digest_t) = l1_digest(&TestHost, &packed, 1, Some(2), true);
     let (cid_m, digest_m) = l1_digest(&TestHost, &packed, 1, Some(2), false);
     assert_eq!(cid_t, cid_m);
     assert_ne!(digest_t, digest_m);
+}
+
+// ---- the reference digests with a client order id (cloid) ----
+
+/// Computed with the same SDK: intern/fixtures/hl/reference/sdk_cloid_digests.py and its output. A separate file,
+/// because the contract's own test (crates/coin) builds every case of digests.json with `build`, without a cloid.
+const CLOID_REFERENCE: &str = include_str!("../../../fixtures/hl/reference/cloid_digests.json");
+
+/// "0x" and 32 hex digits -> a Cloid.
+fn cloid_of(hex: &str) -> Cloid {
+    let digits = hex.strip_prefix("0x").expect("0x");
+    assert_eq!(digits.len(), 32, "{hex}");
+    let mut bytes = [0u8; 16];
+    for (i, b) in bytes.iter_mut().enumerate() {
+        *b = u8::from_str_radix(&digits[2 * i..2 * i + 2], 16).unwrap();
+    }
+    Cloid(bytes)
+}
+
+/// The encoding proposed to the owner in crates/hl-order/README.md: round id (4 bytes), position id (4 bytes),
+/// the order's nonce (8 bytes), all big-endian. Not part of the library: the owner decides the encoding (01).
+fn proposed_cloid(round_id: u32, position_id: u32, nonce: u64) -> Cloid {
+    let mut bytes = [0u8; 16];
+    bytes[..4].copy_from_slice(&round_id.to_be_bytes());
+    bytes[4..8].copy_from_slice(&position_id.to_be_bytes());
+    bytes[8..].copy_from_slice(&nonce.to_be_bytes());
+    Cloid(bytes)
+}
+
+#[test]
+fn cloid_cases_match_the_official_sdk() {
+    let doc: Value = serde_json::from_str(CLOID_REFERENCE).unwrap();
+    assert_eq!(doc["generated_by"], "hyperliquid-python-sdk 0.24.0");
+    let cases = doc["cases"].as_array().unwrap();
+    assert_eq!(cases.len(), 10);
+    for (with_cloid, testnet) in [(true, true), (true, false), (false, true), (false, false)] {
+        assert!(
+            cases
+                .iter()
+                .any(|c| c["inputs"]["cloid"].is_string() == with_cloid
+                    && c["testnet"].as_bool() == Some(testnet)),
+            "a case with cloid {with_cloid}, testnet {testnet}"
+        );
+    }
+
+    for c in cases {
+        let id = c["id"].as_str().unwrap();
+        let action = action_of(&c["inputs"]);
+        let cloid = c["inputs"]["cloid"].as_str().map(|hex| {
+            let cloid = cloid_of(hex);
+            // Our hex form is the SDK's, byte for byte (lower case, zero padded).
+            assert_eq!(cloid.to_hex(), hex, "{id}: cloid hex");
+            cloid
+        });
+        let nonce = c["nonce"].as_u64().unwrap();
+        let expires = c["expires_after"]
+            .as_u64()
+            .expect("every case has an expiry");
+        let testnet = c["testnet"].as_bool().unwrap();
+
+        let (json, packed) = encode(&action, cloid).unwrap();
+        assert_eq!(
+            json,
+            c["action_json"].as_str().unwrap(),
+            "{id}: action JSON"
+        );
+        assert_eq!(
+            hex(&packed),
+            c["msgpack_hex"].as_str().unwrap(),
+            "{id}: msgpack bytes"
+        );
+        let (connection_id, digest) = l1_digest(&TestHost, &packed, nonce, Some(expires), testnet);
+        assert_eq!(
+            format!("0x{}", hex(&connection_id)),
+            c["connection_id"].as_str().unwrap(),
+            "{id}: connectionId"
+        );
+        assert_eq!(
+            format!("0x{}", hex(&digest)),
+            c["digest"].as_str().unwrap(),
+            "{id}: digest"
+        );
+
+        let built = build_with_cloid(&TestHost, &action, cloid, nonce, expires, testnet).unwrap();
+        assert_eq!(built.action_json, json, "{id}: build_with_cloid() JSON");
+        assert_eq!(built.digest, digest, "{id}: build_with_cloid() digest");
+        if cloid.is_none() {
+            assert_eq!(
+                build(&TestHost, &action, nonce, expires, testnet).unwrap(),
+                built,
+                "{id}: build()"
+            );
+        }
+
+        // The cases tagged with the README's proposal really use it.
+        if let Some(parts) = c["cloid_parts"].as_object() {
+            let n = |key: &str| parts[key].as_u64().unwrap();
+            let proposed = proposed_cloid(
+                u32::try_from(n("round_id")).unwrap(),
+                u32::try_from(n("position_id")).unwrap(),
+                n("nonce"),
+            );
+            assert_eq!(cloid, Some(proposed), "{id}: the proposed encoding");
+            assert_eq!(
+                n("nonce"),
+                nonce,
+                "{id}: the cloid carries the order's own nonce"
+            );
+        }
+    }
+}
+
+#[test]
+fn the_readme_example_cloid() {
+    // Round 7's opening order (position 3, nonce 1794483574065), as crates/hl-order/README.md shows it.
+    assert_eq!(
+        proposed_cloid(7, 3, 1_794_483_574_065).to_hex(),
+        "0x0000000700000003000001a1cf8e5531"
+    );
 }
 
 // ---- encoding details ----
@@ -186,9 +314,9 @@ fn whole_numbers_take_the_shortest_msgpack_form() {
         sz_e8: E8,
         reduce_only: false,
     };
-    let (_, doge) = encode(&order(173)).unwrap();
+    let (_, doge) = encode(&order(173), None).unwrap();
     assert!(contains(&doge, &[0xa1, b'a', 0xcc, 0xad, 0xa1, b'b']));
-    let (_, pepe) = encode(&order(12)).unwrap();
+    let (_, pepe) = encode(&order(12), None).unwrap();
     assert!(contains(&pepe, &[0xa1, b'a', 0x0c, 0xa1, b'b']));
 }
 
@@ -203,6 +331,71 @@ fn strings_use_fixstr_then_str8() {
     assert_eq!(enc(&"x".repeat(31))[0], 0xbf);
     assert_eq!(enc(&"x".repeat(32))[..2], [0xd9, 32]);
     assert_eq!(enc(&"x".repeat(256))[..3], [0xda, 0x01, 0x00]);
+}
+
+#[test]
+fn a_cloid_is_0x_and_32_lower_case_hex_digits() {
+    assert_eq!(
+        Cloid([0; 16]).to_hex(),
+        "0x00000000000000000000000000000000"
+    );
+    assert_eq!(
+        Cloid([0xff; 16]).to_hex(),
+        "0xffffffffffffffffffffffffffffffff"
+    );
+    // The SDK's Cloid.from_int(n) is n as 16 big-endian bytes; from_int(1) is the value its own signing test uses.
+    assert_eq!(
+        Cloid(1u128.to_be_bytes()).to_hex(),
+        "0x00000000000000000000000000000001"
+    );
+    // The example in Hyperliquid's API docs.
+    assert_eq!(
+        Cloid(0x1234_5678_90ab_cdef_1234_5678_90ab_cdef_u128.to_be_bytes()).to_hex(),
+        "0x1234567890abcdef1234567890abcdef"
+    );
+}
+
+#[test]
+fn a_cloid_adds_one_key_after_t_and_changes_nothing_else() {
+    let order = Action::Order {
+        asset: 173,
+        is_buy: true,
+        px_e8: e8("0.067076"),
+        sz_e8: e8("268"),
+        reduce_only: false,
+    };
+    let cloid = proposed_cloid(7, 3, 1_794_483_574_065);
+    let (json0, packed0) = encode(&order, None).unwrap();
+    let (json1, packed1) = encode(&order, Some(cloid)).unwrap();
+
+    // JSON: `,"c":"0x…"` right after the order's "t" value, before the order map closes.
+    let at = json0.find(r#"}],"grouping""#).unwrap();
+    let mut expected = json0.clone();
+    expected.insert_str(at, &format!(r#","c":"{}""#, cloid.to_hex()));
+    assert_eq!(json1, expected);
+
+    // msgpack: the order's map grows from 6 entries to 7, and "c" (a 34-byte str 8) comes after "t".
+    let header = packed0.windows(2).position(|w| w == [0x91, 0x86]).unwrap() + 1;
+    let grouping = packed0
+        .windows(9)
+        .position(|w| w == b"\xa8grouping")
+        .unwrap();
+    let mut expected = packed0.clone();
+    expected[header] = 0x87;
+    let mut c = vec![0xa1, b'c', 0xd9, 34];
+    c.extend_from_slice(cloid.to_hex().as_bytes());
+    expected.splice(grouping..grouping, c);
+    assert_eq!(packed1, expected);
+
+    // The cloid is inside the hash: another cloid, or none, gives another digest.
+    let digest = |cloid| {
+        build_with_cloid(&TestHost, &order, cloid, 1, 2, true)
+            .unwrap()
+            .digest
+    };
+    let other = proposed_cloid(7, 3, 1_794_483_574_066);
+    assert_ne!(digest(Some(cloid)), digest(None));
+    assert_ne!(digest(Some(cloid)), digest(Some(other)));
 }
 
 #[test]
@@ -371,6 +564,32 @@ fn build_refuses_zero_and_bad_prices() {
     );
     // The size format depends on the market's size decimals, which build cannot see; check_format can.
     assert!(built(&order(e8("74921"), e8("0.000123"))).is_ok());
+
+    // With a cloid an order is refused for exactly the same reasons.
+    let tagged = |a: &Action| build_with_cloid(&TestHost, a, Some(Cloid([7; 16])), 1, 2, true);
+    assert_eq!(tagged(&order(0, E8)), Err(HlError::Zero));
+    assert_eq!(tagged(&order(E8, 0)), Err(HlError::Zero));
+    assert_eq!(
+        tagged(&order(e8("1234.56"), E8)),
+        Err(HlError::BadPriceFormat)
+    );
+    assert!(tagged(&order(e8("74921"), e8("0.000123"))).is_ok());
+}
+
+#[test]
+fn a_cloid_on_a_leverage_change_is_refused() {
+    let leverage = Action::Leverage {
+        asset: 173,
+        leverage: 2,
+    };
+    assert_eq!(
+        build_with_cloid(&TestHost, &leverage, Some(Cloid([1; 16])), 1, 2, true),
+        Err(HlError::CloidOnLeverage)
+    );
+    assert_eq!(
+        build_with_cloid(&TestHost, &leverage, None, 1, 2, true),
+        build(&TestHost, &leverage, 1, 2, true)
+    );
 }
 
 #[test]
@@ -380,7 +599,7 @@ fn action_json_is_valid_json_with_the_same_fields() {
         let asset = u32::try_from(rng.below(1 << 32)).unwrap();
         if rng.below(2) == 0 {
             let leverage = u32::try_from(1 + rng.below(u64::from(u32::MAX))).unwrap();
-            let (json, _) = encode(&Action::Leverage { asset, leverage }).unwrap();
+            let (json, _) = encode(&Action::Leverage { asset, leverage }, None).unwrap();
             let v: Value = serde_json::from_str(&json).unwrap();
             assert_eq!(v["type"], "updateLeverage");
             assert_eq!(v["asset"], asset);
@@ -392,13 +611,22 @@ fn action_json_is_valid_json_with_the_same_fields() {
                 (1 + rng.below(99_999)) * 10u64.pow(2 + u32::try_from(rng.below(8)).unwrap());
             let sz_e8 = 1 + rng.below(u64::MAX - 1);
             let (is_buy, reduce_only) = (rng.below(2) == 0, rng.below(2) == 0);
-            let (json, _) = encode(&Action::Order {
-                asset,
-                is_buy,
-                px_e8,
-                sz_e8,
-                reduce_only,
-            })
+            let cloid = (rng.below(2) == 0).then(|| {
+                let mut bytes = [0u8; 16];
+                bytes[..8].copy_from_slice(&rng.next().to_be_bytes());
+                bytes[8..].copy_from_slice(&rng.next().to_be_bytes());
+                Cloid(bytes)
+            });
+            let (json, _) = encode(
+                &Action::Order {
+                    asset,
+                    is_buy,
+                    px_e8,
+                    sz_e8,
+                    reduce_only,
+                },
+                cloid,
+            )
             .unwrap();
             let v: Value = serde_json::from_str(&json).unwrap();
             assert_eq!(v["type"], "order");
@@ -411,6 +639,14 @@ fn action_json_is_valid_json_with_the_same_fields() {
             assert_eq!(o["s"], wire(sz_e8));
             assert_eq!(o["r"], reduce_only);
             assert_eq!(o["t"]["limit"]["tif"], "Ioc");
+            match cloid {
+                Some(c) => assert_eq!(o["c"], c.to_hex()),
+                None => assert!(o.get("c").is_none()),
+            }
+            assert_eq!(
+                o.as_object().unwrap().len(),
+                if cloid.is_some() { 7 } else { 6 }
+            );
         }
     }
 }
@@ -442,8 +678,18 @@ fn never_panics_on_extreme_or_random_inputs() {
                     reduce_only: y % 2 == 0,
                 };
                 let _ = build(&TestHost, &order, x, y, asset % 2 == 0);
+                let cloid = Cloid([(x % 256) as u8; 16]);
+                let _ = build_with_cloid(&TestHost, &order, Some(cloid), x, y, asset % 2 == 1);
                 let leverage = u32::try_from(x % (1 << 32)).unwrap();
                 let _ = build(&TestHost, &Action::Leverage { asset, leverage }, y, x, true);
+                let _ = build_with_cloid(
+                    &TestHost,
+                    &Action::Leverage { asset, leverage },
+                    Some(cloid),
+                    y,
+                    x,
+                    false,
+                );
                 let _ = check_format(x, y, (asset % 256) as u8);
                 let _ = size_for(u128::from(x) * u128::from(y), x, (asset % 256) as u8);
                 let _ = notional_e6(x, y);
@@ -463,6 +709,10 @@ fn never_panics_on_extreme_or_random_inputs() {
             reduce_only: true,
         };
         let _ = build(&TestHost, &order, x, y, false);
+        let mut cloid = [0u8; 16];
+        cloid[..8].copy_from_slice(&x.to_le_bytes());
+        cloid[8..].copy_from_slice(&y.to_le_bytes());
+        let _ = build_with_cloid(&TestHost, &order, Some(Cloid(cloid)), y, x, true);
         let _ = check_format(x, y, sz_decimals);
         let _ = size_for(u128::from(x) << 32, y, sz_decimals);
     }
