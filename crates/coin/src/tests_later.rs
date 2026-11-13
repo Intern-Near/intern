@@ -782,3 +782,13 @@ fn payments_above_a_trillion_dollars_are_refunded() {
         assert_eq!(transfer_in(&mut c, at(2, 2_000), "alice.test", u128::MAX, msg), u128::MAX, "{msg}");
     }
 }
+
+#[test]
+fn the_contract_can_point_itself_at_another_sticker_contract() {
+    // 1.7: for coin-fast, which was set up without a sticker contract of its own. (`#[private]` is enforced at the
+    // contract's entry point, not in unit tests: a stranger's call is refused on chain.)
+    let mut c = coin(false);
+    ctx(G + 1_000, ME, 0);
+    c.set_stickers(acct("stickers-fast.test"));
+    assert_eq!(c.s9.stickers, acct("stickers-fast.test"));
+}

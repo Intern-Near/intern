@@ -359,6 +359,13 @@ impl Coin {
         env::storage_write(b"m7t", tickets.as_bytes());
     }
 
+    /// 1.7. The contract's own key only: points the coin at its sticker contract. For a test deployment that was set
+    /// up without one (coin-fast); the live coin's never changes.
+    #[private]
+    pub fn set_stickers(&mut self, stickers: AccountId) {
+        self.s9.stickers = stickers;
+    }
+
     /// 1.7. Claims a golden sticker won by guessing as one unit of `golden:<CODE>` on the tickets contract (NEP-245),
     /// tradable on its market, instead of as a one-off NFT. 0.02 NEAR, at least 60 TGas; a failed mint puts it back.
     #[payable]

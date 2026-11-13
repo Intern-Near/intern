@@ -411,7 +411,12 @@ fn the_draw_pays_the_periods_interest_to_one_winner_and_shares_the_rest() {
         (Some("HELD"), Some("drand"))
     );
     assert_eq!(v["randomness"], crate::sign::hex(&[7u8; 32]));
+    // The frozen tickets stay readable, so anyone can replay the draw from the randomness.
+    let t = v["tickets"].as_array().expect("tickets kept");
+    assert_eq!(t.len(), 2);
+    let sum: u128 = t.iter().map(|x| x[1].as_str().unwrap().parse::<u128>().unwrap()).sum();
     let d = &c.get_draw_results(None, None)[0];
+    assert_eq!(U128(sum), d.tickets_total);
     assert_eq!(d.period, 0);
     assert_eq!(d.prize, U128(7_000_000));
     // alice: $1,000 for rounds 2..=7 (6 rounds); bob: about $500 for rounds 3..=7 (5 rounds).

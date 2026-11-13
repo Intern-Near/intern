@@ -366,6 +366,7 @@ impl Coin {
             // Nothing left to luck (nobody in it, one entrant, or no interest yet): held at once.
             if weights.len() <= 1 || self.rw.draw_pot == 0 {
                 let seed = random(&[b"draw".as_slice(), &p.to_le_bytes()].concat());
+                keep_tickets(p, &weights);
                 self.rw_draw_hold(p, current, weights, seed, "none", 0);
                 return;
             }
@@ -393,6 +394,7 @@ impl Coin {
             None => return,
         };
         clear_pending(p);
+        keep_tickets(p, &pending.weights);
         let weights = pending.weights;
         self.rw_draw_hold(p, current, weights, seed, source, pending.drand_round);
     }
@@ -979,4 +981,23 @@ fn write_pending(p: u64, d: &PendingDraw) {
 }
 fn clear_pending(p: u64) {
     env::storage_remove(&pending_key(p));
+}
+
+/// Draws whose frozen tickets are kept after the draw, so anyone can replay them (`get_drand`).
+pub const TICKETS_KEPT: u64 = 4;
+fn tickets_key(p: u64) -> Vec<u8> {
+    [b"d7t".as_slice(), &p.to_le_bytes()].concat()
+}
+/// Keeps a held draw's tickets (in the order they were drawn from) and drops those of older periods.
+fn keep_tickets(p: u64, weights: &Vec<(AccountId, u128)>) {
+    env::storage_write(&tickets_key(p), &near_sdk::borsh::to_vec(weights).expect("tickets"));
+    if p >= TICKETS_KEPT {
+        env::storage_remove(&tickets_key(p - TICKETS_KEPT));
+    }
+}
+/// A draw's frozen tickets: while it waits for its beacon, or after it for the last `TICKETS_KEPT` periods.
+pub(crate) fn draw_tickets(p: u64) -> Option<Vec<(AccountId, u128)>> {
+    read_pending(p).map(|d| d.weights).or_else(|| {
+        env::storage_read(&tickets_key(p)).and_then(|b| near_sdk::borsh::from_slice(&b).ok())
+    })
 }

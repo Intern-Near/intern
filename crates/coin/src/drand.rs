@@ -174,7 +174,8 @@ impl Coin {
 
     /// 1.7. Where a draw period's luck comes from: `state` is "OPEN" (the period is not over), "WAITING" (tickets
     /// fixed, waiting for `drand_round`'s beacon), or "HELD" with `source` "drand", "block" (no beacon in time) or
-    /// "none" (nothing to luck: nobody, one entrant or no prize).
+    /// "none" (nothing to luck: nobody, one entrant or no prize). `tickets`: the frozen `[account, tickets]` in the
+    /// order they are drawn from (while waiting, and kept for the last 4 periods after), or null.
     pub fn get_drand(&self, period: Option<u64>) -> near_sdk::serde_json::Value {
         let p = period.unwrap_or(self.rw.draw_period);
         let (state, round, source) = if let Some(d) = crate::rewards::read_pending(p) {
@@ -184,8 +185,10 @@ impl Coin {
         } else {
             ("OPEN", None, None)
         };
+        let tickets = crate::rewards::draw_tickets(p)
+            .map(|w| w.into_iter().map(|(a, t)| json!([a, U128(t)])).collect::<Vec<_>>());
         json!({"period": p, "state": state, "drand_round": round, "source": source,
-               "randomness": round.and_then(drand_randomness).map(|r| crate::sign::hex(&r)),
+               "randomness": round.and_then(drand_randomness).map(|r| crate::sign::hex(&r)), "tickets": tickets,
                "chain": "quicknet", "chain_hash": CHAIN_HASH, "wait_rounds": DRAND_WAIT_ROUNDS})
     }
 }
