@@ -1,0 +1,22 @@
+{
+  "near_tx": "61jVZXTrZv34SZwyxvVPGx1LpHnGzge8khRnCh4Xjref",
+  "action": {
+    "type": "approveAgent",
+    "signatureChainId": "0x66eee",
+    "hyperliquidChain": "Testnet",
+    "agentAddress": "0xd540af35f34b3c35a4b287ac54f845e2b3527a9d",
+    "agentName": "tailfade",
+    "nonce": 1794549855786
+  },
+  "signature": {
+    "r": "0xa5872d956bb78dc4b84895dda5fb97b3a7dba67629839c89195685942daf3d1f",
+    "s": "0x176fd1449f712cbc7698027d8a908b772dc96204ac17358c0f983996501ca491",
+    "v": 27
+  },
+  "reply": {
+    "status": "ok",
+    "response": {
+      "type": "default"
+    }
+  }
+}

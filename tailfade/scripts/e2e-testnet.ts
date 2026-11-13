@@ -4,13 +4,13 @@
 // visitor's wallet: its derived Hyperliquid address gets test USDC from the faucet, it approves a fresh trading key
 // through NEAR's signing network (the one wallet transaction), the key places a $10 chip at 2x isolated, then closes
 // it. Every reply is saved under fixtures/hl/tailfade-e2e/<UTC time>/ as evidence. Spends testnet NEAR only.
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { toHex } from "../src/hash.ts";
 import { account } from "../src/hl.ts";
-import { hlAddressOf, PATH, SIGNER, sigFromSignResult } from "../src/mpc.ts";
+import { DEFAULT_RPC, hlAddressOf, PATH, SIGNER, sigFromOutcome } from "../src/mpc.ts";
 import {
   agentToHex,
   approveAgent,
@@ -70,7 +70,7 @@ const args = JSON.stringify({
   request: { path: PATH, domain_id: 0, payload_v2: { Ecdsa: toHex(digest).slice(2) } },
 });
 say(`asking ${SIGNER} to sign the approval of ${agent.address} (about 10 s)`);
-const cli = execFileSync(
+const run = spawnSync(
   "near",
   [
     "contract",
@@ -91,12 +91,32 @@ const cli = execFileSync(
     "sign-with-legacy-keychain",
     "send",
   ],
-  { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  { encoding: "utf8" },
 );
-const json = cli.match(/\{[^{}]*"big_r"[\s\S]*?"recovery_id"\s*:\s*\d\s*\}/)?.[0];
-const tx = cli.match(/transactions\/([1-9A-HJ-NP-Za-km-z]{43,44})/)?.[1] ?? null;
-if (!json) throw new Error("no signature in the NEAR CLI's output");
-const sig = sigFromSignResult(JSON.parse(json));
+// The NEAR CLI prints its progress and the call's return value across both streams.
+const cli = `${run.stdout ?? ""}\n${run.stderr ?? ""}`;
+writeFileSync(
+  join(out, "near-cli-sign.txt"),
+  cli.replace(/ed25519:[1-9A-HJ-NP-Za-km-z]{60,}/g, "[key hidden]"),
+);
+// The signing network answers in a later receipt, which the CLI does not print; read the final outcome by its
+// hash, as the website reads the outcome its wallet returns.
+const tx = cli.match(/Transaction ID: ([1-9A-HJ-NP-Za-km-z]{43,44})/)?.[1] ?? null;
+if (!tx) throw new Error("no transaction id in the NEAR CLI's output");
+const final = (await (
+  await fetch(DEFAULT_RPC, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tx",
+      params: { tx_hash: tx, sender_account_id: nearAccount, wait_until: "FINAL" },
+    }),
+  })
+).json()) as { result?: unknown; error?: unknown };
+if (!final.result) throw new Error(`could not read ${tx}: ${JSON.stringify(final.error)}`);
+const sig = sigFromOutcome(final.result);
 const approval = await submitApproval(action, sig);
 save("2-approve-agent.json", { near_tx: tx, action, signature: sig, reply: approval });
 say(`approveAgent (NEAR tx ${tx}): ${JSON.stringify(approval)}`);

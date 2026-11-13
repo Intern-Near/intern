@@ -31,6 +31,20 @@ and signature is checked against Hyperliquid's official Python SDK (`tailfade/re
 - Orders are IOC 1% through the mid (fill now or not at all), sized to the chip × 2 and never under Hyperliquid's
   $10 minimum. A chip that does not fill says so in its reply; show it.
 
+## Verified on testnet (2026-11-13)
+
+`node scripts/e2e-testnet.ts boss2.desk-lab-2026.testnet` in `tailfade/`, with a test account standing in for a
+visitor's wallet. Evidence: `fixtures/hl/tailfade-e2e/20261113T060414-boss2.desk-lab-2026.testnet/`.
+
+| Step | Result |
+|---|---|
+| Address | `boss2.desk-lab-2026.testnet` → `0xd859cdeb4eaa5fcb6b9e3f8c226c8c173b0bb047` (path `tailfade-1`) |
+| Faucet | $30 sent by `usdSend` from the faucet wallet; the address then held $29 (Hyperliquid's $1 fee for a new account) |
+| Approve the trading key | NEAR tx `61jVZXTrZv34SZwyxvVPGx1LpHnGzge8khRnCh4Xjref` (the signing network, about 10 s); Hyperliquid `ok`; `extraAgents` lists the key |
+| TAIL $10 on DOGE, 2x isolated | leverage `ok`; IOC buy **filled 314 DOGE at 0.063806**, margin $10.02 |
+| Close | reduce-only IOC sell **filled 314 DOGE at 0.063784** |
+| After | $28.975065, no position (−$0.025: the price move and fees) |
+
 ## The faucet
 
 Base URL: see `testnet.tailfade_faucet` in `interface/deployments.json`.

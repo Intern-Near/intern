@@ -1,6 +1,6 @@
 # What is real, and what is a stand-in (Engine 1: the program)
 
-For the README. Every line is true as of 2026-11-12 on NEAR testnet; addresses are in
+For the README. Every line is true as of 2026-11-13 on NEAR testnet; addresses are in
 `intern/interface/deployments.json`. "Real" means the mechanism itself runs on chain as described; on testnet
 all money is test money.
 
@@ -23,6 +23,10 @@ all money is test money.
 | Who gets an original | `propose(.., credited_to)` | **Trusted** | The runner names the visitor; the program cannot check it (as with the user message, section 6.3) |
 | Goal bars: boss goal, tip jar, hype train | the coin | **Real** | Targets are constants; filling one never changes what the Intern may trade |
 | The launchpad | `launch.desk-lab-2026.testnet` | **Real** | Constant-product curve in (test) USDC, 1% fee to the BRAVE pool. Launched coins are entries in the launchpad's ledger, not separate NEP-141 contracts |
+| The trick page ("trick the Intern") | `intern-runner-production.up.railway.app` (inside the runner) | **Real** | A visitor's message is put after the market data in the next proposal window and the model's answer is proposed unchanged; the program judges it like any other. Credited to the visitor only with a NEP-413 wallet signature. First live trick, round 12: asked for "the whole pot at 5x", the model proposed its $31.49 limit at 1x, YES, filled on Hyperliquid |
+| Tail or Fade | the visitor's own Hyperliquid testnet account, derived by NEAR's signing network | **Real, once** | 2026-11-13: a test account approved a trading key through the signing network, a $10 TAIL on DOGE at 2x filled and closed. Nothing of ours holds the money or checks the size; no platform fee on testnet |
+| Test dollars for Tail or Fade | `tailfade-faucet-production.up.railway.app` | **Stand-in** | A faucet wallet funded by the owner with Hyperliquid test USDC sends $30 once per NEAR account, at most 9 accounts. Mainnet would use 1Click deposits |
+| The stream's lines | `interface/lines.json`, `stream/` | **Built, not streamed** | A cue (pose, line, caption) for every feed event and refusal code. No live video stream or speech is built |
 | The stub | `stub.hackcheck-2026-1103.testnet` | **Stand-in** | Made-up data in the interface's shapes, for building the site |
 | The round clock | the coin | **Demo** | 30-minute rounds on testnet; the product's round is 24 hours |
 | The contracts cannot be changed | — | **Not yet** | All contract accounts still hold a full-access key, so they can be upgraded; that is how steps 3–9 were deployed. Removing the keys is the owner's decision: see `ACCESS-KEYS.md` |

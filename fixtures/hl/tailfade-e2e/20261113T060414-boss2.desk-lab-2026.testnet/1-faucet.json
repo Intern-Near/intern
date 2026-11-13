@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "account_id": "boss2.desk-lab-2026.testnet",
+  "hl_address": "0xd859cdeb4eaa5fcb6b9e3f8c226c8c173b0bb047",
+  "amount": "30",
+  "reply": {
+    "status": "ok",
+    "response": {
+      "type": "default"
+    }
+  }
+}
