@@ -966,7 +966,16 @@ export class Runner {
     this.#rivalsDone.add(round.id);
     const closeMs = this.#c.round.guess_close_ms ?? this.#c.round.propose_from_ms - 60_000;
     if (this.#d.now() > round.started_at + closeMs - 10_000) return;
-    const prev = this.#lastRound?.id === round.id - 1 ? this.#lastRound : null;
+    let prev: { bets_used: number; refused: number } | null =
+      this.#lastRound?.id === round.id - 1 ? this.#lastRound : null;
+    // Just started (a deploy or a restart): the last round is read from the chain instead.
+    if (prev === null && this.#d.chain.roundById && rivals.some((r) => r.strategy === "copycat")) {
+      try {
+        prev = await this.#d.chain.roundById(round.id - 1);
+      } catch {
+        prev = null;
+      }
+    }
     for (const r of rivals) {
       try {
         const verdict: Verdict3 =

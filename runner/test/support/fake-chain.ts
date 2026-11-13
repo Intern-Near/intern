@@ -228,6 +228,11 @@ export class FakeChain implements Chain {
     this.rewardTicks.push(this.#round.id);
     return { txHash: this.#tx(), value: null, tgas: null };
   }
+  /** Past rounds' counters for `roundById` (the copycat rival after a restart). */
+  readonly pastRounds = new Map<number, { bets_used: number; refused: number }>();
+  async roundById(roundId: number): Promise<{ bets_used: number; refused: number } | null> {
+    return this.pastRounds.get(roundId) ?? null;
+  }
   /** 01 1.7: the drand round a draw waits for (null: none); `submitDrand` records each beacon handed in. */
   drandRound: number | null = null;
   readonly drandSubmitted: { round: number; signature: string }[] = [];

@@ -23,6 +23,7 @@ From `intern/`:
 (cd crates/stickers   && cargo near build non-reproducible-wasm --no-abi)
 (cd crates/launchpad  && cargo near build non-reproducible-wasm --no-abi)
 (cd crates/coin/stub  && cargo near build non-reproducible-wasm --no-abi)
+(cd crates/tickets    && cargo near build non-reproducible-wasm --no-abi)
 ```
 
 or simply `./verify.sh --quick`, which runs these, the tests, and the comparison with testnet.
@@ -30,19 +31,20 @@ or simply `./verify.sh --quick`, which runs these, the tests, and the comparison
 The coin includes Engine 2's crates `ai-check` (the "really the AI" check) and `hl-order` (Hyperliquid
 orders), from `crates/` in this folder; their code is part of the coin's hash.
 
-## The expected hashes (2026-11-13, interface 1.6)
+## The expected hashes (2026-11-13, interface 1.7)
 
 | Account | Wasm | Size (bytes) | sha256, base58 (= the account's `code_hash`) |
 |---|---|---|---|
-| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 677,417 | `GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ` |
+| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 814,501 | `4MbdUr7uciv6cnbzrQiC1ppecqPHgACpVqkuPQ9jX1ZQ` |
 | `usdc.desk-lab-2026.testnet` | `target/near/mock_usdc/mock_usdc.wasm` | 149,106 | `C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H` |
 | `lender.desk-lab-2026.testnet` | `target/near/lender/lender.wasm` | 131,977 | `2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em` |
-| `stickers.desk-lab-2026.testnet` | `target/near/stickers/stickers.wasm` | 203,578 | `22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm` |
+| `stickers.desk-lab-2026.testnet` | `target/near/stickers/stickers.wasm` | 207,650 | `7mCTt2AA6nJrVHWLygLMZg6SUKewQMgNCfvo2Ur57Hd6` |
 | `launch.desk-lab-2026.testnet` | `target/near/launchpad/launchpad.wasm` | 208,384 | `Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT` |
-| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,881 | `2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs` |
-| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 674,646 | `36BjP1TJkPJhHBqttAQKopBhUkXzi8DazeEfNm8Tw6kf` |
+| `tickets.desk-lab-2026.testnet` | `target/near/tickets/tickets.wasm` | 204,865 | `AaMc11ENX2Je2BMdFXSsAFLd6RJZ57zco3uT6m4osrSw` |
+| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 294,837 | `8coK7wZT3njiLves2x7vq2VRUTPPE9Bs3eixv3zT3xqH` |
+| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 811,461 | `946SZZNiCB15Y5VurnvJ1jNQ2m358Cvnr442JnzEvKd1` |
 
-`./verify.sh --quick` on 2026-11-13 printed `SAME` for all seven. To check one by hand:
+`./verify.sh --quick` printed `SAME` for all eight after the 1.7 upgrade (2026-11-13, 18:51 UTC; the tickets contract is new in 1.7). To check one by hand:
 
 ```
 python3 -c "import hashlib,sys;B='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';n=int.from_bytes(hashlib.sha256(open(sys.argv[1],'rb').read()).digest(),'big');s='';exec('while n: n,r=divmod(n,58); s=B[r]+s');print(s)" target/near/coin/coin.wasm
@@ -55,6 +57,8 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
   empty folder and `./verify.sh --quick` run there with an empty `target/`: all seven contracts gave the hashes
   then on chain (`SAME` seven times), and every test passed. The build does not depend on where the folder lives.
   After the 1.6 upgrade, `./verify.sh --quick` printed `SAME` seven times again (269 Rust tests).
+  After the 1.7 upgrade, `./verify.sh --quick` printed `SAME` eight times (the tickets contract is new; 305 Rust
+  tests, and runner 506, tailfade 32, stream 86, shadow 167).
 - **Another machine: not yet checked.** The same Rust, cargo-near and `Cargo.lock` should give the same bytes on
   another Linux machine, but nobody has tried it. If a judge gets a different hash, the most likely cause is a
   different Rust version (check `rustc --version` inside `intern/` says 1.95.0).

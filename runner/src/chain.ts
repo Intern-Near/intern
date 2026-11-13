@@ -63,6 +63,11 @@ export interface Chain {
    * null. Optional: a chain without it (or an older contract) skips drand.
    */
   drandWaiting?(): Promise<number | null>;
+  /**
+   * A past round's counters (`get_round_by_id`), or null if there is none. Optional: the copycat rival uses it when
+   * the runner has just started and does not remember the last round.
+   */
+  roundById?(roundId: number): Promise<{ bets_used: number; refused: number } | null>;
   /** 01 1.7: hands drand quicknet's beacon for `round` to `submit_drand` (relayer); the program verifies it. */
   submitDrand?(round: number, signature: string): Promise<Sent<string>>;
   /** The signed action, or null when NEAR's signing network failed this time: call again (Engine 1's note, 1.2). */
@@ -228,6 +233,11 @@ export class NearChain implements Chain {
       { teraGas: TERA_GAS.rewards_tick },
     );
     return { txHash: r.txHash, value: r.value, tgas: r.tgas };
+  }
+  async roundById(roundId: number): Promise<{ bets_used: number; refused: number } | null> {
+    const v = await this.#view("get_round_by_id", { round_id: roundId });
+    if (!isRecord(v)) return null;
+    return { bets_used: Number(v.bets_used ?? 0), refused: Number(v.refused ?? 0) };
   }
   async drandWaiting(): Promise<number | null> {
     const v = await this.#view("get_drand", {});

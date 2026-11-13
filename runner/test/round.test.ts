@@ -450,6 +450,30 @@ describe("a full round", () => {
     assert.ok(find(u.log.lines, "drand: beacon not out yet"));
   });
 
+  it("01 1.7: rivals guess once in the open phase; a just-started copycat reads the last round from the chain", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    t.chain.pastRounds.set(6, { bets_used: 1, refused: 0 });
+    const guesses: string[] = [];
+    const rival = (account: string, strategy: "contrarian" | "copycat") => ({
+      account,
+      strategy,
+      guess: async (v: string) => {
+        guesses.push(`${strategy} ${v}`);
+        return "tx";
+      },
+    });
+    const runner = new Runner(
+      {
+        ...t.deps,
+        rivals: [rival("rival-contrarian.test", "contrarian"), rival("rival-copycat.test", "copycat")],
+      },
+      DEFAULT_SETTINGS,
+      await t.chain.constants(),
+    );
+    assert.equal(await runner.runRound("full"), "settled");
+    assert.deepEqual(guesses, ["contrarian NOPE", "copycat YES"]);
+  });
+
   it("01 1.7: a 1.6 contract (no get_drand) is not asked about drand", async () => {
     const t = setup((round, nonce) => skipLine(round, nonce));
     await sayVersion(t, "1.6");
