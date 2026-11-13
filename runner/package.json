@@ -11,6 +11,8 @@
     "check": "node --env-file-if-exists=.env src/cli/check.ts",
     "record": "node --env-file-if-exists=.env src/cli/record-answers.ts",
     "verify-recordings": "node src/cli/verify-recordings.ts",
+    "verify-round": "node src/cli/verify-round.ts",
+    "attestation-check": "node src/cli/attestation-check.ts",
     "runner": "node --env-file-if-exists=.env src/cli/run.ts",
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json",

@@ -1,0 +1,22 @@
+{
+  "case": "bad-seed",
+  "what": "Plus \"seed\":\"x\" (not a number).",
+  "started_at": "2026-11-13T13:58:25.611Z",
+  "ms": 308,
+  "status": 400,
+  "headers": {
+    "access-control-expose-headers": "*",
+    "alt-svc": "h3=\":8443\"; ma=86400",
+    "cache-control": "no-store",
+    "connection": "keep-alive",
+    "content-length": "235",
+    "content-type": "application/json",
+    "date": "Fri, 13 Nov 2026 13:58:25 GMT",
+    "server": "nginx",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "vary": "origin, access-control-request-headers, accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-request-id": "682d20b2-a1cb-4029-9c92-7b36cb28a555"
+  },
+  "chat_id": null
+}

@@ -175,8 +175,108 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run check -- --save` | The same, and saves the raw responses under `../fixtures/` in a folder named by the UTC minute. Never overwrites |
 | `npm run record -- --case <case> [--model <id>]…` | Records one real signed answer per model into `../fixtures/ai/<model-slug>/<case>/`. Spends a little NEAR AI credit |
 | `npm run verify-recordings` | Re-verifies every recording from the saved files alone: no network, no key |
+| `npm run verify-round -- <tx hash>` | Re-checks one `propose` transaction from public data (below). Read-only, no key |
+| `npm run attestation-check` | Checks a fresh NEAR AI attestation report for the pinned model (below). Read-only, no key |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
+
+## verify-round: re-check a proposal from public data
+
+```
+npm run verify-round -- <tx hash> [--sender intern-runner-ed25519.testnet] [--rpc <url>] [--save <dir>]
+```
+
+Anyone can run it: it needs NEAR RPC only, no key and no NEAR AI call. For one `propose` transaction it:
+
+1. reads the transaction and its receipts with `tx` (`wait_until: NONE`) from `--rpc` (default
+   `https://test.rpc.fastnear.com`). A regular node keeps about 36 hours; when it answers `UNKNOWN_TRANSACTION`, the
+   archival nodes `https://archival-rpc.testnet.fastnear.com`, then `https://archival-rpc.testnet.near.org` are
+   tried (both answered for a 2026-11-11 transaction on 2026-11-13), and the later calls start there too;
+2. decodes the three base64 arguments (01 §9.3) strictly, as the contract does: the exact request, the exact
+   response, the signature;
+3. rebuilds the signed text `model:sha256(request):sha256(response)` (01 §6.3) and verifies the signature with 01's
+   pin (`src/pinned.ts`: `z-ai/glm-5.3-flash`, ed25519, `5a0210f2…caff`), with `src/signature.ts`; it also shows the
+   contract's own pin, `get_constants().model`, read at the block before the proposal ran. A signature that fails is
+   tried against the ed25519 keys recorded for the four signed models, to name its signer (ed25519 has no key
+   recovery, so another key cannot be named);
+4. checks the request's shape (01 §6.3) and compares its system message, byte for byte, with what `get_rulebook`
+   returned at the block before the proposal ran (a `query` with `block_id`): the rulebook of that moment;
+5. reads the AI's answer as a decision line for that round and nonce (01 §6.2);
+6. prints the contract's verdict, from the receipt's return value and its `approved`, `refused` or `skipped` event,
+   and whether it fits this re-check of checks 3 to 5.
+
+Exit code 0: everything verified and the verdict fits. 1: a problem, or a part that could not be checked. 2: the
+transaction could not be read or is not a proposal. `--save <dir>` keeps every RPC reply in `<dir>/rpc.json`; the
+tests replay two saved this way (`fixtures/ai/verify-round/`).
+
+Not done: a request whose JSON writes a key twice is not detected (`JSON.parse` keeps the last copy; `ai-check`
+refuses it). Checks 1, 2 and 6 to 12 are not recomputed; the verdict shown for them is the contract's. If another
+receipt changed the contract earlier in the same block, the rulebook read at the previous block can differ; the
+line says so. On `coin-fast` the signature is the stand-in text `FAKE` and the tool says that it is not a NEAR AI
+signature.
+
+Real run, 2026-11-13 (the live coin, round 51, trimmed):
+
+```
+$ npm run verify-round -- LNUHvA9cZe5edjeqGMK4htV6rkAuf5uM8VqDN2KDtkz
+  from intern-runner-ed25519.testnet to coin.desk-lab-2026.testnet, method propose, status FINAL; read from https://test.rpc.fastnear.com
+  OK         model: z-ai/glm-5.3-flash named in the request; 01 pins z-ai/glm-5.3-flash
+  OK         signer: the ed25519 signature verifies with the pinned key 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff: NEAR AI's z-ai/glm-5.3-flash key signed exactly these bytes
+  OK         rulebook: the system message equals, byte for byte, the rulebook get_rulebook served just before the proposal ran (round 51, nonce ff0388b1b803fd25, 728 bytes)
+  INFO       the answer: {"v":1,"round":51,"nonce":"ff0388b1b803fd25","action":"bet","market":"PEPE","side":"long","margin_e6":"20000000","leverage":1}
+  INFO       return value: YES, position 32
+  OK         agreement: the contract passed checks 3 to 5, and so does this re-check
+RESULT  verified from public data: z-ai/glm-5.3-flash signed this answer to this request, the request carried the rulebook of that moment, and the contract's verdict (YES, position 32) fits it
+```
+
+## attestation-check: NEAR AI's hardware evidence for the pinned model
+
+```
+npm run attestation-check -- [--model z-ai/glm-5.3-flash] [--algo ed25519] [--save <dir>]
+```
+
+It asks NEAR AI for a fresh attestation report (`GET /v1/attestation/report`, `provider=near`, a new random 32-byte
+nonce; public, no key, not billed) and checks each model candidate as NEAR AI's docs describe
+(`docs.near.ai/cloud/verification/cloud-api/model-attestations.md` and `.../reference/quote-nonce-signer.md`),
+with Node's own crypto and no new dependency:
+
+- the nonce is echoed (`request_nonce`), and the signer is 01's pin;
+- the Intel TDX quote (`src/tdx-quote.ts`): its PCK certificate chain ends in Intel's SGX root certificate (pinned,
+  from Intel's site), the quoting enclave's report is signed by the PCK key and binds the attestation key, and the
+  quote is signed by that key; its report data is the signer's key then our nonce; debug mode is off; MRCONFIGID is
+  `01 || sha256(app_compose) || 15 zero bytes`; the event log replays to the quote's RTMR3;
+- the NVIDIA GPU evidence (`src/nvidia-gpu.ts`): the payload carries our nonce; it is sent unchanged to NVIDIA's
+  attestation service (`POST https://nras.attestation.nvidia.com/v3/attest/gpu`), and the reply must say
+  `x-nvidia-overall-att-result: true`; its tokens' ES384 signatures are checked against NVIDIA's published keys,
+  with our nonce, inside their time window, every GPU's token named by the overall one.
+
+UNVERIFIED (printed on every run, with the reason): Intel's TCB status and advisories, the quoting enclave's
+identity and certificate revocation (they need Intel's collateral; NEAR AI's docs name the `dcap-qvl` verifier for
+that, 27 npm packages, not added); the measured software against an allowlist, and the images' build provenance
+(NEAR AI's docs leave both to the reader's policy); which instance answered a given completion (instances share the
+key); NVIDIA's own checks behind its verdict, and any link between the GPU evidence and the TDX quote beyond the
+shared nonce; the gateway's attestation. Exit code 0: every check passed; 1: a check failed; 2: a call failed. The
+tests use a saved run (`fixtures/ai/attestation/`).
+
+Real run, 2026-11-13 14:00 UTC (trimmed):
+
+```
+$ npm run attestation-check
+  OK    nonce echoed: request_nonce is ours
+  OK    signer is 01's pin: 5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff (01 §6.3)
+  OK    PCK certificate chain: Intel SGX PCK Certificate -> Intel SGX PCK Platform CA -> Intel SGX Root CA; each signed by the next, the last is Intel's pinned root, all valid now
+  OK    quote signature: the header and TD report are signed by the attestation key
+  OK    report data: the quote's report data is the signer's key then our nonce: it binds both
+  OK    event log: RTMR3 replayed from 10 events equals the quote's
+  OK    GPU verdict: x-nvidia-overall-att-result is true
+  OK    each GPU: 8 GPU token(s), each signed by NVIDIA, named by the overall token, nonce matched
+RESULT  every check above passed: NEAR AI's z-ai/glm-5.3-flash ed25519 key is bound to a fresh Intel TDX quote with our nonce, and the GPU evidence with the same nonce passed NVIDIA's attestation. The parts listed as UNVERIFIED were not checked.
+```
+
+## Seed and temperature
+
+Could `temperature: 0` and a fixed `seed` stop the runner re-asking the AI until it likes the answer? No:
+`docs/seed-and-temperature.md` has the docs, 10 real calls and a proposal for the owner. `ai-check` is unchanged.
 
 ## What is in `src/`
 
@@ -201,6 +301,9 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `exchange.ts` | One signed exchange saved as it happens |
 | `recordings.ts`, `check.ts`, `check-run.ts` | Step 1 recordings; the step 0 access check |
 | `secret.ts` | Keeps keys from ever being printed |
+| `verify-round.ts`, `near-rpc.ts`, `pinned.ts` | `verify-round`: the re-check of one proposal; a small read-only NEAR JSON-RPC client with the archival fallback; 01's pin, and the four models' recorded ed25519 keys (to name a signer that is not the pin) |
+| `attestation-check.ts`, `tdx-quote.ts`, `nvidia-gpu.ts` | `attestation-check`: the report's checks; the TDX quote and its signature chain; NVIDIA's GPU verdict and tokens |
+| `seed-temperature.ts`, `cli/seed-temperature.ts` | The fixed question of the seed and temperature research (`docs/seed-and-temperature.md`) |
 
 Tests drive the round loop against test doubles in `test/support/`: an in-memory stand-in for the contract and a
 `fetch` answering like NEAR AI and Hyperliquid testnet. They are labelled as test doubles, live only under `test/`,
@@ -216,5 +319,6 @@ and no command can select them. Hyperliquid's market data in them is a real test
   After that it logs `STUCK` and a person has to look.
 - **Gas** attached to each call is a guess (`TERA_GAS` in `src/chain.ts`, UNVERIFIED). Every call logs the gas it
   really burnt (`tgas`); the first real round's numbers are under "What is checked live".
-- It reads each model's signer from NEAR AI's attestation report (`check`). It does not verify the hardware evidence
-  inside that report.
+- `check` reads each model's signer from NEAR AI's attestation report without verifying the hardware evidence.
+  `attestation-check` verifies part of that evidence for the pinned model; what it leaves UNVERIFIED is listed
+  above. The runner itself does not run it before proposing.

@@ -1,0 +1,22 @@
+{
+  "case": "bad-temperature",
+  "what": "Plus \"temperature\":-1 (invalid).",
+  "started_at": "2026-11-13T13:58:24.359Z",
+  "ms": 1248,
+  "status": 400,
+  "headers": {
+    "access-control-expose-headers": "*",
+    "alt-svc": "h3=\":8443\"; ma=86400",
+    "cache-control": "no-store",
+    "connection": "keep-alive",
+    "content-length": "115",
+    "content-type": "application/json",
+    "date": "Fri, 13 Nov 2026 13:58:25 GMT",
+    "server": "nginx",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "vary": "origin, access-control-request-headers, accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-request-id": "feb63f73-d34d-4c3a-a06b-c3e554e76868"
+  },
+  "chat_id": null
+}
