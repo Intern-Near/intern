@@ -150,7 +150,7 @@ short:
 | | The funding quote (checks 13 to 16) is not built |
 | The stream page: a rigged Live2D Intern on the website follows the feed, with a line for every event ([`interface/lines.json`](interface/lines.json)) | No recorded voice (only the browser's own speech, off by default) and no video stream |
 | The long shot: one vote passed and its 10x ticket was approved, on `coin-fast` only. It was not placed on Hyperliquid | `coin-fast`'s AI check is a stand-in that accepts the signature `"FAKE"` |
-| The 1.7 additions: drand draws, consequences, challenges, rescue, paid tricks and the bounty, NFT earnings, career cards, the originals' Hyperliquid signing, wagers. Each was run on `coin-fast` with a transaction | The stake, the drawdown brake and the dead-man switch are shown in tests only; the originals' Hyperliquid accounts are unfunded; rival players are bots run by our runner |
+| The 1.7 additions: drand draws, consequences, challenges, rescue, paid tricks and the bounty, NFT earnings, career cards, the originals' Hyperliquid signing, wagers. Each was run on `coin-fast` with a transaction | The stake, the drawdown brake and the dead-man switch are shown in tests only; one original's Hyperliquid account is funded (coin-fast, $4 test USDC); rival players are bots run by our runner |
 | | Rounds are 30 minutes for the demo; the product's round is 24 hours |
 
 **Known limits** ([`01-SHARED-INTERFACE.md`](01-SHARED-INTERFACE.md) section 14 lists all twenty):
