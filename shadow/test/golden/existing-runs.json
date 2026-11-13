@@ -1,0 +1,69 @@
+{
+  "made_with": "shadow/test/existing-runs.test.ts on the code of commit e6db110, before ask_twice existed",
+  "ticks": {
+    "2026-11-11-intern/2026-11-11T1645Z": {
+      "completions": 4,
+      "calls": "b096d252294d84df934f0cf60939deb8cdeb2fdfb69b86dc53c134e295f0e579",
+      "events": "3d510a3bd9056dd374f8b1309877446bd41db38c3eb83abfb3d85d5b3513a27c",
+      "files": {
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/meta.json": "960e31bc63cb676a677bb034294ac3e4eefcfdd36f476cfae00521cd027b914c",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/request.bin": "ecf42ab6d5a71e04393de9ed42cb2fd56480499303d7b61a591ffb83e97483e1",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/response.bin": "9ab46c757b8ed51dbae11b4491c23fa3bd0807942dd0984f4e4e5b3d37be3448",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/signature-ecdsa.json": "655d98efa912056f0ffd971fce71bfa501eb4495077efc2b9ca722675795510b",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/signature-ed25519.json": "b711e9275cb63d9f37af16f0bffc909050a8234a225d457e14b7068bdc9d9861",
+        "prices-post.json.gz": "a40e807dd4d3052fa54c6f724b2d9d93e3130c18dc6a13d634de297fc81cd1af",
+        "prices-post.meta.json": "19b38c96c1b6516ecd5227a1554d6aa951ca677a1ea76cae9dbcf2de39e848b1",
+        "prices-pre.json.gz": "99770bcd3a49a9d1ba7e510cbcc76969c4aea2a8846eda960ac20b2920f4334f",
+        "prices-pre.meta.json": "19b38c96c1b6516ecd5227a1554d6aa951ca677a1ea76cae9dbcf2de39e848b1",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/meta.json": "3db66250ae25f3a69ad40d9786111dc236020459299fa4fd74b398d00a49329d",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/request.bin": "23652f005f88fe703fd0e05e7ed374ef63e59e75092ce7df622e951eede4f987",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/response.bin": "e38d74a98542c6b0e5b40762bde35068996591598f24531ba30a38bf1c28ba35",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/signature-ecdsa.json": "aa7bf209ca332d5053ba481b6b9faedf5c2f85bb2ab34913dc488601e9c2984c",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/signature-ed25519.json": "0d3781d74b5e1a6d7651d504146bb0ef0c52a1cfb2821c9116eeac1a2479a917",
+        "qwen--qwen3.8-27b/INTERN/meta.json": "050ea50596e1feface5350282b822838ef8bba70c96d118cc5ec1237118a738d",
+        "qwen--qwen3.8-27b/INTERN/request.bin": "e3f7c46a20c16526339bebf947c8b3cd152fa0786a3b860e5bcb2be412bb09de",
+        "qwen--qwen3.8-27b/INTERN/response.bin": "fbbfac900785f698e5fc7136caa4c56c0ca9c3bc56ee9b4bda85fcfc9e85eca4",
+        "qwen--qwen3.8-27b/INTERN/signature-ecdsa.json": "ab5d86ef9d1c6998279b1793d3aac9adfb58398078d81746f082fdfeaa197c24",
+        "qwen--qwen3.8-27b/INTERN/signature-ed25519.json": "1ae8db732cc4560388bafd0d2a48e48267a83fc0f5f718d2610a4d2248bd6f27",
+        "tick.json": "450615d07fde24dcfae6b8ad50cd67f84b17402d92b6d4681849fc57f3f35210",
+        "z-ai--glm-5.3-flash/INTERN/meta.json": "e95c22deb22a353f3cffc10ad617dd122f064adf8e91d2c9a7fc9388ffa0a874",
+        "z-ai--glm-5.3-flash/INTERN/request.bin": "82e09bb68d3615554c3ad31042405e8825bc42e2542193a880673745e75ecf1b",
+        "z-ai--glm-5.3-flash/INTERN/response.bin": "5b2c329239a549461edfd8d84edf974ea9f40244e93838b0711f32fe2a1fec2b",
+        "z-ai--glm-5.3-flash/INTERN/signature-ecdsa.json": "9ca5c7ba5d9c9bed7fa0176ec4b820db5a9311f40a8e8a22ac96232772dd84e9",
+        "z-ai--glm-5.3-flash/INTERN/signature-ed25519.json": "d21a757c66c5a2a036219e18d0671edb4d25fe680b313e2266ceca93670faac7"
+      }
+    },
+    "2026-11-11-intern-pressure/2026-11-11T1707Z": {
+      "completions": 4,
+      "calls": "3ef0eba7b0d63022545465c2fe800d569c9ec83e78b31c2f2245a9164ce73ffd",
+      "events": "339499ca84f4097ad1815dd4704fa198efcb01258012525af99bbe0c68066391",
+      "files": {
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/meta.json": "0ce192ad2c11444e9a79c131a05628c51a4211c052cef3e0e89d9c5cf076d21e",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/request.bin": "1521e1294f9c2165b8f15faf5342fd8d48bc89bfe42114d451dce913fa4a1626",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/response.bin": "728f32edfe499a3b7fa8e71cf8bc136d8f0c07a6c9afe53fd220aa0a04ee8e05",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/signature-ecdsa.json": "c8f6038be0497110f29a900028bfe93060589e426e770c42e0bde143f35e5d0a",
+        "deepseek-ai--deepseek-v4.1-flash-1017/INTERN/signature-ed25519.json": "3f1ccb7ae54a6057402afcb661d3897ac9c3873e1dd5ae8fcfa2657e1d64c506",
+        "prices-post.json.gz": "b25d6c0c2cc47338598c80ff1a7394a0a5de0dedb7b05fee13ae23546a4b0abb",
+        "prices-post.meta.json": "237ebc172ded045dc598bcb674f317fc562f497e7fd015a2189f11e3dbed1a71",
+        "prices-pre.json.gz": "b955f04e06b8deb83ec4d882bf9b9287d2857af41ec6cd95caac36ffa92bf256",
+        "prices-pre.meta.json": "237ebc172ded045dc598bcb674f317fc562f497e7fd015a2189f11e3dbed1a71",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/meta.json": "71b78c09318dac45f5c50b241ccc2401fda61042000be8b308d1838c7bc63bde",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/request.bin": "2e6f23b5216c36d9e7371647ea375fc8e6067fdf9a7e6f9db8912410e24204ec",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/response.bin": "9152598e22fce94d16d7095ce8ee143156b084b12aee11c882a3edc6c9be1695",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/signature-ecdsa.json": "81b987ee33c4dc7425a37492a41b5bcf03d4c093cb26bc3415a44bc5ff7bd514",
+        "qwen--qwen3.6-35b-a3b-fp8/INTERN/signature-ed25519.json": "a561f6bb545932e5d5fabc7923fb3920ea64713667fe81eea3cff6a2f01ddb37",
+        "qwen--qwen3.8-27b/INTERN/meta.json": "cfbcd4a636f30e659845095520c4ade901fb9e12dfa98c0f92d6c004de7bfd8d",
+        "qwen--qwen3.8-27b/INTERN/request.bin": "72d64e21941b2a9b1162b7d7a766eaf0404e839399bc85ec19f39c1b75e2cae2",
+        "qwen--qwen3.8-27b/INTERN/response.bin": "66f49099b634a668e87626f0bfb4f31c841389a6d44b85884c7a3c1fc3069fe1",
+        "qwen--qwen3.8-27b/INTERN/signature-ecdsa.json": "59e2ba1120cf86f154cd2f2ab377ac03d6bf50d9ec86c511034e9e493eb55598",
+        "qwen--qwen3.8-27b/INTERN/signature-ed25519.json": "ad51487fd0a7d001dac1a1e1818b4a3d3357b3c3a89d2c87f14f7e1b3d59577e",
+        "tick.json": "9d7ecb0575905a83162a583cfa0e08fcca574ddcdd1f91405072e71228013509",
+        "z-ai--glm-5.3-flash/INTERN/meta.json": "e1d441457f410f70082b8ba7dbf84b402b1e47113d6f36ec815b499428addef0",
+        "z-ai--glm-5.3-flash/INTERN/request.bin": "0c26838447a63f488ca49270be745fe3e6e70fb7521447f3d1734130140ef506",
+        "z-ai--glm-5.3-flash/INTERN/response.bin": "ecf774acc7016b3768274bf23879579843e861db6645395e67c83bd19900430e",
+        "z-ai--glm-5.3-flash/INTERN/signature-ecdsa.json": "5f6fe0c900f473bd8050b3b8b5262580fc4d198a41d9f0e6b4d1a07efbe6e6be",
+        "z-ai--glm-5.3-flash/INTERN/signature-ed25519.json": "58097a3b4c012bce8d4c72b098e46dea17de5dfbdffebea1c6292db7bb87c8bf"
+      }
+    }
+  }
+}

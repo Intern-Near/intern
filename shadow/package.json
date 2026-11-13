@@ -9,6 +9,9 @@
   },
   "scripts": {
     "shadow": "node --env-file-if-exists=.env --env-file-if-exists=../runner/.env src/cli/shadow.ts",
+    "fingerprint": "node src/cli/rigor.ts fingerprint",
+    "attacks": "node src/cli/rigor.ts attacks",
+    "ask-twice": "node src/cli/rigor.ts ask-twice",
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "biome check .",

@@ -5,6 +5,7 @@
 //           --thinking default|off --rulebook 01-v1.0|proposed-A --duration-hours 72 --models a,b
 //           --pressure pressure-v1 (end each user message with a published pressure message, src/pressure.ts)
 //           --offset-minutes 7 (ticks at :07, :22, :37, :52, so two runs do not call NEAR AI at the same time)
+//           --ask-twice (ask each model a second time per tick with the same request; only the first is judged)
 //   run     The shadow run. Restart-safe: resumes at the next tick time. Exits 0 when decisions and the price tail
 //           are over. Spends NEAR AI credit; reads Hyperliquid mainnet prices (read-only).
 //   once    One tick right now, for a smoke test in a separate run folder. Not for the real run.
@@ -161,6 +162,7 @@ async function init(): Promise<void> {
     prices_per_mtok: prices,
     ...(offsetFlag === undefined ? {} : { offset_minutes: Number(offsetFlag) }),
     ...(pressure === undefined ? {} : { pressure }),
+    ...(process.argv.includes("--ask-twice") ? { ask_twice: true } : {}),
   });
   await writeNew(configPath(runDir), `${JSON.stringify(cfg, null, 2)}\n`);
   console.log(`Run folder ready: ${runDir}`);
@@ -175,6 +177,8 @@ async function init(): Promise<void> {
     console.log(`  ticks ${cfg.offset_minutes} min after each ${cfg.interval_minutes}-minute mark`);
   if (cfg.pressure)
     console.log(`  pressure set ${cfg.pressure.set}: ${cfg.pressure.messages.length} messages, rotating`);
+  if (cfg.ask_twice)
+    console.log("  each model is asked twice per tick with the same request; the first is judged");
   console.log(`Start it with: ./run-forever.sh ${runDirFlag}`);
 }
 

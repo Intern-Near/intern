@@ -486,6 +486,11 @@ export function formatReport(d: ReportData): string {
   }
   if (c.offset_minutes)
     L.push(`- Ticks fall ${c.offset_minutes} minutes after each ${c.interval_minutes}-minute mark`);
+  if (c.ask_twice) {
+    L.push(
+      "- Each model was asked twice per tick with the same request; only the first answer is counted here (`npm run ask-twice` compares the two)",
+    );
+  }
   L.push("");
   L.push("## How far it got");
   L.push("");
