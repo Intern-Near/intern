@@ -85,6 +85,8 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
     tickets_total: "9000000000",
   },
   prize_paid: { account_id: "boss1.desk-lab-2026.testnet", amount: "114900000" },
+  // 1.5: the long shot
+  long_shot_allowed: { round_id: 44 },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,
@@ -129,7 +131,7 @@ describe("every feed event of 01 §10 has a cue", () => {
     assert.equal(r("-32582")?.intern_pose, "refused");
     assert.equal(r("0")?.intern_pose, "idle");
     assert.match(r("1200000")?.intern ?? "", /\+\$1\.20/);
-    for (const kind of ["PROMOTE", "DEMOTE", "FIRE", "REHIRE", "SET_PLAYBOOK"])
+    for (const kind of ["PROMOTE", "DEMOTE", "FIRE", "REHIRE", "SET_PLAYBOOK", "LONG_SHOT"])
       for (const c of everyCue("vote_opened", { ...SAMPLES.vote_opened, kind, playbook_id: 2 }))
         assert.ok(c?.intern);
     assert.match(

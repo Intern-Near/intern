@@ -421,6 +421,76 @@ pub struct Coin {
     hype_riders: LookupSet<(u64, AccountId)>,
     // ----- 1.4: the reward ladder
     rw: rewards::Rewards,
+    // ----- 1.5: the long shot (R6)
+    ls: rewards::LongShot,
+}
+
+/// The 1.4 layout, read once by `migrate_long_shot`.
+#[near(serializers = [borsh])]
+pub struct CoinV9 {
+    cfg: Cfg,
+    token: FungibleToken,
+    extras: LookupMap<AccountId, Extra>,
+    /// epoch -> (rate.pool, rate.supply, round id of that opening)
+    rates: LookupMap<u64, (u128, u128, u64)>,
+    rounds: LookupMap<u64, RoundRec>,
+    current: Option<RoundRec>,
+    books: PoolBooks,
+    feed: Feed,
+    // ----- step 4
+    rank: RankRec,
+    /// Moves after every ruling; with the round id it makes the nonce (section 6.1).
+    nonce_counter: u64,
+    positions: LookupMap<u64, PositionRec>,
+    /// round id -> its position ids (at most `max_bets`, 3)
+    round_positions: LookupMap<u64, Vec<u64>>,
+    next_position_id: u64,
+    refusals: LookupMap<u64, RefusalRec>,
+    next_refusal_id: u64,
+    /// For each of the sixteen codes, in check order: the round of its first refusal ever.
+    firsts: Vec<Option<u64>>,
+    /// A round whose settlement is waiting for the test dollars to be minted or burned.
+    settling: Option<u64>,
+    // ----- step 5
+    locks: LookupMap<AccountId, LockRec>,
+    locked_total: u128,
+    /// round -> coins locked in that round and still locked (for the weight of all locked coins)
+    locked_by_round: LookupMap<u64, u128>,
+    votes: LookupMap<u64, VoteRec>,
+    next_vote_id: u64,
+    /// The open vote of each kind, in `rules::vote::VoteKind::ALL` order.
+    open_by_kind: Vec<Option<u64>>,
+    // ----- step 6
+    /// Each boss's SAFE dollars.
+    safe: LookupMap<AccountId, u128>,
+    /// All SAFE dollars. Not lent yet (step 8): all idle.
+    books_safe: u128,
+    // ----- step 7
+    pins: Pins,
+    /// Signed actions, the last `sign::OUTBOX_KEEP`: ids outbox_first..outbox_next.
+    outbox: LookupMap<u64, ActionRec>,
+    outbox_first: u64,
+    outbox_next: u64,
+    /// position -> how far its signing has got (sign.rs)
+    sign_stage: LookupMap<u64, u8>,
+    last_hl_nonce: u64,
+    // ----- step 9 (1.3)
+    s9: Step9,
+    playbooks: LookupMap<u64, PlaybookRec>,
+    /// round -> the playbook active in it (for the coach cut)
+    round_playbook: LookupMap<u64, u64>,
+    /// SET_PLAYBOOK vote -> its playbook (0: clear)
+    vote_playbook: LookupMap<u64, u64>,
+    /// refusal -> the visitor the runner credited it to
+    refusal_credit: LookupMap<u64, AccountId>,
+    /// accounts whose badge is minted (or being minted)
+    badges: LookupSet<AccountId>,
+    goal_fills: LookupMap<u64, GoalFillRec>,
+    goal_claims: LookupSet<(u64, AccountId)>,
+    jar_tippers: LookupSet<(u64, AccountId)>,
+    hype_riders: LookupSet<(u64, AccountId)>,
+    // ----- 1.4: the reward ladder
+    rw: rewards::Rewards,
 }
 
 /// The layout before 1.4 (steps 8 and 9), read once by `migrate_rewards`.
@@ -985,7 +1055,7 @@ impl Coin {
             locked_by_round: LookupMap::new(Key::LockedByRound),
             votes: LookupMap::new(Key::Votes),
             next_vote_id: 1,
-            open_by_kind: vec![None; 5],
+            open_by_kind: vec![None; rules::vote::VoteKind::ALL.len()],
             safe: LookupMap::new(Key::Safe),
             books_safe: 0,
             pins: config.pins.map_or_else(Pins::unset, Pins::from_init),
@@ -1005,6 +1075,7 @@ impl Coin {
             jar_tippers: LookupSet::new(Key::JarTippers),
             hype_riders: LookupSet::new(Key::HypeRiders),
             rw: rewards::Rewards::new(0),
+            ls: rewards::LongShot::default(),
         };
         c.tick(); // round 1
         c
@@ -1061,6 +1132,7 @@ impl Coin {
             jar_tippers: LookupSet::new(Key::JarTippers),
             hype_riders: LookupSet::new(Key::HypeRiders),
             rw: rewards::Rewards::new(o.current.map_or(0, |r| r.id)),
+            ls: rewards::LongShot::default(),
         }
     }
 
@@ -1115,6 +1187,64 @@ impl Coin {
             jar_tippers: o.jar_tippers,
             hype_riders: o.hype_riders,
             rw: rewards::Rewards::new(start),
+            ls: rewards::LongShot::default(),
+        }
+    }
+
+    /// Upgrades a 1.4 contract in place (testnet), keeping everything, and adds the long shot (1.5, R6): the
+    /// LONG_SHOT vote and its one ticket. Only the contract account may call it.
+    #[private]
+    #[init(ignore_state)]
+    pub fn migrate_long_shot() -> Self {
+        let mut o: CoinV9 =
+            env::state_read().unwrap_or_else(|| env::panic_str("no 1.4 state to migrate"));
+        while o.open_by_kind.len() < rules::vote::VoteKind::ALL.len() {
+            o.open_by_kind.push(None);
+        }
+        Coin {
+            cfg: o.cfg,
+            token: o.token,
+            extras: o.extras,
+            rates: o.rates,
+            rounds: o.rounds,
+            current: o.current,
+            books: o.books,
+            feed: o.feed,
+            rank: o.rank,
+            nonce_counter: o.nonce_counter,
+            positions: o.positions,
+            round_positions: o.round_positions,
+            next_position_id: o.next_position_id,
+            refusals: o.refusals,
+            next_refusal_id: o.next_refusal_id,
+            firsts: o.firsts,
+            settling: o.settling,
+            locks: o.locks,
+            locked_total: o.locked_total,
+            locked_by_round: o.locked_by_round,
+            votes: o.votes,
+            next_vote_id: o.next_vote_id,
+            open_by_kind: o.open_by_kind,
+            safe: o.safe,
+            books_safe: o.books_safe,
+            pins: o.pins,
+            outbox: o.outbox,
+            outbox_first: o.outbox_first,
+            outbox_next: o.outbox_next,
+            sign_stage: o.sign_stage,
+            last_hl_nonce: o.last_hl_nonce,
+            s9: o.s9,
+            playbooks: o.playbooks,
+            round_playbook: o.round_playbook,
+            vote_playbook: o.vote_playbook,
+            refusal_credit: o.refusal_credit,
+            badges: o.badges,
+            goal_fills: o.goal_fills,
+            goal_claims: o.goal_claims,
+            jar_tippers: o.jar_tippers,
+            hype_riders: o.hype_riders,
+            rw: o.rw,
+            ls: rewards::LongShot::default(),
         }
     }
 

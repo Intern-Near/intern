@@ -431,3 +431,95 @@ fn a_players_reward_records_fit_in_the_registration_storage() {
     println!("a player's reward records use {used} bytes");
     assert!(used <= crate::REWARDS_ACCOUNT_BYTES, "used {used}");
 }
+
+// ----- R6 the long shot (1.5) ----------------------------------------------------------------------------------
+
+const CLOSE: u64 = 79_200_000;
+
+/// alice locks half her coins in round 2; in round 4 they weigh something, and she alone can pass a vote.
+fn long_shot_passed() -> Coin {
+    let mut c = alice_in();
+    ctx(at(2, 1_500), "alice.test", 0);
+    c.lock(U128(500_000_000));
+    goto(&mut c, 4, 1_000);
+    ctx(at(4, 2_000), "alice.test", 0);
+    let id = c.open_vote(wire::VoteKind::LongShot, None);
+    ctx(at(4, 2_100), "alice.test", 0);
+    c.cast(id, true);
+    // The vote runs one round length; finished in round 5, it passes and allows a ticket in round 7.
+    goto(&mut c, 5, 3_000);
+    ctx(at(5, 3_000), "anyone.test", 0);
+    let v = c.finish_vote(id);
+    assert_eq!(v.state, wire::VoteState::Passed);
+    assert_eq!(v.effective_round, Some(7));
+    c
+}
+
+fn ticket_bet(margin: u128, leverage: u32) -> Decision {
+    Decision::Bet { market: Market::Doge, side: Side::Long, margin_e6: margin, leverage }
+}
+
+#[test]
+fn a_passed_long_shot_allows_one_extra_ticket_at_10x_in_its_round_only() {
+    let mut c = long_shot_passed();
+    let allowed = events(&c, EventName::LongShotAllowed);
+    assert_eq!(allowed[0]["round_id"], 7);
+    assert_eq!(c.get_rewards().long_shot.ticket_round, Some(7));
+    // Round 6: no ticket yet; 10x is refused as always, and the rulebook has no long_shot line.
+    goto(&mut c, 6, 1_000);
+    ctx(at(6, IN_WINDOW), RUNNER, 0);
+    assert!(!c.get_rulebook().text.contains("long_shot:"));
+    let margin6 = rules::limits::long_shot_margin(c.current.unwrap().brave_at_open);
+    assert!(matches!(propose(&mut c, 6, &ticket_bet(margin6, 10)), wire::Verdict::Nope { code: Refusal::OverLeverage, .. }));
+    // Round 7: the rulebook states the ticket exactly.
+    goto(&mut c, 7, 1_000);
+    let margin = rules::limits::long_shot_margin(c.current.unwrap().brave_at_open);
+    ctx(at(7, IN_WINDOW), RUNNER, 0);
+    let text = c.get_rulebook().text;
+    assert!(text.contains(&format!("long_shot: one ticket this round: margin_e6 exactly {margin}, leverage up to 10")), "{text}");
+    assert_eq!(c.get_rewards().long_shot.margin, Some(U128(margin)));
+    // The ticket: approved at 10x; it does not use the rank's one bet.
+    let v = propose(&mut c, 7, &ticket_bet(margin, 10));
+    let wire::Verdict::Yes { position_id } = v else { panic!("the ticket: {v:?}") };
+    assert_eq!(c.get_round().bets_used, 0);
+    let approved = events(&c, EventName::Approved);
+    assert_eq!(approved.last().unwrap()["long_shot"], true);
+    assert_eq!(approved.last().unwrap()["leverage"], 10);
+    // The rank's own bet is still there; a second ticket is not (the ticket is used: 10x is refused again).
+    let normal = propose(&mut c, 7, &ticket_bet(11_000_000, 1));
+    assert!(matches!(normal, wire::Verdict::Yes { .. }), "{normal:?}");
+    assert!(matches!(propose(&mut c, 7, &ticket_bet(margin, 10)), wire::Verdict::Nope { code: Refusal::OverLeverage, .. }));
+    assert!(c.get_rewards().long_shot.used);
+    // Both bets settle as usual; the ticket's margin was inside the round's limit.
+    ctx(at(7, CLOSE + 1_000), RUNNER, 0);
+    for p in c.get_positions(Some(7)) {
+        c.report_result(p.id, p.margin);
+    }
+    let _ = c.settle(7);
+    assert!(c.get_round_by_id(7).unwrap().settled);
+    let _ = position_id;
+}
+
+#[test]
+fn a_new_long_shot_vote_waits_seven_rounds_after_the_last_ticket() {
+    let mut c = long_shot_passed();
+    goto(&mut c, 8, 1_000);
+    ctx(at(8, 2_000), "alice.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| c.open_vote(wire::VoteKind::LongShot, None))).is_err());
+    assert_eq!(c.get_rewards().long_shot.vote_from_round, 14);
+    goto(&mut c, 14, 1_000);
+    ctx(at(14, 2_000), "alice.test", 0);
+    let id = c.open_vote(wire::VoteKind::LongShot, None);
+    assert!(id > 0);
+}
+
+#[test]
+fn no_long_shot_while_fired() {
+    let mut c = alice_in();
+    c.rank.status = 1; // FIRED
+    ctx(at(2, 1_500), "alice.test", 0);
+    c.lock(U128(500_000_000));
+    goto(&mut c, 4, 1_000);
+    ctx(at(4, 2_000), "alice.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| c.open_vote(wire::VoteKind::LongShot, None))).is_err());
+}

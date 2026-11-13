@@ -9,6 +9,7 @@ import {
   type Phase,
   REFUSAL_CODES,
   type RoundState,
+  rankChecks,
   type Status,
   type Verdict,
 } from "../src/rules.ts";
@@ -104,7 +105,7 @@ function show(v: Verdict): string {
 
 describe("rank checks, the 26 rule cases of checks.json (01 1.2 §12)", () => {
   it("reads version 1.2 with the $11 minimum and all 26 cases", () => {
-    assert.equal(CHECKS.interface_version, "1.4");
+    assert.equal(CHECKS.interface_version, "1.5");
     assert.equal(BigInt(CHECKS.min_notional), MIN_NOTIONAL_E6);
     assert.deepEqual(
       CHECKS.rule_cases.map((c) => c.id),
@@ -224,5 +225,42 @@ describe("rank checks, cases proposed beyond 01 §12", () => {
       bet("DOGE", "LONG", 50_000_000n, 4_294_967_295),
     );
     assert.equal(show(v), "OVER_LEVERAGE 4294967295/2");
+  });
+});
+
+describe("the long-shot ticket (01 1.5, R6)", () => {
+  const base: RoundState = {
+    phase: "PROPOSE",
+    status: "EMPLOYED",
+    rank: "INTERN",
+    brave_at_open_e6: 1_000_000_000n,
+    brave_now_e6: 1_000_000_000n,
+    bets_used: 1,
+    at_risk_e6: 15_000_000n,
+    ms_into_round: 0,
+    propose_from_ms: 0,
+    propose_until_ms: 1,
+    ticket: { margin_e6: 5_000_000n, max_leverage: 10 },
+  };
+  const bet = (market: string, margin: bigint, leverage: number) =>
+    ({ action: "BET", market, side: "LONG", margin_e6: margin, leverage }) as Decision;
+  it("is one extra bet at its exact margin up to 10x, as the program judges it", () => {
+    assert.deepEqual(rankChecks(base, bet("DOGE", 5_000_000n, 10)), {
+      verdict: "YES",
+      notional_e6: 50_000_000n,
+    });
+    assert.equal((rankChecks(base, bet("DOGE", 5_000_000n, 11)) as { code?: string }).code, "OVER_LEVERAGE");
+    assert.equal((rankChecks(base, bet("PENGU", 5_000_000n, 10)) as { limit?: string }).limit, "5");
+    assert.equal((rankChecks(base, bet("DOGE", 6_000_000n, 10)) as { code?: string }).code, "OVER_LEVERAGE");
+    assert.equal(
+      (rankChecks({ ...base, at_risk_e6: 16_000_000n }, bet("DOGE", 5_000_000n, 10)) as { code?: string })
+        .code,
+      "OVER_ROUND_LIMIT",
+    );
+    const { ticket: _t, ...noTicket } = base;
+    assert.equal(
+      (rankChecks(noTicket, bet("DOGE", 5_000_000n, 10)) as { code?: string }).code,
+      "OVER_LEVERAGE",
+    );
   });
 });

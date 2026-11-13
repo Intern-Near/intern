@@ -21,6 +21,27 @@ export interface RulebookInput {
   at_risk_e6: bigint;
   /** Active playbook text, or null for "none". */
   playbook: string | null;
+  /** 01 1.5 (R6): the round's long-shot ticket, only in a round that has one. */
+  long_shot?: LongShot;
+}
+
+/** 01 1.5 (R6): one extra bet this round at exactly `margin_e6`, leverage up to `max_leverage`. */
+export interface LongShot {
+  margin_e6: bigint;
+  max_leverage: number;
+}
+
+/** 01 1.5: the ticket's margin, 0.5% of the pool at round open, rounded down (as the program computes it). */
+export function longShotMarginE6(braveAtOpenE6: bigint): bigint {
+  return (braveAtOpenE6 / 10_000n) * 50n + ((braveAtOpenE6 % 10_000n) * 50n) / 10_000n;
+}
+
+const LONG_SHOT_LINE = /^long_shot: one ticket this round: margin_e6 exactly (\d+), leverage up to (\d+)$/m;
+
+/** The ticket a rulebook states, if any (the program adds the line only in a ticket round). */
+export function longShotOf(rulebookText: string): LongShot | undefined {
+  const m = LONG_SHOT_LINE.exec(rulebookText);
+  return m ? { margin_e6: BigInt(m[1] ?? "0"), max_leverage: Number(m[2]) } : undefined;
 }
 
 /** The smaller of the per-bet limit and what is left of the per-round limit (01 §6.1). */
@@ -44,6 +65,11 @@ export function buildRulebookV12(input: RulebookInput, minNotionalE6: bigint = M
     `min_notional_e6: ${minNotionalE6}`,
     `bets_left: ${Math.max(0, limits.max_bets - input.bets_used)}`,
     `playbook: ${input.playbook ?? "none"}`,
+    ...(input.long_shot
+      ? [
+          `long_shot: one ticket this round: margin_e6 exactly ${input.long_shot.margin_e6}, leverage up to ${input.long_shot.max_leverage}`,
+        ]
+      : []),
     "Amounts are US dollars times 1,000,000, so 10000000 is $10. A bet's notional is margin_e6 times leverage and must be at least min_notional_e6.",
     "Answer with exactly one line of JSON and nothing else, in one of these two forms:",
     `{"v":1,"round":${round},"nonce":"${nonce}","action":"skip"}`,

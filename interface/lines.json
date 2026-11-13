@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.4",
+  "interface_version": "1.5",
   "about": "The Intern's lines for the stream and the site: one cue per feed event (01 section 10, with 1.4's reward events) and per refusal code (01 section 7). Text only; the stream turns `intern` lines into speech and shows `system` lines as Stamp's caption. Voice: spec 24.14. The Intern: first person, short, earnest, a little anxious, office words for bad news, never brags, never talks prices or advice, at most one joke and always on itself. The contract: no person, no feelings; code, rank, limit, asked, with units; no adjectives, no exclamation marks. A line is chosen by the event's seq (seq modulo the number of lines), so the stream and the site say the same thing for the same event. Placeholders in braces are filled by stream/cues.ts; amounts are already formatted (\"$11.49\").",
   "poses": {
     "intern": [
@@ -201,6 +201,10 @@
         "SET_PLAYBOOK": [
           "There's a vote on playbook {playbook_id}. I'll read it carefully either way.",
           "A vote on playbook {playbook_id} is open. A playbook can't change my limits, but I'd still like a good one."
+        ],
+        "LONG_SHOT": [
+          "There's a vote to let me take one long shot. A small stake at high leverage. It usually loses; I'd like that on the record.",
+          "Someone wants me to buy a lottery ticket. If it passes, I get one, once, small."
         ]
       },
       "system": "VOTE OPEN — {kind}{playbook_note}, closes {closes_at}."
@@ -440,6 +444,17 @@
       "mascot": "tin:rattling",
       "intern": [],
       "system": "PRIZE PAID — {amount} to {account}."
+    },
+    "long_shot_allowed": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "waiting",
+      "mascot": null,
+      "intern": [
+        "I'm allowed one long shot in round {round_id}. A small stake at high leverage. It usually loses; that's what a long shot is.",
+        "Round {round_id}: one long shot, if I want it. I'll think about it properly."
+      ],
+      "system": "LONG SHOT — one ticket in round {round_id}: 0.5% of the pool, up to 10x, inside the round's limit."
     }
   },
   "refusals": {

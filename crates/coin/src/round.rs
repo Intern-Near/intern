@@ -87,6 +87,7 @@ impl Coin {
             r.bets_used,
             r.at_risk,
             playbook.as_deref(),
+            self.ticket_for(r), // 1.5 (R6): only in a ticket round
         )
     }
 
@@ -207,6 +208,9 @@ impl Coin {
             brave_now: self.books.brave_total,
             bets_used: r.bets_used,
             at_risk: r.at_risk,
+            ticket: self
+                .ticket_for(&r)
+                .map(|(margin, max_leverage)| rules::checks::Ticket { margin, max_leverage }),
         };
         let ruling = rule(
             &ctx,
@@ -260,14 +264,19 @@ impl Coin {
                 let mut ids = self.round_positions.get(&r.id).cloned().unwrap_or_default();
                 ids.push(id);
                 self.round_positions.insert(r.id, ids);
-                r.bets_used += 1;
+                if bet.ticket {
+                    // R6: the long shot is one extra bet; it does not use one of the rank's bets.
+                    self.ls.used = true;
+                } else {
+                    r.bets_used += 1;
+                }
                 r.at_risk += bet.margin;
                 self.books.in_play += bet.margin; // from approval the margin is out of reach of cash-out
                 self.save_round(r);
                 self.feed.push(
                     EventName::Approved,
                     json!({"position_id": id, "round_id": r.id, "market": bet.market, "side": bet.side,
-                           "margin": U128(bet.margin), "leverage": bet.leverage}),
+                           "margin": U128(bet.margin), "leverage": bet.leverage, "long_shot": bet.ticket}),
                 );
                 self.rw_ruling(r.id, crate::rewards::YES); // 1.4
                 wire::Verdict::Yes { position_id: id }

@@ -7,7 +7,7 @@ import { isRecord } from "./json.ts";
 import { addressFromDerivedKey, view } from "./near.ts";
 import { fetchAttestation, fetchModels, parseModelSigners } from "./nearai.ts";
 import { checkConstants } from "./round.ts";
-import { buildRulebookV12 } from "./rulebook.ts";
+import { buildRulebookV12, longShotMarginE6, longShotOf } from "./rulebook.ts";
 import type { Secret } from "./secret.ts";
 
 /**
@@ -33,6 +33,10 @@ export function rulebookDifferences(
   playbook: string | null,
   minNotionalE6: bigint,
 ): { line: number; program: string; template: string }[] {
+  // 01 1.5: a ticket round's text has a long_shot line; the template states what the program should have computed.
+  const ticket = longShotOf(text)
+    ? { margin_e6: longShotMarginE6(BigInt(round.brave_at_open)), max_leverage: 10 }
+    : undefined;
   const template = buildRulebookV12(
     {
       round_id: round.id,
@@ -42,6 +46,7 @@ export function rulebookDifferences(
       bets_used: round.bets_used,
       at_risk_e6: BigInt(round.at_risk),
       playbook,
+      ...(ticket ? { long_shot: ticket } : {}),
     },
     minNotionalE6,
   ).split("\n");

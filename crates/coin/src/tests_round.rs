@@ -350,7 +350,7 @@ fn the_rulebook_view_is_what_propose_checks_even_before_a_round_is_written() {
     assert!(rules::rulebook::is_valid_nonce(&rb.nonce));
     assert_eq!(
         rb.text,
-        rules::rulebook::rulebook(2, &rb.nonce, Rank::Intern, 0, 0, 0, None)
+        rules::rulebook::rulebook(2, &rb.nonce, Rank::Intern, 0, 0, 0, None, None)
     );
     // propose writes round 2 and checks against exactly that nonce: a skip is accepted.
     assert_eq!(propose(&mut c, now, &Decision::Skip), wire::Verdict::Skip);

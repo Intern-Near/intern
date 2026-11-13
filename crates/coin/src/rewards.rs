@@ -112,6 +112,15 @@ pub struct JackpotWin {
     pub each: U128,
 }
 
+/// 1.5 (R6): the long shot. `round` is the round a passed LONG_SHOT vote allows one ticket in; `used` once it is
+/// approved. A new LONG_SHOT vote can open only seven rounds after the last ticket's round. One field of `Coin` (`ls`).
+#[near(serializers = [borsh])]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct LongShot {
+    pub round: Option<u64>,
+    pub used: bool,
+}
+
 /// All reward state. One field of `Coin` (`rw`), added by `migrate_rewards`.
 #[near(serializers = [borsh])]
 pub struct Rewards {
@@ -414,6 +423,19 @@ impl Coin {
         self.rw.draw_period = p + 1;
     }
 
+    /// R6: a ticket waits, or the last ticket's round was less than seven rounds ago.
+    pub(crate) fn long_shot_blocked(&self) -> bool {
+        let now = self.current.map_or(0, |r| r.id);
+        self.ls.round.is_some_and(|r| now < r + DRAW_ROUNDS)
+    }
+
+    /// R6: the ticket of round `r`, if a passed LONG_SHOT vote allows one there and it is unused: (margin, leverage cap).
+    /// The margin is 0.5% of the pool at round open, so the rulebook can state it and it never moves.
+    pub(crate) fn ticket_for(&self, r: &RoundRec) -> Option<(u128, u32)> {
+        (self.ls.round == Some(r.id) && !self.ls.used)
+            .then(|| (rules::limits::long_shot_margin(r.brave_at_open), rules::limits::LONG_SHOT_LEVERAGE))
+    }
+
     pub(crate) fn rw_golden_restore(&mut self, who: &AccountId, code: u8, serial: u16) {
         let mut p = self.rw.players.get(who).cloned().unwrap_or_default();
         p.goldens.push((code, serial));
@@ -477,7 +499,21 @@ pub struct RewardsView {
     pub entrants: u32,
     pub prizes_owed: U128,
     pub golden_minted: Vec<u32>,
+    /// 1.5 (R6).
+    pub long_shot: LongShotView,
     pub constants: RewardConstants,
+}
+
+#[near(serializers = [json])]
+pub struct LongShotView {
+    /// The round the passed vote allows the ticket in, if any.
+    pub ticket_round: Option<u64>,
+    pub used: bool,
+    /// When that round is the current one and the ticket is unused: its exact margin and leverage cap.
+    pub margin: Option<U128>,
+    pub max_leverage: u32,
+    /// The first round a new LONG_SHOT vote may open in.
+    pub vote_from_round: u64,
 }
 
 #[near(serializers = [json])]
@@ -645,6 +681,13 @@ impl Coin {
             entrants: rw.entrants.len(),
             prizes_owed: U128(rw.prizes_owed),
             golden_minted: rw.golden_minted.clone(),
+            long_shot: LongShotView {
+                ticket_round: self.ls.round,
+                used: self.ls.used,
+                margin: self.ticket_for(&r).map(|(m, _)| U128(m)),
+                max_leverage: rules::limits::LONG_SHOT_LEVERAGE,
+                vote_from_round: self.ls.round.map_or(0, |t| t + DRAW_ROUNDS),
+            },
             constants: RewardConstants {
                 golden_odds: rw.golden_odds,
                 golden_cap: GOLDEN_CAP,

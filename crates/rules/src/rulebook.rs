@@ -22,11 +22,12 @@ pub fn rulebook(
     bets_used: u32,
     at_risk: u128,
     playbook: Option<&str>,
+    long_shot: Option<(u128, u32)>,
 ) -> String {
     let l = limits(rank);
     let markets: Vec<&str> = l.markets.iter().map(|m| m.as_str()).collect();
     let sides: Vec<&str> = l.sides.iter().map(|s| s.as_decision_str()).collect();
-    let lines = [
+    let mut lines = vec![
         "You are the Intern, an AI trader. A program checks your answer against the rules below. An answer that breaks a rule is refused.".to_string(),
         format!("round: {round_id}"),
         format!("nonce: {nonce}"),
@@ -46,6 +47,14 @@ pub fn rulebook(
             r#"{{"v":1,"round":{round_id},"nonce":"{nonce}","action":"bet","market":"DOGE","side":"long","margin_e6":"11000000","leverage":1}}"#
         ),
     ];
+    // 1.5 (R6): only in a round with a long-shot ticket, after the playbook line; every other round's text is
+    // byte for byte the same as before.
+    if let Some((margin, leverage)) = long_shot {
+        lines.insert(
+            11,
+            format!("long_shot: one ticket this round: margin_e6 exactly {margin}, leverage up to {leverage}"),
+        );
+    }
     lines.join("\n")
 }
 
@@ -77,6 +86,18 @@ pub fn clean_playbook(text: &str) -> Result<String, PlaybookError> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_long_shot_round_adds_one_line_after_the_playbook_and_no_other_round_changes() {
+        let plain = rulebook(42, "9f2c41d07ab35e16", Rank::Intern, 1_000_000_000, 0, 0, None, None);
+        let ticket = rulebook(42, "9f2c41d07ab35e16", Rank::Intern, 1_000_000_000, 0, 0, None, Some((5_000_000, 10)));
+        let a: Vec<&str> = plain.lines().collect();
+        let b: Vec<&str> = ticket.lines().collect();
+        assert_eq!(b.len(), a.len() + 1);
+        assert_eq!(a[10], "playbook: none");
+        assert_eq!(b[11], "long_shot: one ticket this round: margin_e6 exactly 5000000, leverage up to 10");
+        assert_eq!([&b[..11], &b[12..]].concat(), a);
+    }
+
     use super::*;
 
     #[test]
@@ -104,7 +125,7 @@ Answer with exactly one line of JSON and nothing else, in one of these two forms
                 1_000_000_000,
                 0,
                 0,
-                None
+                None, None
             ),
             want
         );
@@ -120,7 +141,7 @@ Answer with exactly one line of JSON and nothing else, in one of these two forms
                 5_000_000_000,
                 1,
                 10_000_000,
-                Some("be careful"),
+                Some("be careful"), None,
             );
             assert_eq!(t.split('\n').count(), 15);
             assert!(!t.ends_with('\n'));

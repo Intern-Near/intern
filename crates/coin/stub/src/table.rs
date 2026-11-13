@@ -51,6 +51,6 @@ pub fn rulebook_text(
         brave_at_open,
         bets_used,
         at_risk,
-        playbook,
+        playbook, None,
     )
 }

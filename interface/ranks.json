@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.4",
+  "interface_version": "1.5",
   "about": "The three ranks of 01-SHARED-INTERFACE.md section 3. Each entry has the shape of the Limits type. Values are PROPOSED and fixed at deploy; no vote can change them.",
   "min_notional": "11000000",
   "limit_base": "The smaller of brave_at_open and the BRAVE pool now (get_pot().brave.total). A limit in dollars is limit_base x bps / 10000, rounded down. The rulebook text always uses brave_at_open.",

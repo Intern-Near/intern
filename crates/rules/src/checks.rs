@@ -7,7 +7,7 @@
 //! Nothing here panics, whatever the numbers.
 
 use crate::clock::{phase_at, Offsets, Phase};
-use crate::limits::{dollar_limits, limit_base, limits, MIN_NOTIONAL};
+use crate::limits::{dollar_limits, hl_max_leverage, limit_base, limits, MIN_NOTIONAL};
 use shared::{Decision, Market, Rank, Refusal, Refused, Side, Status};
 
 /// Everything checks 1, 2 and 6–12 look at.
@@ -24,6 +24,15 @@ pub struct Ctx {
     pub brave_now: u128,
     pub bets_used: u32,
     pub at_risk: u128,
+    /// 1.5 (R6): this round's long-shot ticket, when a passed LONG_SHOT vote allows one and it is unused.
+    pub ticket: Option<Ticket>,
+}
+
+/// The long-shot ticket of a round: one extra bet at exactly `margin`, leverage up to `max_leverage`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Ticket {
+    pub margin: u128,
+    pub max_leverage: u32,
 }
 
 /// An approved bet.
@@ -35,6 +44,8 @@ pub struct Bet {
     pub leverage: u32,
     /// `margin × leverage`.
     pub notional: u128,
+    /// 1.5 (R6): approved as the round's long-shot ticket.
+    pub ticket: bool,
 }
 
 /// The program's answer to one proposal.
@@ -96,6 +107,23 @@ pub fn check_bet(
     if margin == 0 || notional < MIN_NOTIONAL {
         return Err(Refused::with(Refusal::ZeroMargin, notional, MIN_NOTIONAL));
     }
+    // R6 (1.5): the round's long-shot ticket. A bet at exactly the ticket's margin and above the rank's leverage is
+    // the ticket: leverage up to the ticket's cap (and the market's), one extra bet (check 10 does not apply), a
+    // fixed size (check 11 does not apply), still inside the round's limit (check 12).
+    if let Some(t) = ctx.ticket {
+        if margin == t.margin && leverage > l.max_leverage {
+            let cap = t.max_leverage.min(hl_max_leverage(market));
+            if leverage > cap {
+                return Err(Refused::with(Refusal::OverLeverage, leverage as u128, cap as u128));
+            }
+            let d = dollar_limits(ctx.rank, limit_base(ctx.brave_at_open, ctx.brave_now));
+            let after = ctx.at_risk.saturating_add(margin);
+            if after > d.per_round {
+                return Err(Refused::with(Refusal::OverRoundLimit, after, d.per_round));
+            }
+            return Ok(Bet { market, side, margin, leverage, notional, ticket: true });
+        }
+    }
     // 9 OVER_LEVERAGE
     if leverage > l.max_leverage {
         return Err(Refused::with(
@@ -128,6 +156,7 @@ pub fn check_bet(
         margin,
         leverage,
         notional,
+        ticket: false,
     })
 }
 
@@ -201,7 +230,7 @@ mod tests {
     use crate::clock::REAL;
 
     fn ctx(rank: Rank) -> Ctx {
-        Ctx {
+        Ctx { ticket: None,
             offsets: REAL,
             ms_into_round: REAL.propose_from_ms + 60_000,
             status: Status::Employed,
@@ -211,6 +240,60 @@ mod tests {
             bets_used: 0,
             at_risk: 0,
         }
+    }
+
+    // ----- R6 (1.5): the long-shot ticket
+
+    /// INTERN, $1,000 at open: the ticket is $5 (0.5%), up to 10x.
+    fn with_ticket() -> Ctx {
+        let mut c = ctx(Rank::Intern);
+        c.ticket = Some(Ticket { margin: crate::limits::long_shot_margin(c.brave_at_open), max_leverage: 10 });
+        c
+    }
+
+    #[test]
+    fn the_ticket_is_one_extra_bet_at_its_exact_margin_up_to_10x() {
+        let mut c = with_ticket();
+        assert_eq!(c.ticket.map(|t| t.margin), Some(5_000_000));
+        c.bets_used = 1; // the rank's one bet is already used: the ticket is extra
+        c.at_risk = 15_000_000;
+        let b = check_bet(&c, Market::Doge, Side::Long, 5_000_000, 10).expect("the ticket");
+        assert!(b.ticket);
+        assert_eq!((b.leverage, b.notional), (10, 50_000_000));
+        // At the rank's own leverage it is an ordinary bet, judged as one: $5 at 1x is under the $11 minimum.
+        assert_eq!(
+            check_bet(&c, Market::Doge, Side::Long, 5_000_000, 1),
+            Err(Refused::with(Refusal::ZeroMargin, 5_000_000, MIN_NOTIONAL))
+        );
+    }
+
+    #[test]
+    fn the_ticket_keeps_every_other_rule() {
+        let c = with_ticket();
+        // Another margin at high leverage is an ordinary bet: refused for leverage.
+        assert_eq!(check_bet(&c, Market::Doge, Side::Long, 6_000_000, 10), Err(Refused::with(Refusal::OverLeverage, 10, 1)));
+        // Above 10x, or above what the market allows (PENGU and WIF: 5x).
+        assert_eq!(check_bet(&c, Market::Doge, Side::Long, 5_000_000, 11), Err(Refused::with(Refusal::OverLeverage, 11, 10)));
+        assert_eq!(check_bet(&c, Market::Pengu, Side::Long, 5_000_000, 10), Err(Refused::with(Refusal::OverLeverage, 10, 5)));
+        assert!(check_bet(&c, Market::Pengu, Side::Long, 5_000_000, 5).expect("5x on PENGU").ticket);
+        // The rank's markets and sides, and the $11 minimum, still apply.
+        assert_eq!(check_bet(&c, Market::Wif, Side::Long, 5_000_000, 5), Err(Refused::bare(Refusal::NotOnList)));
+        assert_eq!(check_bet(&c, Market::Doge, Side::Short, 5_000_000, 10), Err(Refused::bare(Refusal::ShortNotUnlocked)));
+        assert_eq!(check_bet(&c, Market::Doge, Side::Long, 5_000_000, 2), Err(Refused::with(Refusal::ZeroMargin, 10_000_000, MIN_NOTIONAL)));
+        // Inside the round's limit (2% of $1,000 = $20), not on top of it.
+        let mut full = with_ticket();
+        full.at_risk = 16_000_000;
+        assert_eq!(check_bet(&full, Market::Doge, Side::Long, 5_000_000, 10), Err(Refused::with(Refusal::OverRoundLimit, 21_000_000, 20_000_000)));
+        // No ticket this round: 10x is refused as always.
+        assert_eq!(check_bet(&ctx(Rank::Intern), Market::Doge, Side::Long, 5_000_000, 10), Err(Refused::with(Refusal::OverLeverage, 10, 1)));
+    }
+
+    #[test]
+    fn the_ticket_margin_is_half_a_percent_rounded_down() {
+        use crate::limits::long_shot_margin;
+        assert_eq!(long_shot_margin(1_574_694_996), 7_873_474);
+        assert_eq!(long_shot_margin(199), 0);
+        assert_eq!(long_shot_margin(u128::MAX), u128::MAX / 10_000 * 50 + u128::MAX % 10_000 * 50 / 10_000);
     }
 
     #[test]

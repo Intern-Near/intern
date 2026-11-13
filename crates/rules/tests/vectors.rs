@@ -61,7 +61,7 @@ fn all_26_rule_cases_pass_through_the_real_rule() {
     for case in cases {
         let id = n(&case["id"]);
         let st = &case["state"];
-        let ctx = Ctx {
+        let ctx = Ctx { ticket: None,
             offsets,
             ms_into_round: n(&st["ms_into_round"]),
             status: s(&st["status"]).parse().unwrap(),
@@ -142,7 +142,7 @@ fn rulebook_cases_match_byte_for_byte() {
             u(&st["brave_at_open"]),
             n(&st["bets_used"]) as u32,
             u(&st["at_risk"]),
-            st["playbook"].as_str(),
+            st["playbook"].as_str(), None,
         );
         assert_eq!(text, s(&case["text"]), "{}", s(&case["id"]));
     }

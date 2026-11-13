@@ -35,7 +35,7 @@ const DUMMY_SIG = { r: `0x${"11".repeat(32)}`, s: `0x${"22".repeat(32)}`, v: 27 
 
 export function fakeConstants(model: Constants["model"]): Constants {
   return {
-    interface_version: "1.4",
+    interface_version: "1.5",
     network: "testnet",
     ranks: (["INTERN", "ANALYST", "TRADER"] as const).map((r) => ({
       ...RANKS[r],

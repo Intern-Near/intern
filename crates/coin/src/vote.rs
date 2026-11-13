@@ -69,6 +69,7 @@ fn to_wire(k: VoteKind) -> wire::VoteKind {
         VoteKind::Fire => wire::VoteKind::Fire,
         VoteKind::Rehire => wire::VoteKind::Rehire,
         VoteKind::SetPlaybook => wire::VoteKind::SetPlaybook,
+        VoteKind::LongShot => wire::VoteKind::LongShot,
     }
 }
 fn from_wire(k: wire::VoteKind) -> VoteKind {
@@ -78,6 +79,7 @@ fn from_wire(k: wire::VoteKind) -> VoteKind {
         wire::VoteKind::Fire => VoteKind::Fire,
         wire::VoteKind::Rehire => VoteKind::Rehire,
         wire::VoteKind::SetPlaybook => VoteKind::SetPlaybook,
+        wire::VoteKind::LongShot => VoteKind::LongShot,
     }
 }
 
@@ -230,6 +232,10 @@ impl Coin {
 
     /// Whether a passed change of this kind is still waiting (a rank change, or for SET_PLAYBOOK a playbook change).
     fn change_waiting(&self, kind: VoteKind) -> bool {
+        if kind == VoteKind::LongShot {
+            // 1.5 (R6): a ticket waits, or the last one was less than seven rounds ago.
+            return self.long_shot_blocked();
+        }
         if kind == VoteKind::SetPlaybook {
             self.s9.pending_playbook.is_some()
         } else {
@@ -239,6 +245,12 @@ impl Coin {
 
     fn apply_vote(&mut self, vote_id: u64, kind: VoteKind, eff: u64, rank: Rank, status: Status) {
         let now_round = self.current.expect("round").id;
+        if kind == VoteKind::LongShot {
+            // 1.5 (R6): one ticket, in the second round after it passed (like every loosening vote).
+            self.ls = crate::rewards::LongShot { round: Some(eff), used: false };
+            self.feed.push(EventName::LongShotAllowed, json!({"round_id": eff}));
+            return;
+        }
         if kind == VoteKind::SetPlaybook {
             // 1.3: from the start of the second round after it passed, the rulebook carries it.
             let pid = self.vote_playbook.get(&vote_id).copied().unwrap_or(0);
@@ -416,6 +428,9 @@ impl Coin {
         self.tick();
         let now = Self::now();
         let k = from_wire(kind);
+        while self.open_by_kind.len() < VoteKind::ALL.len() {
+            self.open_by_kind.push(None);
+        }
         if let Some(id) = self.open_by_kind[kind_code(k) as usize] {
             let closes = self.votes.get(&id).expect("vote").closes_at;
             require!(
@@ -425,6 +440,9 @@ impl Coin {
             self.finish(id, now); // its time ran out but nobody finished it
         }
         let (rank, status) = self.rank_now();
+        if k == VoteKind::LongShot && self.long_shot_blocked() {
+            env::panic_str("a long-shot ticket is waiting, or the last one was less than 7 rounds ago");
+        }
         if let Err(e) = rv::can_open(k, rank, status, self.change_waiting(k)) {
             env::panic_str(why(e));
         }

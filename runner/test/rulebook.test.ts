@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import type { RankName } from "../src/ranks.ts";
-import { buildRulebook, buildRulebookV12, maxMarginE6, type RulebookInput } from "../src/rulebook.ts";
+import {
+  buildRulebook,
+  buildRulebookV12,
+  longShotMarginE6,
+  longShotOf,
+  maxMarginE6,
+  type RulebookInput,
+} from "../src/rulebook.ts";
 
 const BASE: RulebookInput = {
   round_id: 42,
@@ -86,7 +93,7 @@ describe("01 1.2 §6.1, against Engine 1's rulebook cases in checks.json", () =>
   };
 
   it("has the three cases R1 to R3 of version 1.2", () => {
-    assert.equal(checks.interface_version, "1.4");
+    assert.equal(checks.interface_version, "1.5");
     assert.deepEqual(
       checks.rulebook_cases.cases.map((c) => c.id),
       ["R1", "R2", "R3"],
@@ -111,4 +118,29 @@ describe("01 1.2 §6.1, against Engine 1's rulebook cases in checks.json", () =>
       assert.equal(text.split("\n").length, 15);
     });
   }
+});
+
+describe("the long-shot line (01 1.5)", () => {
+  it("is added after the playbook line only in a ticket round, and read back", () => {
+    const input = {
+      round_id: 42,
+      nonce: "9f2c41d07ab35e16",
+      rank: "INTERN" as const,
+      brave_at_open_e6: 1_000_000_000n,
+      bets_used: 0,
+      at_risk_e6: 0n,
+      playbook: null,
+    };
+    const plain = buildRulebookV12(input).split("\n");
+    const t = buildRulebookV12({
+      ...input,
+      long_shot: { margin_e6: longShotMarginE6(1_000_000_000n), max_leverage: 10 },
+    }).split("\n");
+    assert.equal(t.length, plain.length + 1);
+    assert.equal(t[11], "long_shot: one ticket this round: margin_e6 exactly 5000000, leverage up to 10");
+    assert.deepEqual([...t.slice(0, 11), ...t.slice(12)], plain);
+    assert.deepEqual(longShotOf(t.join("\n")), { margin_e6: 5_000_000n, max_leverage: 10 });
+    assert.equal(longShotOf(plain.join("\n")), undefined);
+    assert.equal(longShotMarginE6(1_574_694_996n), 7_873_474n);
+  });
 });

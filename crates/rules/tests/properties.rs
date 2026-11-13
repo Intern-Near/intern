@@ -61,7 +61,7 @@ proptest! {
         market in any_market(), side in any_side(), m in margin(), lev in leverage(),
     ) {
         let status = if fired { Status::Fired } else { Status::Employed };
-        let ctx = Ctx { offsets, ms_into_round: ms, status, rank, brave_at_open: at_open, brave_now: now, bets_used, at_risk };
+        let ctx = Ctx { ticket: None, offsets, ms_into_round: ms, status, rank, brave_at_open: at_open, brave_now: now, bets_used, at_risk };
         let d = if skip { Decision::Skip } else { Decision::Bet { market, side, margin_e6: m, leverage: lev } };
         let asked = Cell::new(false);
         let got = rule(&ctx, || { asked.set(true); verify_fails.map_or(Ok(d), Err) }, |_| Ok(()));
@@ -118,7 +118,7 @@ proptest! {
         let (mut used, mut at_risk) = (0u32, 0u128);
         for (market, side, m, lev, keep_bps) in asks {
             now = now * keep_bps / 10_000; // some money leaves (or none, at 10,000)
-            let ctx = Ctx { offsets: REAL, ms_into_round: in_window(&REAL), status: Status::Employed, rank,
+            let ctx = Ctx { ticket: None, offsets: REAL, ms_into_round: in_window(&REAL), status: Status::Employed, rank,
                             brave_at_open: at_open, brave_now: now, bets_used: used, at_risk };
             if let Ruling::Yes(b) = rule(&ctx, || Ok(Decision::Bet { market, side, margin_e6: m, leverage: lev }), |_| Ok(())) {
                 let d = dollar_limits(rank, limit_base(at_open, now));
@@ -143,7 +143,7 @@ proptest! {
         bets_used in 0u32..=3, at_risk in 0u128..=300_000_000,
         market in any_market(), side in any_side(), m in margin(), lev in leverage(),
     ) {
-        let ctx = |rank, now| Ctx { offsets: REAL, ms_into_round: in_window(&REAL), status: Status::Employed, rank,
+        let ctx = |rank, now| Ctx { ticket: None, offsets: REAL, ms_into_round: in_window(&REAL), status: Status::Employed, rank,
                                      brave_at_open: at_open, brave_now: now, bets_used, at_risk };
         for pair in Rank::ALL.windows(2) {
             if check_bet(&ctx(pair[0], now), market, side, m, lev).is_ok() {

@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.4",
+  "interface_version": "1.5",
   "about": "The six markets of 01-SHARED-INTERFACE.md section 4, one list per network, each entry in the shape of the MarketInfo type. Indexes differ per network and can change: they are pinned at deploy and re-checked before each deploy.",
   "source": "Hyperliquid POST /info {\"type\":\"metaAndAssetCtxs\"}, pulled 2026-11-11, recorded in research-scripts/hl_markets_2026-11-11.txt. Every index and size-decimals value below was compared with that file on 2026-11-11.",
   "notes": {

@@ -25,6 +25,7 @@ import { limitPxE8, parseScaled } from "./pricing.ts";
 import { marketDataMessage } from "./prompt.ts";
 import { MIN_NOTIONAL_E6, RANKS } from "./ranks.ts";
 import { type BetOnExchange, CLOCK_SLACK_MS, type Outcome, workOutReturned } from "./result.ts";
+import { longShotOf } from "./rulebook.ts";
 import type { Secret } from "./secret.ts";
 import { hexToBytes, parseSignatureReply } from "./signature.ts";
 import { TRICK_LIMITS, type TrickDesk } from "./trick-desk.ts";
@@ -93,9 +94,11 @@ const stamp = (ms: number): string =>
     .replace(/\.\d+Z$/, "Z");
 
 /** The version of 01-SHARED-INTERFACE.md this runner follows. */
-export const INTERFACE_VERSION = "1.4";
-/** Versions of 01 this runner works with: 1.4 added only the reward ladder, so a 1.3 contract still works. */
-export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4"];
+export const INTERFACE_VERSION = "1.5";
+/** Versions of 01 this runner works with: 1.4 and 1.5 added the reward ladder, so a 1.3 contract still works. */
+export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5"];
+/** Versions with `rewards_tick`. */
+const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5"];
 
 /**
  * A NEAR account id (NEAR's account-id rules: 2 to 64 characters, lower-case letters and digits in parts joined by
@@ -166,12 +169,15 @@ export class Runner {
   readonly #rebalanced = new Set<number>();
   /** Rounds this process has settled: the chain's view can lag a few seconds behind the settle transaction. */
   readonly #settled = new Set<number>();
+  /** The program's interface version, read again each round: the contract can be upgraded under a running runner. */
+  #version: string;
   #askFailures = new Map<number, number>();
 
   constructor(deps: Deps, settings: Settings, constants: Constants) {
     this.#d = deps;
     this.#s = settings;
     this.#c = constants;
+    this.#version = constants.interface_version;
     const file = this.#deliveriesFile;
     if (existsSync(file)) {
       for (const line of readFileSync(file, "utf8").split("\n")) {
@@ -286,6 +292,7 @@ export class Runner {
     // The runner's own forecast with its TypeScript copy of the checks (01 §7, version 1.2: nothing may stand before
     // or after the decision line), to compare with the contract's verdict.
     const proposal = { request: requestBytes, response, signature };
+    const ticket = longShotOf(rulebook.text); // 01 1.5: only a ticket round has one
     const pot = await chain.pot();
     const state = {
       phase: round.phase,
@@ -299,6 +306,7 @@ export class Runner {
       propose_from_ms: c.round.propose_from_ms,
       propose_until_ms: c.round.propose_until_ms,
       min_notional_e6: BigInt(c.min_notional),
+      ...(ticket ? { ticket } : {}),
     };
     const pinned = { model: c.model.id, algo, signer: c.model.signer };
     const expected = { rulebook: rulebook.text, round_id: round.id, nonce: rulebook.nonce };
@@ -349,8 +357,14 @@ export class Runner {
   async #rebalance(roundId: number): Promise<void> {
     if (this.#rebalanced.has(roundId)) return;
     this.#rebalanced.add(roundId);
-    // 01 1.4: the reward ladder's jackpots and draws, once a round (a 1.3 contract has no rewards_tick).
-    if (this.#c.interface_version === "1.4") await this.#rewardsTick(roundId);
+    // 01 1.4: the reward ladder's jackpots and draws, once a round (a 1.3 contract has no rewards_tick). The version is
+    // read again here, once a round, because the contract may have been upgraded since the runner started.
+    try {
+      this.#version = (await this.#d.chain.constants()).interface_version;
+    } catch {
+      // keep the last version read; the round goes on
+    }
+    if (REWARD_VERSIONS.includes(this.#version)) await this.#rewardsTick(roundId);
     try {
       const sent = await this.#d.chain.rebalance();
       const pot = await this.#d.chain.pot();

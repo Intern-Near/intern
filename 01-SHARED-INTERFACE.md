@@ -1,6 +1,6 @@
 # $INTERN — the shared interface
 
-**Version 1.4, 2026-11-13.** Read `00-HOW-WE-WORK.md` first.
+**Version 1.5, 2026-11-13.** Read `00-HOW-WE-WORK.md` first.
 
 This is the one rulebook that the program (Engine 1), the off-chain Intern (Engine 2) and the website all follow. If any other file disagrees with this one, this one wins. To change it, see `00-HOW-WE-WORK.md` section 7.
 
@@ -168,6 +168,7 @@ Answer with exactly one line of JSON and nothing else, in one of these two forms
 - The example bet in the last line is $11, the smallest bet allowed. *(1.1: it was $1, which every model that copied the example would have been refused for. 1.2: $11, and the `min_notional_e6` line and the sentence on amounts were added, as Engine 2's 3-day run uses them: in that run's first ticks the models bet the example's amount far more often than any other.)*
 - `nonce` is 16 lower-case hex characters. It changes at the start of each round and after every proposal the program rules on (YES, NOPE or skip). So a signed answer can be used once.
 - Playbook text is limited to 2,000 bytes and may not contain a newline (the program replaces newlines with spaces when a playbook is submitted).
+- *(1.5)* **Only in a round with a long-shot ticket** (section 9.7), one more line follows the `playbook:` line: `long_shot: one ticket this round: margin_e6 exactly <margin>, leverage up to 10`. The margin is 0.5% of `brave_at_open`, rounded down. Every other round's text is byte for byte as before.
 - The user message is free. The runner puts market data there.
 
 ### 6.2 The decision line
@@ -229,6 +230,8 @@ What the proof shows and does not show: it shows which model gave which answer t
 Spelled exactly like this everywhere: in the program, the runner, the site, the stickers, the README.
 
 The checks run in this order and **stop at the first failure**, so one proposal gets one code.
+
+*(1.5)* **The long-shot ticket** (section 9.7): in a round with a ticket, a bet at **exactly** the ticket's margin and above the rank's `max_leverage` is judged as the ticket. Checks 6, 7 and 8 apply as always; check 9 uses the ticket's cap (10, or 5 on PENGU and WIF, Hyperliquid's own limits); checks 10 and 11 do not apply (it is one extra bet of a fixed size); check 12 applies (it sits inside the round's limit). Any other bet is judged as before.
 
 | # | Code | Fails when | `asked` | `limit` |
 |---|---|---|---|---|
@@ -399,7 +402,7 @@ type Account = {
   vote_weight: U128;                       // right now, for a vote opened right now
 };
 
-type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK";
+type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT";   // (1.5) LONG_SHOT
 type Vote = {
   id: number; kind: VoteKind; playbook_id: number | null; opened_by: AccountId;
   opened_at: Ms; closes_at: Ms;
@@ -531,6 +534,7 @@ Rules (`PROPOSED` numbers in `get_constants().vote`):
 - **Promote, rehire, set playbook** pass with yes above `promote_pass_bps` (5,000) of the weight that voted **and** total votes of at least `promote_quorum_bps` (2,000) of `locked_weight_at_open`. They take effect at the start of the **second** round to open after the vote passes, so one full round runs in between.
 - **Demote, fire** pass with yes of at least `tighten_pass_bps` (3,400) of `locked_weight_at_open`: a third of all the weight locked when the vote opened. No quorum, and "no" votes do not change the result. They take effect at once: no new bets from that moment. Open bets may still be closed. *(1.2: it was 34% of the weight that voted, which let one boss with one locked coin fire the Intern whenever nobody else voted.)*
 - Promote moves up one rank; demote moves down one; rehire returns at `INTERN`.
+- *(1.5)* **Long shot** (`LONG_SHOT`) passes like a promotion and takes effect at the start of the second round after it passes: that round allows one long-shot ticket (section 9.7). Only while `EMPLOYED`; not while a ticket waits, and not until seven rounds after the last ticket's round.
 - *(1.1)* **What a demotion does at once:** the lower rank's limits apply from that moment, against the same round's counters. Bets already approved stay. If `bets_used` or `at_risk` is already at or over the lower rank's limits, no further bet passes this round.
 - *(1.1)* A demotion or a firing cancels a promotion that is still waiting to take effect.
 - *(1.1)* `REHIRE` can be opened only while the Intern is `FIRED`. `PROMOTE`, `DEMOTE` and `FIRE` only while `EMPLOYED`. `PROMOTE` cannot be opened at `TRADER`, nor `DEMOTE` at `INTERN`.
@@ -671,7 +675,7 @@ The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid
 - **The streak jackpot (R3).** `jackpot_streak` (7) right guesses in a row win it, but only for a boss who holds at least `min_boss_usd` ($10) and became a boss at least `min_boss_rounds` (7) rounds earlier; everyone else plays for points. Several winners in one round split it equally; dust rolls over. It is filled by half of every tip (`tip_to_jackpot_bps` 5,000) and by direct additions.
 - **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest shared equally by up to `draw_runners` (10) runners-up; alone in the draw, the winner takes all; with nobody in it, it rolls over. A boss's tickets are **the smaller of the dollars held when the period began (or when joining) and at the draw** (BRAVE at today's value, pending, SAFE), times the rounds of the period they were in. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
 - **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed`.
-- **The long shot (R6)** is not in 1.4 (it changes what the Intern may trade, and the rulebook).
+- **The long shot (R6, 1.5).** Bosses may vote `LONG_SHOT` (section 9.2). In the round it allows, the Intern may place **one extra bet**: margin **exactly 0.5% of the pool at round open**, leverage up to 10 (5 on PENGU and WIF), on a coin and side its rank allows, inside the round's limit (section 7). The rulebook says so that round only (section 6.1). The result is shared by all BRAVE holders, like any bet. **It usually loses: that is what a long shot is.** At most once every seven rounds. `get_rewards().long_shot` shows it.
 
 ```ts
 type Verdict3 = "YES" | "NOPE" | "SKIP";
@@ -687,6 +691,8 @@ type Rewards = {
   jackpot: Usdc; jackpot_added_total: Usdc; jackpot_from_tips_total: Usdc; jackpot_last_won_round: number | null;
   draw_pot: Usdc; draw_period: number; draw_from_round: number; entrants: number; prizes_owed: Usdc;
   golden_minted: number[];   // sixteen, in the order of section 7
+  long_shot: { ticket_round: number | null; used: boolean; margin: Usdc | null; max_leverage: number;   // (1.5)
+               vote_from_round: number };   // margin: set only in the ticket round while unused
   constants: { golden_odds: number; golden_cap: number; jackpot_streak: number; min_boss_usd: Usdc; min_boss_rounds: number;
                tip_to_jackpot_bps: number; draw_rounds: number; draw_top_bps: number; draw_runners: number; max_entrants: number };
 };
@@ -715,7 +721,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `locked` / `unlocked` | `{ account_id, amount }` |
 | `skipped` | `{ round_id }` |
 | `refused` | `{ refusal_id, round_id, code, asked, limit, is_first }` |
-| `approved` | `{ position_id, round_id, market, side, margin, leverage }` |
+| `approved` | `{ position_id, round_id, market, side, margin, leverage, long_shot }` *(1.5: `long_shot` true for the ticket)* |
 | `order_signed` | `{ action_id, position_id, kind }` |
 | `result_reported` | `{ position_id, returned, result, result_source }` |
 | `settled` | `{ round_id, result, brave_after }` |
@@ -740,6 +746,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `jackpot_won` *(1.4)* | `{ round_id, winners, each }` |
 | `draw_held` *(1.4)* | `{ period, winner \| null, prize, runners_up, each, tickets_total, rolled_over? }` |
 | `prize_paid` *(1.4)* | `{ account_id, amount }` |
+| `long_shot_allowed` *(1.5)* | `{ round_id }` (the round with the ticket) |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
@@ -963,6 +970,7 @@ Accounts that already exist from the research, for reference only: the signing c
 13. *(1.4)* **The draw and the golden stickers use NEAR's per-block random seed.** Nobody calling the program can choose it, but a block producer could in principle bias a single draw. Acceptable for test-dollar prizes; a real-money draw would need commit-then-reveal.
 14. *(1.4)* **Draw tickets are an approximation of "dollars held over time"**: the smaller of the dollars at the period's start and at the draw, times the rounds in it. Entry is opt-in (`enter_draw`), so the draw walks at most 200 entrants; all the pool's interest goes to the draw, and bosses who do not join do not win it.
 15. *(1.4)* **The jackpot's "held for 7 rounds"** is checked as: became a boss at least 7 rounds earlier and holds at least $10 now. A boss who left and came back keeps their first round.
+16. *(1.5)* **The long shot is the one exception to the fixed limits**, and only by a vote: one ticket of 0.5% of the pool at up to 10x, at most once every seven rounds, inside the round's limit. Without the vote, nothing changes what the Intern may trade.
 
 ## 15. Change log
 
@@ -971,5 +979,6 @@ Accounts that already exist from the research, for reference only: the signing c
 | 1.0 | 2026-11-11 | First version |
 | 1.1 | 2026-11-11 | From Engine 1's review. Limits use the smaller of the pool at round open and the pool now. Cash-out during an open bet excludes the margin in play. `sign_next` is runner-only and needs no deposit; `close` may be signed again. Pending money becomes coins lazily, per account. Demotion, vote timing and vote-opening rules spelled out. `ecrecover`: `v` is 0 or 1, high-s accepted. Rulebook example bet raised to $10. `"0"` is a well-formed margin. `stuck` defined. Paging defined. `OUTSIDE_WINDOW` limit for late proposals. Undecodable input is a NOPE, not an abort. Test cases 25, 26 and D13 added. Three known limits added |
 | 1.2 | 2026-11-12 | Owner's decisions, from Engine 1's vote work and Engine 2's open items. Demote and fire pass at 34% of all locked weight, not of the weight that voted. `min_notional` is $11, not $10. The rulebook gains a `min_notional_e6` line and one sentence on amounts; its example bet is $11. Blank lines around the decision line are `MALFORMED_DECISION` (unchanged rule, said plainly). Pinned model `z-ai/glm-5.3-flash`, `ed25519`. The request's allowed shape and two NEAR AI headers written down. `px_e8` is a decimal string (a number is also accepted). A signed action's `v` is 27 or 28. The contract calls `check_format` before `build`. Test cases 7, 8, 9, 18, 19, 20 and 24 moved to the $11 minimum. Deployments filled in. Clarified the same day (Engine 2's items P and Q): the TypeScript shape in 8.1 says "1.2"; `sign_next` and `close` return `null` when the signature failed |
+| 1.5 | 2026-11-13 | The long shot (reward ladder R6, owner's decision): the `LONG_SHOT` vote (passes like a promotion; at most once every seven rounds), one ticket in the round it allows (0.5% of the pool at round open, up to 10x or the market's cap, one extra bet inside the round's limit), the optional `long_shot:` rulebook line in that round only, the ticket's place in checks 9–12, `get_rewards().long_shot`, the `long_shot_allowed` event and `approved.long_shot`. Known limit 16 |
 | 1.4 | 2026-11-13 | The reward ladder, owner's decisions: the free guess (YES, NOPE or SKIP, judged on the round's first ruling), golden stickers (1 in 50, 100 per code), the streak jackpot (7 in a row, eligible bosses only; half of every tip plus direct additions), the payday draw (every 7 rounds, the lender's interest, 70% to one winner, the rest to up to 10 runners-up), prizes claimed in USDC. Interest now goes to the draw, not the pool; half of each tip to the jackpot. Registration covers 1,280 bytes. New views, actions, events (9.7, 10); `rewards_tick` each round. Section 13 names the trick-page API and the Tail or Fade faucet. Known limits 13–15. The long shot is not in 1.4 |
 | 1.3 | 2026-11-12 | Owner's decisions on the later phases: playbooks with a 10% coach cut, the boss badge and the sixteen originals (NEP-171, in a separate contract), tips and goal bars (boss goal, tip jar, hype train), the launchpad (a separate NEAR contract). `propose` takes an optional `credited_to`; `Refusal` and `get_sticker_firsts` show it. New views, events, constants and two deployment names. Nothing here changes what the Intern may trade. Also Engine 1's step 8 (section 9.6): lending to a STAND-IN lender on testnet (`rebalance`, `collect_interest`), outside income credited at the next round's opening (tips too), `brave.interest` and `brave.income_waiting` in the pot, a cash-out or dial that must first bring money back needs 150 TGas, and `lender` in the deployments. Known limit 8 updated: the first bet has filled |

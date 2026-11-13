@@ -16,7 +16,7 @@ use near_sdk::AccountId;
 pub use shared::{Market, Rank, Refusal, Side, Status};
 
 /// The interface version these shapes follow.
-pub const INTERFACE_VERSION: &str = "1.4";
+pub const INTERFACE_VERSION: &str = "1.5";
 
 // ----- numbers --------------------------------------------------------------------------------
 
@@ -86,7 +86,9 @@ wire_enum!(
         Demote,
         Fire,
         Rehire,
-        SetPlaybook
+        SetPlaybook,
+        // 1.5 (R6)
+        LongShot
     }
 );
 wire_enum!(
@@ -147,6 +149,8 @@ wire_enum!(
         JackpotWon,
         DrawHeld,
         PrizePaid,
+        // 1.5
+        LongShotAllowed,
     }
 );
 

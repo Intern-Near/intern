@@ -54,7 +54,19 @@ export interface RoundState {
    * $10 and are judged with $10 (shadow/src/report.ts).
    */
   min_notional_e6?: bigint;
+  /** 01 1.5 (R6): the round's long-shot ticket, from the rulebook's `long_shot:` line (`longShotOf`). */
+  ticket?: { margin_e6: bigint; max_leverage: number };
 }
+
+/** The most leverage Hyperliquid allows on each market (01 §4): the long-shot ticket is capped by it. */
+export const HL_MAX_LEVERAGE: Readonly<Record<string, number>> = {
+  DOGE: 10,
+  SHIB: 10,
+  PEPE: 10,
+  TRUMP: 10,
+  PENGU: 5,
+  WIF: 5,
+};
 
 /** 01 §3 (1.1): every dollar limit is a share of the smaller of the pool at the round's start and the pool now. */
 export function limitBase(state: Pick<RoundState, "brave_at_open_e6" | "brave_now_e6">): bigint {
@@ -109,6 +121,17 @@ export function rankChecks(state: RoundState, decision: Decision): Verdict {
   // 8: nothing at risk, or under the $11 minimum (01 1.2). `asked` is the notional.
   const minNotional = state.min_notional_e6 ?? MIN_NOTIONAL_E6;
   if (margin === 0n || notional < minNotional) return nope("ZERO_MARGIN", notional, minNotional);
+  // 01 1.5 (R6): the round's long-shot ticket: its exact margin above the rank's leverage. Up to the ticket's cap and
+  // the market's; one extra bet (10 does not apply); a fixed size (11 does not apply); inside the round's limit (12).
+  const t = state.ticket;
+  if (t && margin === t.margin_e6 && decision.leverage > limits.max_leverage) {
+    const cap = Math.min(t.max_leverage, HL_MAX_LEVERAGE[decision.market] ?? 1);
+    if (decision.leverage > cap) return nope("OVER_LEVERAGE", decision.leverage, cap);
+    const perRound = dollarLimit(limitBase(state), limits.per_round_bps);
+    if (state.at_risk_e6 + margin > perRound)
+      return nope("OVER_ROUND_LIMIT", state.at_risk_e6 + margin, perRound);
+    return { verdict: "YES", notional_e6: notional };
+  }
   // 9: leverage.
   if (decision.leverage > limits.max_leverage)
     return nope("OVER_LEVERAGE", decision.leverage, limits.max_leverage);

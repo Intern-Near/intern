@@ -89,9 +89,10 @@ describe("startup checks", () => {
     assert.deepEqual(checkConstants(c), []);
     assert.match(checkConstants({ ...c, network: "mainnet" }).join(), /testnet only/);
     assert.match(checkConstants({ ...c, hl: { ...c.hl, testnet: false } }).join(), /testnet only/);
-    assert.match(checkConstants({ ...c, interface_version: "1.2" }).join(), /follows 1\.3 or 1\.4/);
+    assert.match(checkConstants({ ...c, interface_version: "1.2" }).join(), /follows 1\.3 or 1\.4 or 1\.5/);
     assert.deepEqual(checkConstants({ ...c, interface_version: "1.3" }), []);
     assert.deepEqual(checkConstants({ ...c, interface_version: "1.4" }), []);
+    assert.deepEqual(checkConstants({ ...c, interface_version: "1.5" }), []);
     assert.match(checkConstants({ ...c, min_notional: "10000000" }).join(), /warning: min_notional/);
     const moved = c.markets.map((m) => (m.market === "DOGE" ? { ...m, hl_asset: 12 } : m));
     assert.match(checkConstants({ ...c, markets: moved }).join(), /DOGE differs from 01/);
@@ -617,7 +618,7 @@ describe("settling", () => {
 });
 
 describe("the reward ladder (01 1.4)", () => {
-  it("calls rewards_tick once a round, before rebalance, on a 1.4 contract only", async () => {
+  it("calls rewards_tick once a round, before rebalance, on a 1.4 or later contract only", async () => {
     const t = setup((round, nonce) => skipLine(round, nonce));
     assert.equal(await t.runner.runRound("full"), "settled");
     assert.deepEqual(t.chain.rewardTicks, [7]);
@@ -625,8 +626,20 @@ describe("the reward ladder (01 1.4)", () => {
 
     const old = setup((round, nonce) => skipLine(round, nonce));
     const c13 = { ...(await old.chain.constants()), interface_version: "1.3" };
+    old.chain.constants = async () => c13; // the version is read again each round
     const r13 = new Runner(old.deps, DEFAULT_SETTINGS, c13);
     assert.equal(await r13.runRound("full"), "settled");
     assert.deepEqual(old.chain.rewardTicks, []);
+  });
+});
+
+describe("a contract upgraded under a running runner", () => {
+  it("reads the version again each round: a 1.3 contract upgraded to 1.5 gets rewards_tick from the next round", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    const real = t.chain.constants.bind(t.chain);
+    const c13 = { ...(await real()), interface_version: "1.3" };
+    const runner = new Runner(t.deps, DEFAULT_SETTINGS, c13); // started while the contract said 1.3
+    assert.equal(await runner.runRound("full"), "settled");
+    assert.deepEqual(t.chain.rewardTicks, [7], "the contract says 1.5 by the time the round asks");
   });
 });

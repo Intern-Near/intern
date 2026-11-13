@@ -506,7 +506,7 @@ fn interface_file(name: &str) -> serde_json::Value {
 fn decision_line_cases_d1_to_d13_from_checks_json() {
     let file = interface_file("vectors/checks.json");
     // 01 1.3 changed no decision-line case: D1 to D13 are the same as in 1.2.
-    assert_eq!(file["interface_version"], "1.4");
+    assert_eq!(file["interface_version"], "1.5");
     let d = &file["decision_line_cases"];
     let (round_id, nonce) = (
         d["round_id"].as_u64().unwrap(),

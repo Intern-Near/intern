@@ -20,15 +20,18 @@ pub enum VoteKind {
     Fire,
     Rehire,
     SetPlaybook,
+    /// 1.5 (R6): one long-shot ticket, at most once every seven rounds. Appended: stored kinds keep their codes.
+    LongShot,
 }
 
 impl VoteKind {
-    pub const ALL: [VoteKind; 5] = [
+    pub const ALL: [VoteKind; 6] = [
         VoteKind::Promote,
         VoteKind::Demote,
         VoteKind::Fire,
         VoteKind::Rehire,
         VoteKind::SetPlaybook,
+        VoteKind::LongShot,
     ];
 
     pub const fn as_str(self) -> &'static str {
@@ -38,6 +41,7 @@ impl VoteKind {
             VoteKind::Fire => "FIRE",
             VoteKind::Rehire => "REHIRE",
             VoteKind::SetPlaybook => "SET_PLAYBOOK",
+            VoteKind::LongShot => "LONG_SHOT",
         }
     }
 
@@ -167,6 +171,10 @@ pub fn can_open(
         // 1.3: in any rank or status; a playbook never changes what may be traded.
         VoteKind::SetPlaybook if change_waiting => Err(CannotOpen::ChangeWaiting),
         VoteKind::SetPlaybook => Ok(()),
+        // 1.5 (R6): only while employed, and not while a ticket waits or the last one is under seven rounds old.
+        VoteKind::LongShot if status != Status::Employed => Err(CannotOpen::WrongStatus),
+        VoteKind::LongShot if change_waiting => Err(CannotOpen::ChangeWaiting),
+        VoteKind::LongShot => Ok(()),
         VoteKind::Rehire if status != Status::Fired => Err(CannotOpen::WrongStatus),
         VoteKind::Rehire if change_waiting => Err(CannotOpen::ChangeWaiting),
         VoteKind::Rehire => Ok(()),
@@ -211,7 +219,7 @@ pub fn outcome(kind: VoteKind, rank: Rank, status: Status) -> (Rank, Status) {
         ),
         VoteKind::Fire => (rank, Status::Fired),
         VoteKind::Rehire => (Rank::Intern, Status::Employed),
-        VoteKind::SetPlaybook => (rank, status),
+        VoteKind::SetPlaybook | VoteKind::LongShot => (rank, status),
     }
 }
 
@@ -225,6 +233,29 @@ mod tests {
     use super::*;
 
     const R: VoteRules = RULES;
+
+    #[test]
+    fn long_shot_passes_like_a_promotion_and_opens_only_when_allowed() {
+        let k = VoteKind::LongShot;
+        assert_eq!(k.as_str(), "LONG_SHOT");
+        assert_eq!(kind_index(k), 5, "appended: stored kinds keep their codes");
+        assert!(!k.is_tightening());
+        assert_eq!(effective_round(k, 10), 12);
+        assert_eq!(outcome(k, Rank::Intern, Status::Employed), (Rank::Intern, Status::Employed));
+        assert_eq!(can_open(k, Rank::Intern, Status::Employed, false), Ok(()));
+        assert_eq!(can_open(k, Rank::Intern, Status::Fired, false), Err(CannotOpen::WrongStatus));
+        assert_eq!(can_open(k, Rank::Trader, Status::Employed, true), Err(CannotOpen::ChangeWaiting));
+        // More than half of the weight that voted, and 20% turnout.
+        let t = |yes, no| Tally { yes, no, locked_weight_at_open: 1_000 };
+        assert!(passed(k, &t(151, 50), &R));
+        assert!(!passed(k, &t(100, 100), &R), "half is not more than half");
+        assert!(!passed(k, &t(150, 0), &R), "150 of 1,000 is under the 20% turnout");
+        assert!(passed(k, &t(200, 0), &R), "200 of 1,000 is 20% turnout");
+    }
+
+    fn kind_index(k: VoteKind) -> usize {
+        VoteKind::ALL.iter().position(|x| *x == k).unwrap()
+    }
 
     #[test]
     fn coins_locked_in_or_after_the_vote_round_count_zero() {

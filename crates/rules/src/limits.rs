@@ -9,6 +9,25 @@ use shared::{Market, Rank, Side};
 /// cut to the size decimals, so a $10 bet always became an order a little under $10.
 pub const MIN_NOTIONAL: u128 = 11_000_000;
 
+/// 1.5, reward ladder R6 (the long shot): the ticket's margin is this share of the pool at round open, fixed.
+pub const LONG_SHOT_MARGIN_BPS: u128 = 50;
+/// The ticket's leverage cap, lowered to what the market allows on Hyperliquid (`hl_max_leverage`).
+pub const LONG_SHOT_LEVERAGE: u32 = 10;
+
+/// The ticket's margin for a round: 0.5% of `brave_at_open`, rounded down (the rulebook states it, so it
+/// cannot use the pool now, which may move during the round).
+pub fn long_shot_margin(brave_at_open: u128) -> u128 {
+    brave_at_open / 10_000 * LONG_SHOT_MARGIN_BPS + brave_at_open % 10_000 * LONG_SHOT_MARGIN_BPS / 10_000
+}
+
+/// The most leverage Hyperliquid allows on each market (01 §4; VERIFIED there 2026-11-11).
+pub const fn hl_max_leverage(m: Market) -> u32 {
+    match m {
+        Market::Pengu | Market::Wif => 5,
+        Market::Doge | Market::Shib | Market::Pepe | Market::Trump => 10,
+    }
+}
+
 /// One rank's fixed limits (the interface's `Limits`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
