@@ -70,6 +70,7 @@ fn to_wire(k: VoteKind) -> wire::VoteKind {
         VoteKind::Rehire => wire::VoteKind::Rehire,
         VoteKind::SetPlaybook => wire::VoteKind::SetPlaybook,
         VoteKind::LongShot => wire::VoteKind::LongShot,
+        VoteKind::Renew => wire::VoteKind::Renew,
     }
 }
 fn from_wire(k: wire::VoteKind) -> VoteKind {
@@ -80,6 +81,7 @@ fn from_wire(k: wire::VoteKind) -> VoteKind {
         wire::VoteKind::Rehire => VoteKind::Rehire,
         wire::VoteKind::SetPlaybook => VoteKind::SetPlaybook,
         wire::VoteKind::LongShot => VoteKind::LongShot,
+        wire::VoteKind::Renew => VoteKind::Renew,
     }
 }
 
@@ -236,6 +238,9 @@ impl Coin {
             // 1.5 (R6): a ticket waits, or the last one was less than seven rounds ago.
             return self.long_shot_blocked();
         }
+        if kind == VoteKind::Renew {
+            return false; // 1.7: one open RENEW vote at a time is the only limit
+        }
         if kind == VoteKind::SetPlaybook {
             self.s9.pending_playbook.is_some()
         } else {
@@ -249,6 +254,10 @@ impl Coin {
             // 1.5 (R6): one ticket, in the second round after it passed (like every loosening vote).
             self.ls = crate::rewards::LongShot { round: Some(eff), used: false };
             self.feed.push(EventName::LongShotAllowed, json!({"round_id": eff}));
+            return;
+        }
+        if kind == VoteKind::Renew {
+            self.auto_renew(); // 1.7: 30 more days, at once
             return;
         }
         if kind == VoteKind::SetPlaybook {
@@ -302,6 +311,9 @@ impl Coin {
     pub(crate) fn apply_due_rank(&mut self, id: u64) {
         if let Some((r, s, e)) = self.rank.pending {
             if id >= e {
+                if self.rank.status != s && s == status_code(Status::Employed) {
+                    self.auto_new_term(); // 1.7: a rehire starts a new 30-day term
+                }
                 self.rank = RankRec {
                     rank: r,
                     status: s,

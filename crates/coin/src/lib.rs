@@ -28,6 +28,7 @@ pub mod rewards;
 mod round;
 mod safe;
 pub mod sign;
+pub mod auto;
 pub mod vote;
 pub mod weekly;
 
@@ -809,6 +810,8 @@ impl Coin {
         let Some(o) = self.plan(Self::now()) else {
             return;
         };
+        let supply_before = self.supply(); // 1.7: for `round_opened`'s `minted`
+        let locked_now = o.mint.as_ref().map_or(0, |m| m.locked);
         if let Some(prev) = o.closed {
             self.rounds.insert(prev.id, prev);
             self.feed.push(
@@ -837,11 +840,17 @@ impl Coin {
         self.apply_due_rank(o.round.id);
         self.open_round_playbook(o.round.id);
         self.check_boss_goal();
+        // 1.7 (Engine 2's finding): the coin supply after the opening and the coins it created (pending money
+        // converted; at the very first conversion, `locked` of them locked for ever in the contract's own account),
+        // so the supply can be followed from any event on, after older ones drop out of the 1,000 kept.
+        let supply_after = self.supply();
         self.feed.push(
             EventName::RoundOpened,
             json!({"round_id": o.round.id, "rank": rank_of(o.round.rank), "status": status_of(o.round.status),
-                   "brave_at_open": U128(o.round.brave_at_open)}),
+                   "brave_at_open": U128(o.round.brave_at_open), "coin_supply": U128(supply_after),
+                   "minted": U128(supply_after.saturating_sub(supply_before)), "locked": U128(locked_now)}),
         );
+        self.auto_on_open(o.round.id); // 1.7: the brake and the term, after the round's own event
     }
 
     /// Writes an account's converted pending money into its coin balance (1.1: lazily, per account).
@@ -1656,6 +1665,7 @@ impl Coin {
             },
             result_source: wire::ResultSource::Reported,
             lending: wire::LendingConstants {
+                lender: self.s9.lender.clone(),
                 mode: if self.s9.lender.is_some() {
                     wire::LendingMode::Standin
                 } else {
@@ -1845,3 +1855,5 @@ mod tests_sign;
 mod tests_vote;
 #[cfg(test)]
 mod tests_weekly;
+#[cfg(test)]
+mod tests_auto;

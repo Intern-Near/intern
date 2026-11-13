@@ -18,6 +18,7 @@ import {
   readVerdict,
   type SignedAction,
 } from "./contract.ts";
+import { isRecord } from "./json.ts";
 import { call, view } from "./near.ts";
 
 /**
@@ -42,6 +43,16 @@ export interface Chain {
    * moved as the program returned them (negative when brought back).
    */
   rebalance(): Promise<Sent<string>>;
+  /**
+   * 01 1.7: whether `rebalance` would move anything now (`get_rebalance`, a free view): false for "NONE", "BUSY" or
+   * "NO_LENDER". Optional: a chain without it (or an older contract) makes the runner call `rebalance` as before.
+   */
+  rebalanceDue?(): Promise<boolean>;
+  /**
+   * 01 1.7: the drawdown brake from `get_auto` (`brake_until` when it is on, else null). Optional: without it (or on
+   * an older contract) the runner assumes no brake.
+   */
+  brake?(): Promise<number | null>;
   /**
    * 01 1.4 §9.7: settles the streak jackpots of closed rounds and holds a payday draw that is due. Anyone may call
    * it; the runner does once each round, after rebalance (relayer).
@@ -188,6 +199,17 @@ export class NearChain implements Chain {
     return { txHash: r.txHash, value: readVerdict(r.value), tgas: r.tgas };
   }
   /** Sent by the relayer, like rebalance. */
+  async brake(): Promise<number | null> {
+    const v = await this.#view("get_auto");
+    if (!isRecord(v)) throw new Error("get_auto: not an object");
+    return v.brake_on === true && typeof v.brake_until === "number" ? v.brake_until : null;
+  }
+  async rebalanceDue(): Promise<boolean> {
+    const v = await this.#view("get_rebalance");
+    const action = isRecord(v) && typeof v.action === "string" ? v.action : null;
+    if (action === null) throw new Error("get_rebalance: no action");
+    return action === "LEND" || action === "RECALL";
+  }
   async rewardsTick(): Promise<Sent<unknown>> {
     const r = await call(
       this.#as("relayer"),

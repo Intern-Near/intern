@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.6",
+  "interface_version": "1.7",
   "about": "The Intern's lines for the stream and the site: one cue per feed event (01 section 10, with 1.4's reward events) and per refusal code (01 section 7). Text only; the stream turns `intern` lines into speech and shows `system` lines as Stamp's caption. Voice: spec 24.14. The Intern: first person, short, earnest, a little anxious, office words for bad news, never brags, never talks prices or advice, at most one joke and always on itself. The contract: no person, no feelings; code, rank, limit, asked, with units; no adjectives, no exclamation marks. A line is chosen by the event's seq (seq modulo the number of lines), so the stream and the site say the same thing for the same event. Placeholders in braces are filled by stream/cues.ts; amounts are already formatted (\"$11.49\").",
   "poses": {
     "intern": [
@@ -488,6 +488,72 @@
         "The review bar for week {week} is full: {stamps} stamps."
       ],
       "system": "REVIEW BAR — week {week} filled with {stamps} stamps."
+    },
+    "strikes_out": {
+      "speak": true,
+      "priority": 1,
+      "intern_pose": "refused",
+      "mascot": "stamp:slamming",
+      "intern": [
+        "Three rounds, three refusals of my own answer. That's three strikes: the program has {strike_word} me. Fair.",
+        "Strike three. I gave three answers in a row the program could not accept, so it {strike_word} me by itself."
+      ],
+      "system": "THREE STRIKES — round {round_id}: three refusals in a row of the Intern's own answer; {strike_action}."
+    },
+    "brake_on": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "waiting",
+      "mascot": "stamp:watching",
+      "intern": [
+        "The pool lost {loss} over the last seven rounds. The brake is on: my limits are halved until round {until_round}.",
+        "Seven rounds, {loss} down. The program halved my limits until round {until_round}. I'll go small."
+      ],
+      "system": "BRAKE ON — round {round_id}: the last 7 rounds lost {loss} (1% or more of {base}); limits halved until round {until_round}."
+    },
+    "brake_off": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "idle",
+      "mascot": null,
+      "intern": [
+        "The brake is off. My usual limits are back from round {round_id}.",
+        "Round {round_id}: full limits again. The brake lifted by itself."
+      ],
+      "system": "BRAKE OFF — round {round_id}: the rank's full limits apply again."
+    },
+    "term_lapsed": {
+      "speak": true,
+      "priority": 1,
+      "intern_pose": "fired",
+      "mascot": "shredder:awake",
+      "intern": [
+        "My term ran out and nobody renewed it. That's the job: I'm out until you rehire me.",
+        "Thirty days, no renewal. The program let me go. A rehire vote brings me back."
+      ],
+      "system": "TERM LAPSED — round {round_id}: the Intern's term ended without a RENEW vote; fired until rehired."
+    },
+    "term_renewed": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "happy",
+      "mascot": null,
+      "intern": [
+        "You renewed my contract. Thirty more days, until {term_end}.",
+        "Renewed. My term now runs to {term_end}."
+      ],
+      "system": "TERM RENEWED — the Intern's term now ends {term_end}."
+    },
+    "abandoned": {
+      "speak": true,
+      "priority": 1,
+      "intern_pose": "fired",
+      "mascot": "shredder:awake",
+      "intern": [
+        "Round {round_id} had no result for three rounds, so someone pulled the switch. {bets_booked_lost} bet(s) booked as lost, and I'm out until rehired.",
+        "The dead-man switch: round {round_id} was abandoned, {bets_booked_lost} bet(s) written off. Money can leave; a rehire brings me back."
+      ],
+      "system": "ABANDONED — round {round_id}: no result 3 rounds after close; {bets_booked_lost} bet(s) booked as lost; the Intern is fired."
     }
   },
   "refusals": {

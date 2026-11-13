@@ -1,6 +1,6 @@
 # $INTERN — the shared interface
 
-**Version 1.6, 2026-11-13.** Read `00-HOW-WE-WORK.md` first. *(In the public repository: `00-HOW-WE-WORK.md` and the
+**Version 1.7, 2026-11-13.** Read `00-HOW-WE-WORK.md` first. *(In the public repository: `00-HOW-WE-WORK.md` and the
 other planning files, `02` to `05`, are not included. This file is complete without them.)*
 
 This is the one rulebook that the program (Engine 1), the off-chain Intern (Engine 2) and the website all follow. If any other file disagrees with this one, this one wins. To change it, see `00-HOW-WE-WORK.md` section 7.
@@ -74,7 +74,7 @@ Fixed at deploy. No vote can change these numbers. Values `PROPOSED`.
 
 - **The limit base** is the smaller of two figures: the BRAVE pool's size at the moment the round opened (`brave_at_open`) and the BRAVE pool's size right now (`get_pot().brave.total`). People may cash out during a round, and a limit must never be sized on money that has left. *(1.1)*
 - A limit in dollars is `limit base × bps / 10000`, rounded **down**. So a limit can go down during a round, never up.
-- The rulebook text (section 6.1) always uses `brave_at_open`, so it does not change under the runner between fetching it and submitting. If money left in between, a bet that fits the rulebook can still be refused. That is correct and rare.
+- *(1.7)* The rulebook text (section 6.1) states the limits on **the limit base** too (the smaller figure), so it says what checks 11 and 12 will allow. *(Until 1.6 it used `brave_at_open` alone: after a cash-out, a bet of exactly the stated maximum was refused `OVER_TRADE_LIMIT`; known limit 17.)* If money leaves while the AI answers, the text changes and an answer to the old text is refused `WRONG_RULEBOOK`; the runner reads the rulebook again before proposing and, if it changed, asks once more.
 - `min_notional`: 11000000 ($11). Hyperliquid refuses orders under $10 (VERIFIED, its docs: "Order must have minimum value of $10"). *(1.2: it was $10. An order is sized `floor(notional / px)` cut to the size decimals, so a $10 bet always became an order a little under $10 that Hyperliquid would refuse. Found by Engine 2.)*
 - A fourth state, `FIRED`: no new bets. Closing an open bet is still allowed.
 - The Intern starts as `INTERN`, `EMPLOYED`.
@@ -165,7 +165,7 @@ Answer with exactly one line of JSON and nothing else, in one of these two forms
 {"v":1,"round":{round_id},"nonce":"{nonce}","action":"bet","market":"DOGE","side":"long","margin_e6":"11000000","leverage":1}
 ```
 
-- `max_margin_e6` is the smaller of the per-bet limit and what is left of the per-round limit, both computed from `brave_at_open`.
+- `max_margin_e6` is the smaller of the per-bet limit and what is left of the per-round limit, both computed from the limit base (section 3: the smaller of `brave_at_open` and the pool now). *(1.7; before, from `brave_at_open`.)*
 - The example bet in the last line is $11, the smallest bet allowed. *(1.1: it was $1, which every model that copied the example would have been refused for. 1.2: $11, and the `min_notional_e6` line and the sentence on amounts were added, as Engine 2's 3-day run uses them: in that run's first ticks the models bet the example's amount far more often than any other.)*
 - `nonce` is 16 lower-case hex characters. It changes at the start of each round and after every proposal the program rules on (YES, NOPE or skip). So a signed answer can be used once.
 - Playbook text is limited to 2,000 bytes and may not contain a newline (the program replaces newlines with spaces when a playbook is submitted).
@@ -308,6 +308,8 @@ Read-only and free. The site and the runner use only these.
 | `get_jackpot_wins` *(1.4)* | `{ limit?: number }` | `JackpotWin[]`, newest first |
 | `get_claimable` *(1.3)* | `{ account_id: AccountId }` | `Claimable` |
 | `get_week` *(1.6)* | — | `WeekView` (section 9.8) |
+| `get_auto` *(1.7)* | — | `AutoView` (section 9.9) |
+| `get_rebalance` *(1.7)* | — | `{ action: "LEND" \| "RECALL" \| "NONE" \| "BUSY" \| "NO_LENDER", amount: Usdc }`: what `rebalance` would move now, without moving it |
 | `get_league` *(1.6)* | `{ week?: number, group?: number, account_id?: AccountId }` | `LeagueView` (section 9.8) |
 | `get_league_results` *(1.6)* | `{ week: number }` | `GroupResult[]` (section 9.8) |
 | `get_review` *(1.6)* | `{ week: number }` | `ReviewView \| null` (section 9.8) |
@@ -341,7 +343,7 @@ type Constants = {
   funding: { mode: "RECORDED" | "ONECLICK"; quote_signer: string; quote_max_age_ms: number;
              max_funding_cost_bps: Bps };
   result_source: "REPORTED" | "MEASURED";
-  lending: { mode: "NONE" | "STANDIN" | "RHEA" };
+  lending: { mode: "NONE" | "STANDIN" | "RHEA"; lender: AccountId | null };   // (1.7) lender: the lending contract
   hl: { testnet: boolean; address: string; signer_contract: AccountId; path: string;
         order_expiry_ms: number };
   runner: AccountId;
@@ -379,7 +381,7 @@ type Position = {
   approved_at: Ms; open_signed_at: Ms | null; close_signed_at: Ms | null; settled_at: Ms | null;
   sz_e8: U128 | null;                      // size of the open order, in the exchange's units
   returned: Usdc | null; result: Signed | null;
-  result_source: "REPORTED" | "MEASURED" | null;
+  result_source: "REPORTED" | "MEASURED" | "ABANDONED" | null;   // (1.7) ABANDONED: booked as lost by `abandon`
 };
 
 type SignedAction = {
@@ -409,7 +411,7 @@ type Account = {
   vote_weight: U128;                       // right now, for a vote opened right now
 };
 
-type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT";   // (1.5) LONG_SHOT
+type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT" | "RENEW";   // (1.5) LONG_SHOT, (1.7) RENEW
 type Vote = {
   id: number; kind: VoteKind; playbook_id: number | null; opened_by: AccountId;
   opened_at: Ms; closes_at: Ms;
@@ -679,8 +681,8 @@ The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid
 | Claim prizes | The winner | `claim_prizes()`, 1 yocto, at least 40 TGas | Pays every prize owed, in USDC. A failed transfer is owed again |
 
 - **Golden stickers (R2).** Each guess has a 1 in `golden_odds` (`PROPOSED` 50) chance of a golden sticker of one of the sixteen codes, at most `golden_cap` (100) of each code, ever.
-- **The streak jackpot (R3).** `jackpot_streak` (7) right guesses in a row win it, but only for a boss who holds at least `min_boss_usd` ($10) and became a boss at least `min_boss_rounds` (7) rounds earlier; everyone else plays for points. Several winners in one round split it equally; dust rolls over. It is filled by half of every tip (`tip_to_jackpot_bps` 5,000) and by direct additions.
-- **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest shared equally by up to `draw_runners` (10) runners-up; alone in the draw, the winner takes all; with nobody in it, it rolls over. A boss's tickets are **the smaller of the dollars held when the period began (or when joining) and at the draw** (BRAVE at today's value, pending, SAFE), times the rounds of the period they were in. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
+- **The streak jackpot (R3).** `jackpot_streak` (7) right guesses in a row win it, but only for a boss who holds at least `min_boss_usd` ($10) **in BRAVE** *(1.7: BRAVE coins at today's value; SAFE and pending money no longer count)* and became a boss at least `min_boss_rounds` (7) rounds earlier; everyone else plays for points. *(1.7)* Several winners in one round split it **by the BRAVE dollars each holds** (at least $10 each), not equally; dust rolls over. It is filled by half of every tip (`tip_to_jackpot_bps` 5,000) and by direct additions.
+- **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest in `draw_runners` (10) equal shares; with nobody in it, it rolls over. *(1.7, Engine 2's "f3")* **Each of the eleven prizes is drawn by tickets with replacement**, so an account's expected prize is its share of the tickets however its money is split across accounts (one account may win several). A boss's tickets are **the smaller of the BRAVE dollars held when the period began (or when joining) and at the draw** *(1.7: BRAVE coins at today's value only; SAFE risks nothing and is not lent)*, times the rounds of the period they were in. `enter_draw` needs some BRAVE. **When the draw is full (200), a newcomer holding more BRAVE takes the place of the entrant holding least**; otherwise it is refused. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
 - **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed`.
 - **The long shot (R6, 1.5).** Bosses may vote `LONG_SHOT` (section 9.2). In the round it allows, the Intern may place **one extra bet**: margin **exactly 0.5% of the pool at round open**, leverage up to 10 (5 on PENGU and WIF), on a coin and side its rank allows, inside the round's limit (section 7). The rulebook says so that round only (section 6.1). The result is shared by all BRAVE holders, like any bet. **It usually loses: that is what a long shot is.** At most once every seven rounds. `get_rewards().long_shot` shows it.
 
@@ -751,6 +753,27 @@ type ReviewView = {
 };
 ```
 
+### 9.9 Automatic consequences *(1.7)*
+
+Owner's decisions on Engine 2's list (items 10 and 11). The program applies these by itself, with no vote and no runner.
+
+- **Three strikes.** A round's **first** ruling that is a NOPE for the Intern's own answer (codes of checks 3 to 12: `BAD_MODEL_SIGNATURE` … `OVER_ROUND_LIMIT`; not `OUTSIDE_WINDOW`, `FIRED` or a funding-quote code) is a strike. A YES clears them; a SKIP leaves them. Three in a row: the Intern is demoted one rank at once, or fired if it is an INTERN (`strikes_out`, then `rank_changed` or `fired`). The runner asks the Intern's own question first each round; a visitor's trick comes after it and is not its first ruling.
+- **The drawdown brake.** At each round's opening: if the settled results of the last 7 rounds lost 1% or more of the pool as it was seven rounds ago, the rank's dollar limits are **halved** for the next 7 rounds (`brake_on`, later `brake_off`). The rulebook says so in one more line after the playbook (and long-shot) line: `brake: the pool lost 1% or more over the last 7 rounds; the dollar limits are halved until round <n>`. It lifts by itself.
+- **The term.** The Intern is hired for 30 days (time, not rounds). A `RENEW` vote (passes like a promotion; only while `EMPLOYED`) adds 30 days to the later of now and the term's end, at once (`term_renewed`). A rehire starts a new term. A round that opens after the term has run out fires the Intern (`term_lapsed`, `fired`).
+- **The dead-man switch.** `abandon({ round_id })`, anyone, attach at least 150 TGas: once the current round's bets have had no result for 3 round lengths after its close time, every bet without a result is booked as lost (`returned` 0, `result_source` `ABANDONED`), the Intern is fired (`abandoned`, `fired`), and the round settles, so the next round can open and money can leave. Holders rehire it by vote.
+- Timed steps anyone may already call: `settle`, `close`, `rewards_tick`, `rebalance`, `finish_vote`, and now `abandon`.
+
+```ts
+type AutoView = {
+  strikes: number; strikes_out: number;            // 3
+  brake_on: boolean; brake_until: number | null; brake_rounds: number; brake_loss_bps: number;   // 7, 100
+  loss_window_result: Signed; loss_window_base: Usdc;   // the last 7 rounds' settled result, and the pool it is measured on
+  term_ends_at: Ms; term_ms: number;               // 30 days
+  dead_man_rounds: number;                         // 3
+  abandon_from: Ms | null;                         // when the current round could be abandoned, if it has an open bet
+};
+```
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -763,7 +786,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 
 | `EventName` | `data` |
 |---|---|
-| `round_opened` | `{ round_id, rank, status, brave_at_open }` |
+| `round_opened` | `{ round_id, rank, status, brave_at_open, coin_supply, minted, locked }` *(1.7: the coin supply after the opening, the coins it created, and of those the units locked for ever at the very first conversion, 1,000)* |
 | `paid_in` | `{ account_id, pool, amount, pending: boolean }` |
 | `coins_minted` | `{ account_id, coins, round_id }` |
 | `cashed_out` | `{ account_id, pool, coins \| null, paid }` |
@@ -800,6 +823,12 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `league_closed` *(1.6)* | `{ week, players, groups, winners: { group, account_id, points }[] }` (each group's first place) |
 | `review_written` *(1.6)* | `{ week, bets, refused, skipped, result, rank_end }` |
 | `review_bar_filled` *(1.6)* | `{ week, stamps }` |
+| `strikes_out` *(1.7)* | `{ round_id, strikes, action: "DEMOTE" \| "FIRE", to? }` |
+| `brake_on` *(1.7)* | `{ round_id, result, base, until_round }` |
+| `brake_off` *(1.7)* | `{ round_id }` |
+| `term_lapsed` *(1.7)* | `{ round_id, term_ended_at }` |
+| `term_renewed` *(1.7)* | `{ term_ends_at }` |
+| `abandoned` *(1.7)* | `{ round_id, bets_booked_lost }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
@@ -1022,7 +1051,7 @@ Accounts that already exist from the research, for reference only: the signing c
 3. **On testnet no margin moves** to Hyperliquid through NEAR. The test account there is funded once, by hand.
 4. **The caller picks the order price.** A bad price costs at most the margin.
 5. **An immediate-or-cancel order may not fill, or fill in part.** The program cannot know. The runner reports it.
-6. **The proof does not bind the runner** (section 6.3). The rank is the only bound.
+6. **The proof does not bind the runner** (section 6.3). The rank is the only bound. *(1.7, the owner's decision on Engine 2's `runner/docs/seed-and-temperature.md`)* Fixing `temperature` 0 and a seed would not stop re-asking: NEAR AI gave two different bets in three identical requests. A public log of every question (the runner commits each request's hash on chain before asking) would make re-asking visible, but needs a new method on the runner's limited key, which only its owner can add: not done.
 7. **Voting power can be rented** for the cost of one round's exposure. Locking and the 7-round weight slow it; the fixed limits cap what a captured vote can do.
 8. **The first bet filled in round 7 on 2026-11-12**, on testnet *(updated 1.5: since then the live coin's bets
    have filled most rounds; on 2026-11-13 Hyperliquid listed 40 fills for the contract's address, 20 opens and 20
@@ -1035,8 +1064,8 @@ Accounts that already exist from the research, for reference only: the signing c
 14. *(1.4)* **Draw tickets are an approximation of "dollars held over time"**: the smaller of the dollars at the period's start and at the draw, times the rounds in it. Entry is opt-in (`enter_draw`), so the draw walks at most 200 entrants; all the pool's interest goes to the draw, and bosses who do not join do not win it.
 15. *(1.4)* **The jackpot's "held for 7 rounds"** is checked as: became a boss at least 7 rounds earlier and holds at least $10 now. A boss who left and came back keeps their first round.
 16. *(1.5)* **The long shot is the one exception to the fixed limits**, and only by a vote: one ticket of 0.5% of the pool at up to 10x, at most once every seven rounds, inside the round's limit. Without the vote, nothing changes what the Intern may trade.
-17. *(1.6)* **A bet of exactly the rulebook's `max_margin_e6` can be refused `OVER_TRADE_LIMIT` after a cash-out.** The rulebook states the limit from `brave_at_open`; checks 11 and 12 use the smaller of that and the pool now (section 3). If someone cashes out between the round's opening and the proposal, the largest bet the rulebook allows is over the limit by a little. The rule held; the AI did not break it. (Found by Engine 2's simulation.)
-18. *(1.6)* **Many small accounts can crowd the reward ladder.** The draw takes the first 200 entrants and the jackpot needs only $10 held for 7 rounds, so accounts made for the purpose could take most draw places and jackpot shares with little money. On testnet the prizes are cents; a real-money version would need a minimum stake per entry or a cost per account. (Found by Engine 2's simulation.)
+17. *(1.6, fixed in 1.7)* **A bet of exactly the rulebook's `max_margin_e6` could be refused `OVER_TRADE_LIMIT` after a cash-out.** Fixed: the rulebook now states the limit on the same base the checks use (section 3). What is left: a cash-out while the AI answers changes the text, so the answer is refused `WRONG_RULEBOOK` unless the runner asks again (it does, once); someone cashing out a cent at the right moment every round could make the Intern miss a round.
+18. *(1.6, narrowed in 1.7)* **Many small accounts could crowd the reward ladder.** Fixed for the draw: tickets count BRAVE dollars only, prizes are drawn by dollars with replacement, and a full draw keeps its places for the biggest holders (Engine 2's simulation: fake accounts' share 100% → about 13%). Narrowed for the jackpot: eligibility and the split count BRAVE dollars only, so each fake account must put $10 at the Intern's risk for 7 rounds; covering every answer of a 7-round streak (3^7 = 2,187 accounts) costs about $21,870 in BRAVE. A free guess per account still lets a well-funded script farm it; a cost per guess would close it.
 19. *(1.6)* **Leagues hold 25 groups of 20 a week** (500 players); later guessers earn points but have no group that week. League standings and reviews are computed from rounds and guesses on chain; nothing in them changes what the Intern may trade, and they carry no prize.
 20. *(1.6)* **A vote that nobody voted in fails, whatever its kind.** Section 9.2's wording alone ("yes of at least 34% of the locked weight") would let a demote or fire vote pass with no votes when no weight is locked (0 ≥ 34% of 0); the contract fails it (`crates/rules/src/vote.rs`, `passed`: "Nobody voted: fails"). (Found by Engine 2.)
 
@@ -1044,6 +1073,7 @@ Accounts that already exist from the research, for reference only: the signing c
 
 | Version | Date | Change |
 |---|---|---|
+| 1.7 | 2026-11-13 | Engine 2's findings fixed (owner's decision): the rulebook states the limits on the limit base (known limit 17); the draw counts BRAVE dollars only, draws each prize with replacement and keeps a full draw for the biggest holders; the jackpot counts BRAVE dollars and splits by them (known limit 18); `round_opened` carries `coin_supply`, `minted`, `locked`; `get_constants().lending.lender`; the view `get_rebalance`; the runner asks again when the rulebook changed, skips an empty rebalance, and exits when it gives up so its host restarts it. Known limit 6: the seed-and-temperature decision |
 | 1.6 | 2026-11-13 | Leagues and the weekly review (owner's decisions; section 9.8): `get_week`, `get_league`, `get_league_results`, `get_review`, `get_reviews`, `stamp_review`, the events `league_closed`, `review_written`, `review_bar_filled`; `rewards_tick` also closes leagues and writes reviews. Client order ids on every order (section 11.2, `build_with_cloid`, Engine 2's PR #3). `get_outbox` keeps 200 actions (section 8). Known limits 17–20. Nothing here changes what the Intern may trade. The diary is not built (future scope) |
 | 1.0 | 2026-11-11 | First version |
 | 1.1 | 2026-11-11 | From Engine 1's review. Limits use the smaller of the pool at round open and the pool now. Cash-out during an open bet excludes the margin in play. `sign_next` is runner-only and needs no deposit; `close` may be signed again. Pending money becomes coins lazily, per account. Demotion, vote timing and vote-opening rules spelled out. `ecrecover`: `v` is 0 or 1, high-s accepted. Rulebook example bet raised to $10. `"0"` is a well-formed margin. `stuck` defined. Paging defined. `OUTSIDE_WINDOW` limit for late proposals. Undecodable input is a NOPE, not an abort. Test cases 25, 26 and D13 added. Three known limits added |

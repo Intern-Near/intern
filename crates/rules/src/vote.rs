@@ -22,16 +22,19 @@ pub enum VoteKind {
     SetPlaybook,
     /// 1.5 (R6): one long-shot ticket, at most once every seven rounds. Appended: stored kinds keep their codes.
     LongShot,
+    /// 1.7: extends the Intern's term by 30 days (the coin's `auto` module). Appended.
+    Renew,
 }
 
 impl VoteKind {
-    pub const ALL: [VoteKind; 6] = [
+    pub const ALL: [VoteKind; 7] = [
         VoteKind::Promote,
         VoteKind::Demote,
         VoteKind::Fire,
         VoteKind::Rehire,
         VoteKind::SetPlaybook,
         VoteKind::LongShot,
+        VoteKind::Renew,
     ];
 
     pub const fn as_str(self) -> &'static str {
@@ -42,6 +45,7 @@ impl VoteKind {
             VoteKind::Rehire => "REHIRE",
             VoteKind::SetPlaybook => "SET_PLAYBOOK",
             VoteKind::LongShot => "LONG_SHOT",
+            VoteKind::Renew => "RENEW",
         }
     }
 
@@ -175,6 +179,9 @@ pub fn can_open(
         VoteKind::LongShot if status != Status::Employed => Err(CannotOpen::WrongStatus),
         VoteKind::LongShot if change_waiting => Err(CannotOpen::ChangeWaiting),
         VoteKind::LongShot => Ok(()),
+        // 1.7: only while employed (a fired Intern is rehired instead).
+        VoteKind::Renew if status != Status::Employed => Err(CannotOpen::WrongStatus),
+        VoteKind::Renew => Ok(()),
         VoteKind::Rehire if status != Status::Fired => Err(CannotOpen::WrongStatus),
         VoteKind::Rehire if change_waiting => Err(CannotOpen::ChangeWaiting),
         VoteKind::Rehire => Ok(()),
@@ -219,7 +226,7 @@ pub fn outcome(kind: VoteKind, rank: Rank, status: Status) -> (Rank, Status) {
         ),
         VoteKind::Fire => (rank, Status::Fired),
         VoteKind::Rehire => (Rank::Intern, Status::Employed),
-        VoteKind::SetPlaybook | VoteKind::LongShot => (rank, status),
+        VoteKind::SetPlaybook | VoteKind::LongShot | VoteKind::Renew => (rank, status),
     }
 }
 

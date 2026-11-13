@@ -94,14 +94,14 @@ const stamp = (ms: number): string =>
     .replace(/\.\d+Z$/, "Z");
 
 /** The version of 01-SHARED-INTERFACE.md this runner follows. */
-export const INTERFACE_VERSION = "1.6";
+export const INTERFACE_VERSION = "1.7";
 /**
  * Versions of 01 this runner works with: 1.4 and 1.5 added the reward ladder, 1.6 leagues, the weekly review and
  * order tags (none of which the runner has to do anything for), so a 1.3 contract still works.
  */
-export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5", "1.6"];
+export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5", "1.6", "1.7"];
 /** Versions with `rewards_tick`. */
-const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5", "1.6"];
+const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5", "1.6", "1.7"];
 
 /**
  * A NEAR account id (NEAR's account-id rules: 2 to 64 characters, lower-case letters and digits in parts joined by
@@ -241,6 +241,7 @@ export class Runner {
     rank: RankState,
     last: string,
     creditedTo: string | null = null,
+    attempt = 1,
   ): Promise<{ verdict: ChainVerdict; tx: string; answer: string | null } | null> {
     const { chain, fetchFn, apiKey } = this.#d;
     const c = this.#c;
@@ -292,17 +293,28 @@ export class Runner {
       return null;
     }
 
+    // 01 1.7 (Engine 2's fix "e2"): the rulebook states the limit on the pool now, so it can change while the model
+    // answers (a cash-out). An answer to an old text is refused WRONG_RULEBOOK: read it again, and ask once more.
+    const again = await chain.rulebook();
+    if (again.text !== rulebook.text) {
+      this.#log("rulebook changed while asking", round.id, { attempt, dir });
+      if (attempt >= 2) return null;
+      return this.askAndProposeDetailed(await chain.round(), rank, last, creditedTo, attempt + 1);
+    }
+
     // The runner's own forecast with its TypeScript copy of the checks (01 §7, version 1.2: nothing may stand before
     // or after the decision line), to compare with the contract's verdict.
     const proposal = { request: requestBytes, response, signature };
     const ticket = longShotOf(rulebook.text); // 01 1.5: only a ticket round has one
     const pot = await chain.pot();
+    // 01 1.7: under the drawdown brake the program halves the limit base; the forecast does the same.
+    const halve = /^brake: /m.test(rulebook.text) ? 2n : 1n;
     const state = {
       phase: round.phase,
       status: rank.status,
       rank: round.rank,
-      brave_at_open_e6: BigInt(round.brave_at_open),
-      brave_now_e6: BigInt(pot.brave_total),
+      brave_at_open_e6: BigInt(round.brave_at_open) / halve,
+      brave_now_e6: BigInt(pot.brave_total) / halve,
       bets_used: round.bets_used,
       at_risk_e6: BigInt(round.at_risk),
       ms_into_round: this.#d.now() - round.started_at,
@@ -368,6 +380,19 @@ export class Runner {
       // keep the last version read; the round goes on
     }
     if (REWARD_VERSIONS.includes(this.#version)) await this.#rewardsTick(roundId);
+    // 01 1.7: ask first (a free view) and skip a call that would fail with "nothing to move" (Engine 2's finding:
+    // the relayer paid for one every round). An older contract has no such view: then call as before.
+    if (this.#d.chain.rebalanceDue) {
+      try {
+        const due = await this.#d.chain.rebalanceDue();
+        if (due === false) {
+          this.#log("rebalance: nothing to move", roundId, { checked: "get_rebalance" });
+          return;
+        }
+      } catch {
+        // the view is missing or failed: fall back to calling rebalance
+      }
+    }
     try {
       const sent = await this.#d.chain.rebalance();
       const pot = await this.#d.chain.pot();

@@ -333,8 +333,13 @@ async function main(): Promise<void> {
   }
   for (;;) {
     if ((await runner.runRound("full")) === "gave-up") {
-      process.exitCode = 1;
-      return;
+      // Exit for real: the trick page's server (when PORT is set) would otherwise keep the process alive, and the
+      // host (Railway, restart on failure) would never start a fresh runner. Found by Engine 2.
+      log({
+        step: "exit",
+        reason: "gave up after repeated failures; exiting so the host restarts the runner",
+      });
+      process.exit(1);
     }
   }
 }

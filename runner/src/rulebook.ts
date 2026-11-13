@@ -23,6 +23,11 @@ export interface RulebookInput {
   playbook: string | null;
   /** 01 1.5 (R6): the round's long-shot ticket, only in a round that has one. */
   long_shot?: LongShot;
+  /**
+   * 01 1.7: the drawdown brake is on until this round. The caller passes `brave_at_open_e6` already halved (the
+   * limit base is halved); the text gets one line saying so.
+   */
+  brake_until?: number;
 }
 
 /** 01 1.5 (R6): one extra bet this round at exactly `margin_e6`, leverage up to `max_leverage`. */
@@ -68,6 +73,11 @@ export function buildRulebookV12(input: RulebookInput, minNotionalE6: bigint = M
     ...(input.long_shot
       ? [
           `long_shot: one ticket this round: margin_e6 exactly ${input.long_shot.margin_e6}, leverage up to ${input.long_shot.max_leverage}`,
+        ]
+      : []),
+    ...(input.brake_until !== undefined
+      ? [
+          `brake: the pool lost 1% or more over the last 7 rounds; the dollar limits are halved until round ${input.brake_until}`,
         ]
       : []),
     "Amounts are US dollars times 1,000,000, so 10000000 is $10. A bet's notional is margin_e6 times leverage and must be at least min_notional_e6.",

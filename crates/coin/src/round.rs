@@ -77,17 +77,23 @@ impl Coin {
         self.rank_at(self.current.map_or(1, |r| r.id))
     }
 
-    pub(crate) fn rulebook_for(&self, r: &RoundRec, nonce: &str) -> String {
+    /// `brave_now`: the BRAVE pool now (`books.brave_total`, projected in a view). 1.7: the rulebook states the limit
+    /// on the smaller of the pool at the opening and now, the same base checks 11 and 12 use.
+    pub(crate) fn rulebook_for(&self, r: &RoundRec, nonce: &str, brave_now: u128) -> String {
         let playbook = self.playbook_text_at(r.id); // 1.3
-        rules::rulebook::rulebook(
+        let brake = self.brake_on(r.id); // 1.7: the drawdown brake halves the base and says so
+        let base = rules::limits::limit_base(r.brave_at_open, brave_now) / if brake { 2 } else { 1 };
+        let brake_until = if brake { crate::auto::brake_until() } else { None };
+        rules::rulebook::rulebook_with_brake(
             r.id,
             nonce,
             self.rank_at(r.id).0,
-            r.brave_at_open,
+            base,
             r.bets_used,
             r.at_risk,
             playbook.as_deref(),
             self.ticket_for(r), // 1.5 (R6): only in a ticket round
+            brake_until,
         )
     }
 
@@ -122,12 +128,10 @@ impl Coin {
             result: p
                 .returned
                 .map(|b| wire::I128(shares::result_of(p.margin, b))),
-            result_source: p.result_source.map(|s| {
-                if s == REPORTED {
-                    wire::ResultSource::Reported
-                } else {
-                    wire::ResultSource::Measured
-                }
+            result_source: p.result_source.map(|s| match s {
+                REPORTED => wire::ResultSource::Reported,
+                crate::auto::ABANDONED => wire::ResultSource::Abandoned, // 1.7
+                _ => wire::ResultSource::Measured,
             }),
         }
     }
@@ -198,14 +202,15 @@ impl Coin {
         let mut r = self.current.expect("a round is always open");
         let (rank, status) = self.rank_now();
         let nonce = self.nonce_for(r.id, self.nonce_counter);
-        let rulebook = self.rulebook_for(&r, &nonce);
+        let rulebook = self.rulebook_for(&r, &nonce, self.books.brave_total);
         let ctx = Ctx {
             offsets: self.cfg.offsets(),
             ms_into_round: now.saturating_sub(r.started_at),
             status,
             rank,
-            brave_at_open: r.brave_at_open,
-            brave_now: self.books.brave_total,
+            // 1.7: under the drawdown brake the rank's dollar limits are halved: the base is halved.
+            brave_at_open: r.brave_at_open / if self.brake_on(r.id) { 2 } else { 1 },
+            brave_now: self.books.brave_total / if self.brake_on(r.id) { 2 } else { 1 },
             bets_used: r.bets_used,
             at_risk: r.at_risk,
             ticket: self
@@ -278,6 +283,7 @@ impl Coin {
                     json!({"position_id": id, "round_id": r.id, "market": bet.market, "side": bet.side,
                            "margin": U128(bet.margin), "leverage": bet.leverage, "long_shot": bet.ticket}),
                 );
+                self.auto_first_ruling(r.id, crate::rewards::YES, None); // 1.7: strikes
                 self.rw_ruling(r.id, crate::rewards::YES); // 1.4
                 wire::Verdict::Yes { position_id: id }
             }
@@ -286,6 +292,7 @@ impl Coin {
                 self.save_round(r);
                 self.feed
                     .push(EventName::Skipped, json!({"round_id": r.id}));
+                self.auto_first_ruling(r.id, crate::rewards::SKIP, None); // 1.7
                 self.rw_ruling(r.id, crate::rewards::SKIP); // 1.4
                 wire::Verdict::Skip
             }
@@ -330,6 +337,7 @@ impl Coin {
                     EventName::Refused,
                     json!({"refusal_id": id, "round_id": r.id, "code": refused.code, "asked": asked, "limit": limit, "is_first": is_first}),
                 );
+                self.auto_first_ruling(r.id, crate::rewards::NOPE, Some(refused.code)); // 1.7: strikes
                 self.rw_ruling(r.id, crate::rewards::NOPE); // 1.4
                 wire::Verdict::Nope {
                     refusal_id: id,
@@ -478,11 +486,11 @@ impl Coin {
 
     /// The exact system message for the AI (section 6.1), for the round as it is now.
     pub fn get_rulebook(&self) -> wire::Rulebook {
-        let (r, ..) = self.projected();
+        let (r, b, ..) = self.projected();
         let nonce = self.nonce_for(r.id, self.nonce_counter);
         wire::Rulebook {
             round_id: r.id,
-            text: self.rulebook_for(&r, &nonce),
+            text: self.rulebook_for(&r, &nonce, b.brave_total),
             nonce,
         }
     }

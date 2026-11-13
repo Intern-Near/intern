@@ -309,3 +309,63 @@ fn weeks_before_the_upgrade_get_a_backfilled_review_without_a_feed_event() {
     assert!(events(&c, EventName::ReviewWritten).is_empty());
     assert_eq!(c.get_reviews(None, None).iter().map(|r| r.week).collect::<Vec<_>>(), [1, 0]);
 }
+
+// ----- 1.7 fixes -------------------------------------------------------------------------------------------
+
+#[test]
+fn after_a_cash_out_the_rulebook_states_the_limit_the_checks_will_allow() {
+    // alice's $1,000 is the pool; the INTERN may bet 2%: the rulebook says $20.
+    let mut c = three();
+    ctx(at(2, IN_WINDOW), RUNNER, 0);
+    assert!(c.get_rulebook().text.contains("max_margin_e6: 20000000"));
+    // $100 leaves the pool after the opening (as a cash-out does). The limit base is now $900: the rulebook says
+    // $18, the same number checks 11 and 12 use (before 1.7 it kept saying $20, and a $20 bet was refused).
+    c.books.brave_total -= 100_000_000;
+    ctx(at(2, IN_WINDOW), RUNNER, 0);
+    let text = c.get_rulebook().text;
+    assert!(text.contains("max_margin_e6: 18000000"), "{text}");
+    let max = Decision::Bet { market: Market::Doge, side: Side::Long, margin_e6: 18_000_000, leverage: 1 };
+    assert!(matches!(propose(&mut c, 2, &max), wire::Verdict::Yes { .. }));
+}
+
+#[test]
+fn a_bet_over_the_rulebooks_maximum_after_a_cash_out_is_still_refused() {
+    let mut c = three();
+    c.books.brave_total -= 100_000_000;
+    let old_max = Decision::Bet { market: Market::Doge, side: Side::Long, margin_e6: 20_000_000, leverage: 1 };
+    assert!(matches!(
+        propose(&mut c, 2, &old_max),
+        wire::Verdict::Nope { code: Refusal::OverTradeLimit, .. }
+    ));
+}
+
+#[test]
+fn round_opened_carries_the_coin_supply_and_what_the_opening_minted() {
+    // 1.7: alice's $1,000 converts at round 2's opening; the very first conversion locks 1,000 units for ever.
+    let c = three();
+    let opened = events(&c, EventName::RoundOpened);
+    let r2 = opened.iter().find(|e| e["round_id"] == 2).expect("round 2 opened");
+    let supply = c.ft_total_supply().0;
+    assert_eq!(r2["coin_supply"], U128(supply).0.to_string());
+    assert_eq!(r2["minted"], r2["coin_supply"], "everything in existence was minted at this opening");
+    assert_eq!(r2["locked"], "1000");
+    let r1 = opened.iter().find(|e| e["round_id"] == 1).expect("round 1 opened");
+    assert_eq!((r1["coin_supply"].as_str(), r1["minted"].as_str()), (Some("0"), Some("0")));
+}
+
+#[test]
+fn get_rebalance_says_what_a_rebalance_would_move_without_moving_it() {
+    // 1.7: alice's $1,000 is idle; the INTERN's slice is 2% ($20): the rest ($980) would be lent.
+    let mut c = three();
+    ctx(at(2, 5_000), "anyone.test", 0);
+    let v = c.get_rebalance();
+    assert_eq!((v.action.as_str(), v.amount.0), ("LEND", 980_000_000));
+    // Once it is lent, only the slice is idle: nothing to move.
+    c.s9.lent = 980_000_000;
+    assert_eq!(c.get_rebalance().action, "NONE");
+    // After $15 more leaves the idle part (as a cash-out does), the slice is short: bring it back.
+    c.s9.lent = 995_000_000;
+    let v = c.get_rebalance();
+    assert_eq!(v.action, "RECALL");
+    assert!(v.amount.0 > 0 && v.amount.0 <= 15_000_000);
+}

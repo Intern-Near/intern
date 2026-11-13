@@ -137,6 +137,32 @@ impl Coin {
     /// Anyone (the runner each round). Keeps exactly the Intern's slice idle: lends what is idle beyond
     /// it (at least $10), or brings back from the lender what the slice is short of (at least $1).
     /// Returns the dollars moved: positive lent, negative brought back.
+    /// 1.7: what `rebalance` would do now, without doing it (free), so a caller can skip a call that would fail
+    /// with "nothing to move" (Engine 2's finding: the relayer paid for one every round). `action` is "LEND",
+    /// "RECALL", "NONE", "BUSY" (a move is in flight) or "NO_LENDER".
+    pub fn get_rebalance(&self) -> RebalanceView {
+        let none = |action: &str| RebalanceView { action: action.to_string(), amount: U128(0) };
+        if self.s9.lender.is_none() {
+            return none("NO_LENDER");
+        }
+        if self.lending_busy() {
+            return none("BUSY");
+        }
+        let (r, b, ..) = self.projected();
+        let idle = b.brave_total.saturating_sub(self.s9.lent + self.s9.lend_in_flight + b.in_play);
+        let l = rules::limits::limits(self.rank_at(r.id).0);
+        let slice = b.brave_total.saturating_mul(l.per_round_bps as u128) / 10_000;
+        let short = slice.saturating_sub(idle).min(self.s9.lent);
+        if short >= MIN_RECALL {
+            return RebalanceView { action: "RECALL".to_string(), amount: U128(short) };
+        }
+        let lend = idle.saturating_sub(slice);
+        if lend >= MIN_LEND {
+            return RebalanceView { action: "LEND".to_string(), amount: U128(lend) };
+        }
+        none("NONE")
+    }
+
     pub fn rebalance(&mut self) -> Promise {
         let lender = self
             .s9
@@ -299,4 +325,11 @@ impl Coin {
         env::log_str("the lender could not pay back in time: nothing changed, try again");
         PromiseOrValue::Value(false)
     }
+}
+
+/// 1.7: `get_rebalance`.
+#[near(serializers = [json])]
+pub struct RebalanceView {
+    pub action: String,
+    pub amount: U128,
 }

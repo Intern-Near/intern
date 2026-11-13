@@ -9,8 +9,10 @@ pub const PLAYBOOK_MAX_BYTES: usize = 2_000;
 
 /// The section 6.1 template for a given state.
 ///
-/// - Uses `brave_at_open`, never the pool now (section 3, 1.1), so the text does not change under
-///   the runner when someone cashes out.
+/// - `base` is the limit base of section 3: the smaller of `brave_at_open` and the pool now. *(1.7: it was
+///   `brave_at_open` alone, so after a cash-out a bet of exactly the stated maximum was refused
+///   `OVER_TRADE_LIMIT`; the text now states what checks 11 and 12 will allow. If the pool shrinks while the AI
+///   answers, the text changes and the runner asks again.)*
 /// - `rank` is the current rank (after a demotion, the lower one).
 /// - `bets_left` and `max_margin_e6` stop at 0.
 /// - `playbook` must already be clean (see [`clean_playbook`]); `None` prints "none".
@@ -18,11 +20,29 @@ pub fn rulebook(
     round_id: u64,
     nonce: &str,
     rank: Rank,
-    brave_at_open: u128,
+    base: u128,
     bets_used: u32,
     at_risk: u128,
     playbook: Option<&str>,
     long_shot: Option<(u128, u32)>,
+) -> String {
+    rulebook_with_brake(round_id, nonce, rank, base, bets_used, at_risk, playbook, long_shot, None)
+}
+
+/// 1.7: [`rulebook`], with the drawdown brake: when `brake_until` is set (the brake is on), `base` is already halved
+/// by the caller and one more line, after the long-shot line (or the playbook line), says so:
+/// `brake: the pool lost 1% or more over the last 7 rounds; the dollar limits are halved until round <n>`.
+#[allow(clippy::too_many_arguments)]
+pub fn rulebook_with_brake(
+    round_id: u64,
+    nonce: &str,
+    rank: Rank,
+    base: u128,
+    bets_used: u32,
+    at_risk: u128,
+    playbook: Option<&str>,
+    long_shot: Option<(u128, u32)>,
+    brake_until: Option<u64>,
 ) -> String {
     let l = limits(rank);
     let markets: Vec<&str> = l.markets.iter().map(|m| m.as_str()).collect();
@@ -35,7 +55,7 @@ pub fn rulebook(
         format!("markets: {}", markets.join(", ")),
         format!("sides: {}", sides.join(", ")),
         format!("max_leverage: {}", l.max_leverage),
-        format!("max_margin_e6: {}", max_next_margin(rank, brave_at_open, at_risk)),
+        format!("max_margin_e6: {}", max_next_margin(rank, base, at_risk)),
         format!("min_notional_e6: {}", crate::limits::MIN_NOTIONAL),
         format!("bets_left: {}", bets_left(rank, bets_used)),
         format!("playbook: {}", playbook.unwrap_or("none")),
@@ -53,6 +73,13 @@ pub fn rulebook(
         lines.insert(
             11,
             format!("long_shot: one ticket this round: margin_e6 exactly {margin}, leverage up to {leverage}"),
+        );
+    }
+    if let Some(until) = brake_until {
+        let at = if long_shot.is_some() { 12 } else { 11 };
+        lines.insert(
+            at,
+            format!("brake: the pool lost 1% or more over the last 7 rounds; the dollar limits are halved until round {until}"),
         );
     }
     lines.join("\n")

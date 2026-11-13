@@ -16,7 +16,7 @@ use near_sdk::AccountId;
 pub use shared::{Market, Rank, Refusal, Side, Status};
 
 /// The interface version these shapes follow.
-pub const INTERFACE_VERSION: &str = "1.6";
+pub const INTERFACE_VERSION: &str = "1.7";
 
 // ----- numbers --------------------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ wire_enum!(
         Settled
     }
 );
-wire_enum!("SCREAMING_SNAKE_CASE", ResultSource { Reported, Measured });
+wire_enum!("SCREAMING_SNAKE_CASE", ResultSource { Reported, Measured, Abandoned /* 1.7: booked as lost by `abandon` */ });
 wire_enum!(
     "SCREAMING_SNAKE_CASE",
     ActionKind {
@@ -88,7 +88,9 @@ wire_enum!(
         Rehire,
         SetPlaybook,
         // 1.5 (R6)
-        LongShot
+        LongShot,
+        // 1.7
+        Renew
     }
 );
 wire_enum!(
@@ -155,6 +157,13 @@ wire_enum!(
         LeagueClosed,
         ReviewWritten,
         ReviewBarFilled,
+        // 1.7
+        StrikesOut,
+        BrakeOn,
+        BrakeOff,
+        TermLapsed,
+        TermRenewed,
+        Abandoned,
     }
 );
 
@@ -205,7 +214,8 @@ wire_struct!(FundingConstants {
     quote_max_age_ms: u64,
     max_funding_cost_bps: u32,
 });
-wire_struct!(LendingConstants { mode: LendingMode });
+// 1.7: `lender` names the lending contract (null with no lending), so a books check needs no other source.
+wire_struct!(LendingConstants { mode: LendingMode, lender: Option<AccountId> });
 wire_struct!(HlConstants {
     testnet: bool,
     address: String,

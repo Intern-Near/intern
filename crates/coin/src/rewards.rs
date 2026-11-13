@@ -248,9 +248,18 @@ impl Coin {
             + self.safe.get(who).copied().unwrap_or(0)
     }
 
+    /// 1.7: dollars an account holds in BRAVE only (its coins at today's value), the money the Intern's bets put at
+    /// risk. The draw and the jackpot count this, not SAFE: money parked in SAFE risks nothing, so it was the cheap
+    /// way to farm both with many accounts (Engine 2's simulation).
+    pub(crate) fn brave_usd_of(&self, who: &AccountId) -> u128 {
+        let (coins, _, _) = self.projected_account(who);
+        let (_, b, _, supply) = self.projected();
+        shares::brave_value(coins, b.brave_total, b.in_play, supply)
+    }
+
     pub(crate) fn jackpot_eligible(&self, who: &AccountId, round_id: u64) -> bool {
         let (_, _, joined) = self.projected_account(who);
-        joined.is_some_and(|j| j + MIN_BOSS_ROUNDS <= round_id) && self.usd_of(who) >= MIN_BOSS_USD
+        joined.is_some_and(|j| j + MIN_BOSS_ROUNDS <= round_id) && self.brave_usd_of(who) >= MIN_BOSS_USD
     }
 
     /// The player's record with any guess whose round has a ruling (or is over without one) resolved.
@@ -299,11 +308,21 @@ impl Coin {
             if let (Some(list), Some(&v)) = (self.rw.candidates.remove(&r), self.rw.round_verdict.get(&r)) {
                 let winners: Vec<AccountId> = list.into_iter().filter(|(_, g)| *g == v).map(|(a, _)| a).collect();
                 if !winners.is_empty() {
-                    let each = self.rw.jackpot / winners.len() as u128;
-                    for w in &winners {
-                        self.rw_credit_prize(w, each);
+                    // 1.7: several winners split it by the BRAVE dollars each holds (at least $10 each counts), not
+                    // equally, so many small accounts do not out-share one real boss. `each` is the equal-split
+                    // figure, kept for the event's shape; `paid` is what was paid in all.
+                    let jackpot = self.rw.jackpot;
+                    let weights: Vec<u128> =
+                        winners.iter().map(|w| self.brave_usd_of(w).max(MIN_BOSS_USD)).collect();
+                    let total: u128 = weights.iter().sum();
+                    let mut paid = 0u128;
+                    for (w, wt) in winners.iter().zip(&weights) {
+                        let share = jackpot.saturating_mul(*wt) / total;
+                        self.rw_credit_prize(w, share);
+                        paid += share;
                     }
-                    self.rw.jackpot -= each * winners.len() as u128;
+                    let each = jackpot / winners.len() as u128;
+                    self.rw.jackpot -= paid;
                     self.rw.jackpot_last_won = Some(r);
                     self.rw.jackpot_wins.insert(
                         r,
@@ -333,7 +352,7 @@ impl Coin {
         let entrants: Vec<AccountId> = self.rw.entrants.iter().cloned().collect();
         for who in entrants {
             let Some(mut e) = self.rw.entries.get(&who).copied() else { continue };
-            let now_usd = self.usd_of(&who);
+            let now_usd = self.brave_usd_of(&who); // 1.7: BRAVE dollars only
             let rounds = (end + 1).saturating_sub(start.max(e.since_round)) as u128;
             let w = e.base_usd.min(now_usd).saturating_mul(rounds);
             if w > 0 {
@@ -372,6 +391,8 @@ impl Coin {
                 let mut x = u128_of(seed) % t;
                 let next = env::sha256_array(&seed[..]);
                 *seed = next;
+                // 1.7 (Engine 2's f3): drawn with replacement, so an account's expected prize is its share of the
+                // tickets however its money is split across accounts.
                 let i = weights.iter().position(|(_, w)| {
                     if x < *w {
                         true
@@ -380,12 +401,14 @@ impl Coin {
                         false
                     }
                 })?;
-                Some(weights.remove(i).0)
+                Some(weights[i].0.clone())
             };
             let top = prize * DRAW_TOP_BPS / 10_000;
             let winner = pick(&mut weights, &mut seed).expect("total > 0");
             let mut runners: Vec<AccountId> = Vec::new();
-            while runners.len() < DRAW_RUNNERS {
+            // Alone in the draw, the winner takes all (no runner-up shares, no dust).
+            let alone = weights.len() == 1;
+            while !alone && runners.len() < DRAW_RUNNERS {
                 match pick(&mut weights, &mut seed) {
                     Some(a) => runners.push(a),
                     None => break,
@@ -612,9 +635,23 @@ impl Coin {
         require!(self.registered(&who), "register first (storage_deposit)");
         self.tick();
         require!(!self.rw.entrants.contains(&who), "you are already in the draw");
-        require!(self.rw.entrants.len() < MAX_ENTRANTS, "the draw is full");
-        let usd = self.usd_of(&who);
-        require!(usd > 0, "pay in first: tickets come from the dollars you hold");
+        // 1.7: tickets come from BRAVE dollars only (SAFE risks nothing).
+        let usd = self.brave_usd_of(&who);
+        require!(usd > 0, "hold some BRAVE first: tickets come from the dollars you hold in BRAVE");
+        if self.rw.entrants.len() >= MAX_ENTRANTS {
+            // 1.7 (Engine 2's f3): a full draw keeps its places for the biggest holders: a newcomer holding more takes
+            // the place of the entrant holding least (at most `MAX_ENTRANTS` reads).
+            let smallest = self
+                .rw
+                .entrants
+                .iter()
+                .map(|a| (self.brave_usd_of(a), a.clone()))
+                .min_by(|x, y| x.0.cmp(&y.0))
+                .expect("the draw is full, so not empty");
+            require!(usd > smallest.0, "the draw is full and everyone in it holds at least as much in BRAVE as you");
+            self.rw.entrants.remove(&smallest.1);
+            self.rw.entries.remove(&smallest.1);
+        }
         let e = EntryRec { since_round: self.current.expect("round").id, base_usd: usd };
         self.rw.entries.insert(who.clone(), e);
         self.rw.entrants.insert(who.clone());

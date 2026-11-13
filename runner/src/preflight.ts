@@ -40,7 +40,14 @@ export function rulebookDifferences(
   nonce: string,
   playbook: string | null,
   minNotionalE6: bigint,
+  braveNowE6?: bigint,
+  brakeUntil: number | null = null,
 ): { line: number; program: string; template: string }[] {
+  // 01 1.7: the limit is stated on the smaller of the pool at the opening and the pool now (`get_pot().brave.total`),
+  // halved while the drawdown brake is on.
+  const atOpen = BigInt(round.brave_at_open);
+  const smaller = braveNowE6 !== undefined && braveNowE6 < atOpen ? braveNowE6 : atOpen;
+  const base = brakeUntil === null ? smaller : smaller / 2n;
   // 01 1.5: a ticket round's text has a long_shot line; the template states what the program should have computed.
   const ticket = longShotOf(text)
     ? { margin_e6: longShotMarginE6(BigInt(round.brave_at_open)), max_leverage: 10 }
@@ -50,11 +57,12 @@ export function rulebookDifferences(
       round_id: round.id,
       nonce,
       rank: round.rank,
-      brave_at_open_e6: BigInt(round.brave_at_open),
+      brave_at_open_e6: base,
       bets_used: round.bets_used,
       at_risk_e6: BigInt(round.at_risk),
       playbook,
       ...(ticket ? { long_shot: ticket } : {}),
+      ...(brakeUntil === null ? {} : { brake_until: brakeUntil }),
     },
     minNotionalE6,
   ).split("\n");
@@ -186,7 +194,17 @@ export async function preflight(input: PreflightInput): Promise<Line[]> {
         add("fail", "get_rulebook", `for round ${rb.round_id}, not the current ${current.id}`);
       const pb = await view(rpc, chain.contractId, "get_active_playbook");
       const playbook = isRecord(pb) && typeof pb.text === "string" ? pb.text : null;
-      const diffs = rulebookDifferences(rb.text, current, rb.nonce, playbook, BigInt(constants.min_notional));
+      const braveNow = BigInt((await chain.pot()).brave_total);
+      const brakeUntil = chain.brake ? await chain.brake().catch(() => null) : null;
+      const diffs = rulebookDifferences(
+        rb.text,
+        current,
+        rb.nonce,
+        playbook,
+        BigInt(constants.min_notional),
+        braveNow,
+        brakeUntil,
+      );
       if (diffs.length === 0)
         add(
           "ok",

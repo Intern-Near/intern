@@ -99,6 +99,13 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   },
   review_written: { week: 7, bets: 6, refused: 1, skipped: 1, result: "-1250000", rank_end: "INTERN" },
   review_bar_filled: { week: 7, stamps: 5 },
+  // 1.7: automatic consequences
+  strikes_out: { round_id: 61, strikes: 3, action: "DEMOTE", to: "INTERN" },
+  brake_on: { round_id: 62, result: "-16500000", base: "1572880690", until_round: 69 },
+  brake_off: { round_id: 69 },
+  term_lapsed: { round_id: 80, term_ended_at: 1797178800000 },
+  term_renewed: { term_ends_at: 1799770800000 },
+  abandoned: { round_id: 63, bets_booked_lost: 1 },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

@@ -288,7 +288,7 @@ fn check_all_views(s: &Stub, scene: &str) {
             "launchpad",
         ],
     );
-    assert_eq!(c["interface_version"], "1.6");
+    assert_eq!(c["interface_version"], "1.7");
     has_keys(
         "Constants.round",
         &c["round"],
@@ -328,7 +328,7 @@ fn check_all_views(s: &Stub, scene: &str) {
             "max_funding_cost_bps",
         ],
     );
-    has_keys("Constants.lending", &c["lending"], &["mode"]);
+    has_keys("Constants.lending", &c["lending"], &["mode", "lender"]); // 1.7: lender
     has_keys(
         "Constants.hl",
         &c["hl"],

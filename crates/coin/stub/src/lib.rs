@@ -295,6 +295,7 @@ impl Stub {
             result_source: ResultSource::Reported,
             lending: LendingConstants {
                 mode: LendingMode::Standin,
+                lender: Some("lender.desk-lab-2026.testnet".parse().unwrap()),
             },
             hl: HlConstants {
                 testnet: true,

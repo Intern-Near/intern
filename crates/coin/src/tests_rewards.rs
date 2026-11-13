@@ -303,9 +303,54 @@ fn several_winners_in_one_round_split_the_jackpot() {
     goto(&mut c, 11, 1_000);
     ctx(at(11, 2_000), "anyone.test", 0);
     c.rewards_tick();
-    assert_eq!(player(&c, "alice.test").prize_owed, U128(50_000_000));
-    assert_eq!(player(&c, "bob.test").prize_owed, U128(50_000_000));
-    assert_eq!(c.get_rewards().jackpot, U128(1)); // the dust rolls over
+    // 1.7: split by the BRAVE dollars each holds (alice about $1,000, bob about $500): about two to one.
+    let (a, b) = (player(&c, "alice.test").prize_owed.0, player(&c, "bob.test").prize_owed.0);
+    let (wa, wb) = (c.brave_usd_of(&acct("alice.test")), c.brave_usd_of(&acct("bob.test")));
+    assert_eq!((a, b), (100_000_001 * wa / (wa + wb), 100_000_001 * wb / (wa + wb)));
+    assert!(a > b * 19 / 10 && a < b * 21 / 10, "{a} {b}");
+    assert!(c.get_rewards().jackpot.0 <= 1); // the dust rolls over
+}
+
+#[test]
+fn a_full_draw_keeps_its_places_for_the_biggest_brave_holders() {
+    // 1.7 (Engine 2's f3): 200 entrants with $2 each fill the draw; a newcomer with $5 takes the place of one of the
+    // smallest, a newcomer with $1 is turned away.
+    let mut c = alice_in();
+    let names: Vec<String> = (0..crate::rewards::MAX_ENTRANTS).map(|i| format!("e{i:03}.test")).collect();
+    for (i, n) in names.iter().enumerate() {
+        register(&mut c, at(2, 2_000 + i as u64), n);
+        assert_eq!(transfer_in(&mut c, at(2, 2_000 + i as u64), n, 2_000_000, r#"{"pool":"BRAVE"}"#), 0);
+    }
+    register(&mut c, at(2, 3_000), "big.test");
+    assert_eq!(transfer_in(&mut c, at(2, 3_001), "big.test", 5_000_000, r#"{"pool":"BRAVE"}"#), 0);
+    register(&mut c, at(2, 3_002), "small.test");
+    assert_eq!(transfer_in(&mut c, at(2, 3_003), "small.test", 1_000_000, r#"{"pool":"BRAVE"}"#), 0);
+    goto(&mut c, 3, 1_000);
+    for (i, n) in names.iter().enumerate() {
+        ctx(at(3, 2_000 + i as u64), n, 0);
+        c.enter_draw();
+    }
+    assert_eq!(c.get_rewards().entrants, crate::rewards::MAX_ENTRANTS);
+    ctx(at(3, 4_000), "small.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.enter_draw()))).is_err(), "holds less than everyone in it");
+    ctx(at(3, 4_001), "big.test", 0);
+    c.enter_draw();
+    assert_eq!(c.get_rewards().entrants, crate::rewards::MAX_ENTRANTS);
+    assert!(c.rw.entrants.contains(&acct("big.test")));
+    assert_eq!(names.iter().filter(|n| c.rw.entrants.contains(&acct(n))).count(), names.len() - 1);
+}
+
+#[test]
+fn money_parked_in_safe_neither_enters_the_draw_nor_makes_a_jackpot_boss() {
+    // 1.7: a farming account holding $10 in SAFE and nothing in BRAVE (Engine 2's simulation) gets nothing.
+    let mut c = alice_in();
+    register(&mut c, at(2, 1_500), "farm.test");
+    assert_eq!(transfer_in(&mut c, at(2, 1_600), "farm.test", 10_000_000, r#"{"pool":"SAFE"}"#), 0);
+    ctx(at(2, 2_000), "farm.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.enter_draw()))).is_err());
+    goto(&mut c, 12, 1_000);
+    assert!(!player(&c, "farm.test").jackpot_eligible);
+    assert!(player(&c, "alice.test").jackpot_eligible);
 }
 
 // ----- R4 the payday draw ---------------------------------------------------------------------------------
@@ -342,10 +387,12 @@ fn the_draw_pays_the_periods_interest_to_one_winner_and_shares_the_rest() {
     assert_eq!(d.period, 0);
     assert_eq!(d.prize, U128(7_000_000));
     // alice: $1,000 for rounds 2..=7 (6 rounds); bob: about $500 for rounds 3..=7 (5 rounds).
+    // 1.7: the 70% and each of the ten 3% shares (210,000) are drawn by tickets with replacement.
     let a = player(&c, "alice.test").prize_owed.0;
     let b = player(&c, "bob.test").prize_owed.0;
     assert_eq!(a + b, 7_000_000);
-    assert!((a, b) == (4_900_000, 2_100_000) || (a, b) == (2_100_000, 4_900_000));
+    let (hi, lo) = (a.max(b), a.min(b));
+    assert!(hi >= 4_900_000 && (hi - 4_900_000) % 210_000 == 0 && lo % 210_000 == 0, "{a} {b}");
     let rw = c.get_rewards();
     assert_eq!((rw.draw_pot, rw.prizes_owed, rw.draw_period), (U128(0), U128(7_000_000), 1));
     assert_eq!(events(&c, EventName::DrawHeld).len(), 1);

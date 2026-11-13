@@ -286,4 +286,33 @@ describe("the rulebook against 01 1.2 §6.1", () => {
     assert.equal(d.length, 1);
     assert.equal(d[0]?.line, 15);
   });
+
+  it("01 1.7: after a cash-out the limit is stated on the smaller pool", () => {
+    // $1,000 at the opening, $900 now: the program's text says max_margin_e6 18000000 (2% of $900).
+    const program = text.replace("max_margin_e6: 20000000", "max_margin_e6: 18000000");
+    assert.notEqual(program, text);
+    assert.deepEqual(
+      rulebookDifferences(program, round, "9f2c41d07ab35e16", null, 11_000_000n, 900_000_000n),
+      [],
+    );
+    // More money now than at the opening changes nothing: the opening pool is the smaller.
+    assert.deepEqual(
+      rulebookDifferences(text, round, "9f2c41d07ab35e16", null, 11_000_000n, 1_500_000_000n),
+      [],
+    );
+  });
+
+  it("01 1.7: under the drawdown brake the limit is halved and one line says so", () => {
+    const lines = text.replace("max_margin_e6: 20000000", "max_margin_e6: 10000000").split("\n");
+    const at = lines.findIndex((l) => l.startsWith("playbook: ")) + 1;
+    lines.splice(
+      at,
+      0,
+      "brake: the pool lost 1% or more over the last 7 rounds; the dollar limits are halved until round 49",
+    );
+    assert.deepEqual(
+      rulebookDifferences(lines.join("\n"), round, "9f2c41d07ab35e16", null, 11_000_000n, 1_000_000_000n, 49),
+      [],
+    );
+  });
 });
