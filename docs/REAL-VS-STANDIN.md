@@ -27,6 +27,12 @@ all money is test money.
 | Tail or Fade | the visitor's own Hyperliquid testnet account, derived by NEAR's signing network | **Real, once** | 2026-11-13: a test account approved a trading key through the signing network, a $10 TAIL on DOGE at 2x filled and closed. Nothing of ours holds the money or checks the size; no platform fee on testnet |
 | Test dollars for Tail or Fade | `tailfade-faucet-production.up.railway.app` | **Stand-in** | A faucet wallet funded by the owner with Hyperliquid test USDC sends $30 once per NEAR account, at most 9 accounts. Mainnet would use 1Click deposits |
 | The stream's lines | `interface/lines.json`, `stream/` | **Built, not streamed** | A cue (pose, line, caption) for every feed event and refusal code. No live video stream or speech is built |
+| The free guess, points and streaks (reward ladder R1, 1.4) | the coin | **Real** | Anyone registered guesses YES, NOPE or SKIP before the window; judged on the round's first ruling. Points have no cash value |
+| Golden stickers (R2) | the coin and `stickers.desk-lab-2026.testnet` | **Real** | 1 in 50 per guess, 100 per code, from NEAR's per-block random seed; minted on claim, transferable |
+| The streak jackpot (R3) | the coin | **Real**, test dollars | Half of every tip plus direct additions (the team's $100 seed); 7 right in a row by an eligible boss wins it |
+| The payday draw (R4) | the coin | **Real mechanism, stand-in money** | Every 7 rounds the interest collected is drawn (70% to one winner, the rest to up to 10 runners-up). The interest is the STAND-IN lender's 5% test rate, so prizes are cents |
+| Bigger Tail or Fade chips (R5) | the visitor's Hyperliquid account | **Real, once** | 5x and 10x where the market allows; a $10 TAIL at 10x filled and closed on 2026-11-13 |
+| The long shot (R6) | — | **Not built yet** | A voted, once-a-week high-leverage ticket; it changes what the Intern may trade, so it comes last |
 | The stub | `stub.hackcheck-2026-1103.testnet` | **Stand-in** | Made-up data in the interface's shapes, for building the site |
 | The round clock | the coin | **Demo** | 30-minute rounds on testnet; the product's round is 24 hours |
 | The contracts cannot be changed | — | **Not yet** | All contract accounts still hold a full-access key, so they can be upgraded; that is how steps 3–9 were deployed. Removing the keys is the owner's decision: see `ACCESS-KEYS.md` |
