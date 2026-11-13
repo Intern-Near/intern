@@ -312,6 +312,7 @@ Read-only and free. The site and the runner use only these.
 | `get_bounty` *(1.7)* | — | `{ pot, paid_total, added_total, from_tricks_total: Usdc; tricks_paid: number; trick_price: Usdc; bounty_bps: number }` (section 9.10) |
 | `get_nft_earnings` *(1.7)* | — | `{ owed_total, paid_total: Usdc; tokens: { token_id, owed: Usdc }[]; careers_minted: number }` (section 9.12) |
 | `get_career` *(1.7)* | — | `{ rank, status, level, rounds, bets, refusals: number; result: Signed; svg: string }` (section 9.12) |
+| `get_challenges` *(1.7)* | — | `{ bonds_held, bond: Usdc; window_rounds: number; challenges: { vote_id, position_id, challenger, bond, reported, claimed, reason, state: "OPEN" \| "PASSED" \| "APPLYING" \| "APPLIED" \| "FAILED" }[] }`, newest first, at most 20 (section 9.14) |
 | `get_stake` *(1.7)* | — | `{ coins: U128; value: Usdc; fee_bps: number; grew_total, burned_total: U128 }` (section 9.13) |
 | `get_rescue` *(1.7)* | — | `{ fund, target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round, until_round: number; cut_bps: number; paid_total: Usdc; rescues: number }` (section 9.11) |
 | `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
@@ -387,7 +388,7 @@ type Position = {
   approved_at: Ms; open_signed_at: Ms | null; close_signed_at: Ms | null; settled_at: Ms | null;
   sz_e8: U128 | null;                      // size of the open order, in the exchange's units
   returned: Usdc | null; result: Signed | null;
-  result_source: "REPORTED" | "MEASURED" | "ABANDONED" | null;   // (1.7) ABANDONED: booked as lost by `abandon`
+  result_source: "REPORTED" | "MEASURED" | "ABANDONED" | "CORRECTED" | null;   // (1.7) ABANDONED: booked as lost by `abandon`; CORRECTED: a challenge passed
 };
 
 type SignedAction = {
@@ -417,7 +418,7 @@ type Account = {
   vote_weight: U128;                       // right now, for a vote opened right now
 };
 
-type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT" | "RENEW";   // (1.5) LONG_SHOT, (1.7) RENEW
+type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT" | "RENEW" | "CORRECT";   // (1.5) LONG_SHOT, (1.7) RENEW, CORRECT (opened only by a challenge)
 type Vote = {
   id: number; kind: VoteKind; playbook_id: number | null; opened_by: AccountId;
   opened_at: Ms; closes_at: Ms;
@@ -691,7 +692,7 @@ The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid
 - **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest in `draw_runners` (10) equal shares; with nobody in it, it rolls over. *(1.7, Engine 2's "f3")* **Each of the eleven prizes is drawn by tickets with replacement**, so an account's expected prize is its share of the tickets however its money is split across accounts (one account may win several). A boss's tickets are **the smaller of the BRAVE dollars held when the period began (or when joining) and at the draw** *(1.7: BRAVE coins at today's value only; SAFE risks nothing and is not lent)*, times the rounds of the period they were in. `enter_draw` needs some BRAVE. **When the draw is full (200), a newcomer holding more BRAVE takes the place of the entrant holding least**; otherwise it is refused. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
 - **Point wagers** *(1.7)*. `guess({ verdict, wager? })`: `wager` points (at most the points held) are taken when guessing; when the round's first ruling comes, the right guessers share all the round's wagered points in proportion to their own wagers (a guesser's share is `wager × all wagered ÷ wagered on the right answer`, rounded down), on top of the usual point. A round with no ruling gives the wager back. `get_rewards().wagers_this_round` is `[YES, NOPE, SKIP]` (U64 strings); `PlayerView.guess.wager`. Points have no cash value.
 - **Banking a streak** *(1.7)*. `bank_streak()`: the current streak becomes `streak × streak` points and starts again (`streak_banked { account_id, streak, points }`): sure points instead of chasing the jackpot's seven. Not while a guess waits for its ruling.
-- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed + get_bounty().pot + get_rescue().fund + get_nft_earnings().owed_total` *(1.7: the trick bounty, a rescue still collecting, and NFT earnings not yet claimed)*.
+- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed + get_bounty().pot + get_rescue().fund + get_nft_earnings().owed_total + get_challenges().bonds_held` *(1.7: the trick bounty, a rescue still collecting, NFT earnings not yet claimed, and challenge bonds)*.
 - **The long shot (R6, 1.5).** Bosses may vote `LONG_SHOT` (section 9.2). In the round it allows, the Intern may place **one extra bet**: margin **exactly 0.5% of the pool at round open**, leverage up to 10 (5 on PENGU and WIF), on a coin and side its rank allows, inside the round's limit (section 7). The rulebook says so that round only (section 6.1). The result is shared by all BRAVE holders, like any bet. **It usually loses: that is what a long shot is.** At most once every seven rounds. `get_rewards().long_shot` shows it.
 
 ```ts
@@ -807,6 +808,10 @@ Owner's decisions on Engine 2's list (items 13, 14, 24). The tokens live on the 
 
 Owner's decision on Engine 2's list (item 15). The Intern holds a stake of $INTERN coins in the contract's own account (apart from the 1,000 units locked for ever). When a round wins, 5% of what the pool keeps (after the coach and rescue cuts) becomes new coins for the stake (`stake_grew { round_id, coins, fee }`): the supply grows, and holders pay a 5% performance fee in coins. When a round loses, the stake's coins are burned first, up to the loss's worth (`stake_burned { round_id, coins, covered }`): the supply shrinks and the holders' coins are worth more, which covers the loss as far as the stake goes. No dollar moves; NEP-141 `ft_mint`/`ft_burn` logs carry the memo "the Intern's stake". `round_opened.coin_supply` includes the stake.
 
+### 9.14 Challenging a reported result *(1.7)*
+
+Owner's decision on Engine 2's list (item 12). The runner reports results (known limit 2); since 1.6 every order carries a client order id, so anyone can compare a reported result with Hyperliquid's fills. For 3 rounds after a bet's round, a registered account may challenge it: `ft_transfer_call(.., msg: '{"challenge":{"position_id":N,"returned":"<dollars back>","reason":"<≤140 characters>"}}')` with at least $5 as a bond (one challenge per bet; refunded if it cannot be opened). This opens a `CORRECT` vote at once (`result_challenged`, `vote_opened`), which passes like a promotion. Passed: anyone calls `apply_correction({ vote_id })` (at least 60 TGas): the pool takes the difference (test dollars minted or burned on testnet), the bet's `returned` becomes the challenged figure with `result_source` `CORRECTED`, its round's `result` is adjusted, and the bond comes back to the challenger as a prize (`result_corrected`). Failed: the bond goes to the BRAVE pool as outside income. A reason is shown, never given to the AI. `open_vote` refuses `CORRECT`.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -872,6 +877,8 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `nft_earnings_claimed` *(1.7)* | `{ token_id, account_id, amount }` |
 | `stake_grew` *(1.7)* | `{ round_id, coins, fee }` |
 | `stake_burned` *(1.7)* | `{ round_id, coins, covered }` |
+| `result_challenged` *(1.7)* | `{ vote_id, position_id, challenger, reported, claimed, bond }` |
+| `result_corrected` *(1.7)* | `{ vote_id, position_id, from, to, delta, brave_after }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 

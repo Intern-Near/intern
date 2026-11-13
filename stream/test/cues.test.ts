@@ -116,6 +116,8 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   nft_earnings_claimed: { token_id: "original:FIRED", account_id: "boss2.desk-lab-2026.testnet", amount: "500000" },
   stake_grew: { round_id: 73, coins: "1500000", fee: "1250000" },
   stake_burned: { round_id: 74, coins: "1500000", covered: "1251000" },
+  result_challenged: { vote_id: 12, position_id: 40, challenger: "boss2.desk-lab-2026.testnet", reported: "12000000", claimed: "11500000", bond: "5000000" },
+  result_corrected: { vote_id: 12, position_id: 40, from: "12000000", to: "11500000", delta: "-500000", brave_after: "1572380690" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

@@ -77,6 +77,7 @@ describe("books-check on the live coin (recorded 2026-11-13 15:09 UTC)", () => {
         "get_bounty.pot", // 01 1.7: 0 on the recorded 1.6 coin
         "get_rescue.fund",
         "get_nft_earnings.owed_total",
+        "get_challenges.bonds_held",
       ],
     );
     // brave.interest is a running total, not money held: it is shown, never added.

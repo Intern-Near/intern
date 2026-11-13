@@ -71,6 +71,7 @@ fn to_wire(k: VoteKind) -> wire::VoteKind {
         VoteKind::SetPlaybook => wire::VoteKind::SetPlaybook,
         VoteKind::LongShot => wire::VoteKind::LongShot,
         VoteKind::Renew => wire::VoteKind::Renew,
+        VoteKind::Correct => wire::VoteKind::Correct,
     }
 }
 fn from_wire(k: wire::VoteKind) -> VoteKind {
@@ -82,6 +83,7 @@ fn from_wire(k: wire::VoteKind) -> VoteKind {
         wire::VoteKind::SetPlaybook => VoteKind::SetPlaybook,
         wire::VoteKind::LongShot => VoteKind::LongShot,
         wire::VoteKind::Renew => VoteKind::Renew,
+        wire::VoteKind::Correct => VoteKind::Correct,
     }
 }
 
@@ -216,6 +218,9 @@ impl Coin {
                 )),
             }
         }
+        if kind == VoteKind::Correct && v.state == FAILED {
+            self.challenge_finished(id, false); // 1.7: the bond goes to the pool
+        }
         if self.open_by_kind[v.kind as usize] == Some(id) {
             self.open_by_kind[v.kind as usize] = None;
         }
@@ -238,8 +243,8 @@ impl Coin {
             // 1.5 (R6): a ticket waits, or the last one was less than seven rounds ago.
             return self.long_shot_blocked();
         }
-        if kind == VoteKind::Renew {
-            return false; // 1.7: one open RENEW vote at a time is the only limit
+        if kind == VoteKind::Renew || kind == VoteKind::Correct {
+            return false; // 1.7: one open vote of the kind at a time is the only limit
         }
         if kind == VoteKind::SetPlaybook {
             self.s9.pending_playbook.is_some()
@@ -258,6 +263,10 @@ impl Coin {
         }
         if kind == VoteKind::Renew {
             self.auto_renew(); // 1.7: 30 more days, at once
+            return;
+        }
+        if kind == VoteKind::Correct {
+            self.challenge_finished(vote_id, true); // 1.7: applied by `apply_correction`
             return;
         }
         if kind == VoteKind::SetPlaybook {
@@ -305,6 +314,51 @@ impl Coin {
             // Finished late: the round it waits for may already be running.
             self.apply_due_rank(now_round);
         }
+    }
+
+    /// 1.7: opens a vote for `opener` without the locked-coin requirement (a challenge opens a CORRECT vote). None if
+    /// one of the kind is already open, or no locked coin has any weight yet.
+    pub(crate) fn open_internal_vote(&mut self, k: VoteKind, opener: &AccountId) -> Option<u64> {
+        let now = Self::now();
+        while self.open_by_kind.len() < VoteKind::ALL.len() {
+            self.open_by_kind.push(None);
+        }
+        if let Some(id) = self.open_by_kind[kind_code(k) as usize] {
+            if now < self.votes.get(&id).expect("vote").closes_at {
+                return None;
+            }
+            self.finish(id, now);
+        }
+        let v = self.current.expect("round").id;
+        let w = self.total_weight(v);
+        if w == 0 {
+            return None;
+        }
+        let id = self.next_vote_id;
+        self.next_vote_id += 1;
+        let closes_at = now + self.cfg.round_ms;
+        self.votes.insert(
+            id,
+            VoteRec {
+                id,
+                kind: kind_code(k),
+                opened_by: opener.clone(),
+                opened_at: now,
+                closes_at,
+                vote_round: v,
+                yes: 0,
+                no: 0,
+                locked_weight_at_open: w,
+                state: OPEN,
+                effective_round: None,
+            },
+        );
+        self.open_by_kind[kind_code(k) as usize] = Some(id);
+        self.feed.push(
+            EventName::VoteOpened,
+            json!({"vote_id": id, "kind": to_wire(k), "playbook_id": null, "opened_by": opener, "closes_at": closes_at}),
+        );
+        Some(id)
     }
 
     /// Applies a waiting promotion or rehire once round `id` is the one it waits for.
@@ -423,6 +477,7 @@ impl Coin {
             "only a boss with locked coins can open a vote"
         );
         let k0 = from_wire(kind);
+        require!(k0 != VoteKind::Correct, "a CORRECT vote is opened by challenging a result (ft_transfer_call with a bond)");
         if k0 == VoteKind::SetPlaybook {
             // 1.3: the playbook to activate, or 0 to clear it.
             let pid = playbook_id.unwrap_or_else(|| {

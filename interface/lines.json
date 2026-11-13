@@ -655,6 +655,28 @@
         "Round {round_id}: my stake took the hit first, {covered} of it. That's what it's for."
       ],
       "system": "STAKE BURNED — round {round_id}: {coins} of the Intern's coins burned, covering {covered} of the loss."
+    },
+    "result_challenged": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "thinking",
+      "mascot": "stamp:watching",
+      "intern": [
+        "{account} says bet {position_id} came back {claimed}, not {reported}. Bosses vote; the fills are public, check them.",
+        "A challenge: bet {position_id} reported {reported}, {account} says {claimed}. It goes to a vote."
+      ],
+      "system": "CHALLENGE — {account} disputes bet {position_id}: reported {reported}, claimed {claimed}; bond {bond}; vote {vote_id}."
+    },
+    "result_corrected": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "waiting",
+      "mascot": "stamp:slamming",
+      "intern": [
+        "The bosses agreed: bet {position_id} is corrected from {from} to {to}. The pool moves by {delta}.",
+        "Corrected: bet {position_id} now shows {to}. The challenger was right."
+      ],
+      "system": "CORRECTED — bet {position_id}: {from} → {to} ({delta}); pool after {brave_after}."
     }
   },
   "refusals": {

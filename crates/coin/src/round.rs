@@ -19,11 +19,12 @@ pub const MAX_REPORTED_MULTIPLE: u128 = 10;
 const APPROVED: u8 = 0;
 const SETTLED: u8 = 3;
 const REPORTED: u8 = 0;
+pub(crate) const REPORTED_CODE: u8 = REPORTED;
 
 /// The test dollar's own methods (`mock-usdc`), used for section 14.12.
 #[ext_contract(ext_mock_usdc)]
 #[allow(dead_code)]
-trait MockUsdc {
+pub(crate) trait MockUsdc {
     fn mint(&mut self, account_id: AccountId, amount: U128);
     fn burn(&mut self, amount: U128);
 }
@@ -131,6 +132,7 @@ impl Coin {
             result_source: p.result_source.map(|s| match s {
                 REPORTED => wire::ResultSource::Reported,
                 crate::auto::ABANDONED => wire::ResultSource::Abandoned, // 1.7
+                crate::challenge::CORRECTED => wire::ResultSource::Corrected, // 1.7
                 _ => wire::ResultSource::Measured,
             }),
         }

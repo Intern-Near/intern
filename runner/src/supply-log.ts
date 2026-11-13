@@ -23,7 +23,7 @@ import { record, six, text, u128, u128Value, ViewShapeError, whole } from "./vie
  * Nothing else in 01 §10 touches the coin's supply (tips, prizes, coach cuts and results move test dollars).
  */
 
-/** 01 §10's event names: the same 54 as crates/coin/wire's `EventName` (1.7). */
+/** 01 §10's event names: the same 56 as crates/coin/wire's `EventName` (1.7). */
 export const EVENTS_01: readonly string[] = [
   "round_opened",
   "paid_in",
@@ -81,6 +81,8 @@ export const EVENTS_01: readonly string[] = [
   "nft_earnings_claimed",
   "stake_grew",
   "stake_burned",
+  "result_challenged",
+  "result_corrected",
 ];
 
 /** crates/rules/src/shares.rs `LOCKED_FOREVER`: coin units locked at the first conversion (01 §9.1). */

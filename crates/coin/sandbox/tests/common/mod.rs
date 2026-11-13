@@ -197,6 +197,7 @@ impl World {
         let bounty = self.view(&self.coin, "get_bounty", json!({})).await?;
         let rescue = self.view(&self.coin, "get_rescue", json!({})).await?;
         let earn = self.view(&self.coin, "get_nft_earnings", json!({})).await?;
+        let challenges = self.view(&self.coin, "get_challenges", json!({})).await?;
         let held = self.usdc_of(self.coin.id()).await?;
         assert_eq!(
             held,
@@ -210,6 +211,7 @@ impl World {
                 + u(&bounty["pot"])
                 + u(&rescue["fund"])
                 + u(&earn["owed_total"])
+                + u(&challenges["bonds_held"])
                 + ignored,
             "USDC held vs books: {pot} {rw}"
         );

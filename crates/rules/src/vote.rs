@@ -24,10 +24,12 @@ pub enum VoteKind {
     LongShot,
     /// 1.7: extends the Intern's term by 30 days (the coin's `auto` module). Appended.
     Renew,
+    /// 1.7: corrects a challenged result (the coin's `challenge` module); opened by a challenge, not by `open_vote`.
+    Correct,
 }
 
 impl VoteKind {
-    pub const ALL: [VoteKind; 7] = [
+    pub const ALL: [VoteKind; 8] = [
         VoteKind::Promote,
         VoteKind::Demote,
         VoteKind::Fire,
@@ -35,6 +37,7 @@ impl VoteKind {
         VoteKind::SetPlaybook,
         VoteKind::LongShot,
         VoteKind::Renew,
+        VoteKind::Correct,
     ];
 
     pub const fn as_str(self) -> &'static str {
@@ -46,6 +49,7 @@ impl VoteKind {
             VoteKind::SetPlaybook => "SET_PLAYBOOK",
             VoteKind::LongShot => "LONG_SHOT",
             VoteKind::Renew => "RENEW",
+            VoteKind::Correct => "CORRECT",
         }
     }
 
@@ -182,6 +186,8 @@ pub fn can_open(
         // 1.7: only while employed (a fired Intern is rehired instead).
         VoteKind::Renew if status != Status::Employed => Err(CannotOpen::WrongStatus),
         VoteKind::Renew => Ok(()),
+        // 1.7: in any rank or status (a correction changes a past result, not what may be traded).
+        VoteKind::Correct => Ok(()),
         VoteKind::Rehire if status != Status::Fired => Err(CannotOpen::WrongStatus),
         VoteKind::Rehire if change_waiting => Err(CannotOpen::ChangeWaiting),
         VoteKind::Rehire => Ok(()),
@@ -226,7 +232,7 @@ pub fn outcome(kind: VoteKind, rank: Rank, status: Status) -> (Rank, Status) {
         ),
         VoteKind::Fire => (rank, Status::Fired),
         VoteKind::Rehire => (Rank::Intern, Status::Employed),
-        VoteKind::SetPlaybook | VoteKind::LongShot | VoteKind::Renew => (rank, status),
+        VoteKind::SetPlaybook | VoteKind::LongShot | VoteKind::Renew | VoteKind::Correct => (rank, status),
     }
 }
 

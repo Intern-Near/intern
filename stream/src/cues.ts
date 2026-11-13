@@ -168,6 +168,11 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
     "target",
     "fee",
     "covered",
+    "reported",
+    "claimed",
+    "bond",
+    "from",
+    "to",
   ])
     if (k in d) out[k] = usd(d[k]);
   if ("result" in d) out.result = signedUsd(d.result);
@@ -175,6 +180,8 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
   if ("weight" in d) out.weight = coins(d.weight);
   if ("account_id" in d) out.account = account(d.account_id);
   else if ("by" in d) out.account = account(d.by); // 1.7: bounty_grew names the giver `by`
+  else if ("challenger" in d) out.account = account(d.challenger); // 1.7: result_challenged
+  if ("delta" in d) out.delta = signedUsd(d.delta);
   out.amount_coins = coins(d.amount);
   out.rank = ctx.rank ?? s("rank");
   out.side_word = word("side", d.side);

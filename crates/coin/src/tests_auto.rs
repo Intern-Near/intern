@@ -448,3 +448,74 @@ fn the_stake_grows_by_a_five_percent_fee_on_a_win_and_burns_first_on_a_loss() {
     assert!((v2 as i128 - (v1 as i128 - 9_000_000)).abs() <= 100, "{v1} {v2}");
     assert_eq!(events(&c, EventName::StakeBurned).len(), 1);
 }
+
+// ----- challenging a reported result (item 12) ---------------------------------------------------------------
+
+/// Round 2: alice locks $500 of coins; a $11 bet is reported as $12 back and settled. Returns the position id.
+fn bet_reported_and_settled(c: &mut Coin) -> u64 {
+    ctx(at(2, 1_500), "alice.test", 0);
+    c.lock(U128(500_000_000));
+    let wire::Verdict::Yes { position_id } = propose(c, 2, &SMALL) else { panic!("approved") };
+    ctx(at(2, IN_WINDOW + 5_000), RUNNER, 0);
+    c.report_result(position_id, U128(12_000_000));
+    ctx(at(2, IN_WINDOW + 6_000), "anyone.test", 0);
+    let _ = c.settle(2);
+    ctx_full(at(2, IN_WINDOW + 7_000), ME, 0, vec![PromiseResult::Successful(vec![])]);
+    c.on_settle(2, U128(11_000_000), wire::I128(1_000_000));
+    position_id
+}
+
+#[test]
+fn a_challenged_result_is_corrected_by_a_vote_and_the_bond_comes_back() {
+    let mut c = three();
+    let pid = bet_reported_and_settled(&mut c);
+    goto(&mut c, 4, 1_000);
+    // bob says $11.50 came back, not $12, with a $5 bond: a CORRECT vote opens at once.
+    let msg = format!(r#"{{"challenge":{{"position_id":{pid},"returned":"11500000","reason":"fills say 11.50"}}}}"#);
+    assert_eq!(transfer_in(&mut c, at(4, 2_000), "bob.test", 5_000_000, &msg), 0);
+    let ch = c.get_challenges();
+    assert_eq!((ch.bonds_held.0, ch.challenges.len(), ch.challenges[0].state.as_str()), (5_000_000, 1, "OPEN"));
+    let vote_id = ch.challenges[0].vote_id;
+    // The same bet again, or a CORRECT vote by open_vote: refused.
+    assert_eq!(transfer_in(&mut c, at(4, 2_100), "carol.test", 5_000_000, &msg), 5_000_000);
+    ctx(at(4, 2_200), "alice.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| c.open_vote(wire::VoteKind::Correct, None))).is_err());
+    // alice votes yes; the vote passes a round later.
+    ctx(at(4, 2_300), "alice.test", 0);
+    c.cast(vote_id, true);
+    goto(&mut c, 5, 3_000);
+    ctx(at(5, 3_000), "anyone.test", 0);
+    assert_eq!(c.finish_vote(vote_id).state, wire::VoteState::Passed);
+    assert_eq!(c.get_challenges().challenges[0].state, "PASSED");
+    // Applied: the pool gives back $0.50, the bet is CORRECTED, bob's bond is his prize again.
+    let before = c.books.brave_total;
+    ctx(at(5, 4_000), "anyone.test", 0);
+    let _ = c.apply_correction(vote_id);
+    ctx_full(at(5, 4_100), ME, 0, vec![PromiseResult::Successful(vec![])]);
+    assert!(c.on_correction(vote_id));
+    assert_eq!(c.books.brave_total, before - 500_000);
+    let p = c.get_positions(Some(2)).into_iter().find(|p| p.id == pid).unwrap();
+    assert_eq!((p.returned, p.result_source), (Some(U128(11_500_000)), Some(wire::ResultSource::Corrected)));
+    ctx(at(5, 4_200), "anyone.test", 0);
+    assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 5_000_000);
+    assert_eq!(c.get_challenges().bonds_held.0, 0);
+    assert_eq!(events(&c, EventName::ResultCorrected).len(), 1);
+}
+
+#[test]
+fn a_challenge_that_fails_gives_its_bond_to_the_pool_and_the_window_closes() {
+    let mut c = three();
+    let pid = bet_reported_and_settled(&mut c);
+    goto(&mut c, 4, 1_000);
+    let msg = format!(r#"{{"challenge":{{"position_id":{pid},"returned":"11000000","reason":"no"}}}}"#);
+    assert_eq!(transfer_in(&mut c, at(4, 2_000), "bob.test", 5_000_000, &msg), 0);
+    let vote_id = c.get_challenges().challenges[0].vote_id;
+    goto(&mut c, 5, 3_000); // nobody voted
+    ctx(at(5, 3_000), "anyone.test", 0);
+    assert_eq!(c.finish_vote(vote_id).state, wire::VoteState::Failed);
+    assert_eq!(c.get_challenges().bonds_held.0, 0);
+    assert_eq!(c.s9.income_waiting, 5_000_000);
+    // Round 6 is past the window (round 2 + 3): a new challenge of another kind of figure is refused.
+    goto(&mut c, 6, 1_000);
+    assert_eq!(transfer_in(&mut c, at(6, 2_000), "carol.test", 5_000_000, &msg.replace("11000000", "10000000")), 5_000_000);
+}

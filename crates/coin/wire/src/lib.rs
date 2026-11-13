@@ -70,7 +70,7 @@ wire_enum!(
         Settled
     }
 );
-wire_enum!("SCREAMING_SNAKE_CASE", ResultSource { Reported, Measured, Abandoned /* 1.7: booked as lost by `abandon` */ });
+wire_enum!("SCREAMING_SNAKE_CASE", ResultSource { Reported, Measured, Abandoned /* 1.7: booked as lost by `abandon` */, Corrected /* 1.7: a challenge passed */ });
 wire_enum!(
     "SCREAMING_SNAKE_CASE",
     ActionKind {
@@ -90,7 +90,8 @@ wire_enum!(
         // 1.5 (R6)
         LongShot,
         // 1.7
-        Renew
+        Renew,
+        Correct
     }
 );
 wire_enum!(
@@ -174,6 +175,8 @@ wire_enum!(
         NftEarningsClaimed,
         StakeGrew,
         StakeBurned,
+        ResultChallenged,
+        ResultCorrected,
     }
 );
 
