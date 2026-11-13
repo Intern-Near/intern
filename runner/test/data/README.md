@@ -23,3 +23,18 @@ page of get_outbox and get_feed), each with its arguments and the parsed result.
 `view-access-key-list-2026-11-13.json`: the results of the RPC query `view_access_key_list` for
 `intern-runner-ed25519.testnet` and `intern-relayer-ed25519.testnet`, from `https://test.rpc.fastnear.com` on
 2026-11-13 at 13:58:50 UTC (public keys only; no secret). `test/key-scope.test.ts` reads them.
+
+`books-check-2026-11-13T150922Z/`: two real read-only runs of `npm run books -- --save …` on 2026-11-13 at 15:09 UTC,
+through `https://test.rpc.fastnear.com`, with the lender `lender.desk-lab-2026.testnet` from
+`interface/deployments.json`. `coin/rpc.json`: `coin.desk-lab-2026.testnet` at block 277526435; `coin-fast/rpc.json`:
+`coin-fast.desk-lab-2026.testnet` at block 277526441. Each file holds every JSON-RPC exchange of that run (`status`,
+`block`, then the views at that block: `get_constants`, `get_pot`, `get_rewards`, the test dollar's `ft_balance_of`
+of the coin and of the lender, the lender's `get_account` and `get_rate`), each request with the reply body exactly
+as received and its own `fetched_at`. `test/books-check.test.ts` replays them.
+
+`supply-log-2026-11-13T150922Z/`: two real read-only runs of `npm run supply-log -- --save …` on 2026-11-13 at
+15:09 UTC, through `https://test.rpc.fastnear.com`. `coin/rpc.json`: `coin.desk-lab-2026.testnet` at block 277526446
+(feed seq 1 to 313, four pages); `coin-fast/rpc.json`: `coin-fast.desk-lab-2026.testnet` at block 277526452 (feed
+seq 1 to 103; its round 23 was due and not yet written). Every exchange as above: `status`, `block`,
+`get_constants`, every `get_feed` page, `get_pot`, `get_round`, `ft_total_supply` and `ft_balance_of` of the coin
+contract itself. `test/supply-log.test.ts` replays them.

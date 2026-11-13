@@ -21,7 +21,9 @@
     "verify": "npm run typecheck && npm run lint && npm test",
     "playbook-check": "node --env-file-if-exists=.env src/cli/playbook-check.ts",
     "fills-check": "node src/cli/fills-check.ts",
-    "key-scope": "node src/cli/key-scope.ts"
+    "key-scope": "node src/cli/key-scope.ts",
+    "books": "node src/cli/books-check.ts",
+    "supply-log": "node src/cli/supply-log.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

@@ -183,6 +183,8 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run attestation-check` | Checks a fresh NEAR AI attestation report for the pinned model (below). Read-only, no key |
 | `npm run fills-check -- [--coin <account>] [--rounds N] [--rpc <url>] [--json <file>]` | Read-only. The results the runner reported against Hyperliquid's own fills ("fills-check" below) |
 | `npm run key-scope -- <account> [--expect runner\|relayer] [--key <public key>]` | Read-only. The key an account signs with against what is declared, and its other keys ("key-scope" below) |
+| `npm run books -- [--coin <account>] [--json <file>]` | Read-only. Whether the coin holds and has lent exactly what it owes, bucket by bucket ("books" below) |
+| `npm run supply-log -- [--coin <account>] [--json <file>] [--csv <file>]` | Read-only. Every mint and burn of $INTERN, rebuilt from the feed, against `ft_total_supply` ("supply-log" below) |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
 
@@ -378,6 +380,113 @@ verdict on which key the runner uses, and 1 key would pass as its signing key, t
 code 0. The relayer `intern-relayer-ed25519.testnet` with `--expect relayer --key
 ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT`: its one full-access key, `AS DECLARED`, 9.91 NEAR.
 
+## books: do the coin's dollars add up?
+
+```
+npm run books -- [--coin <account>] [--lender <account>] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; it needs no key and reads no `.env`. It pins one final block and reads every number at that block, so a
+payment cannot fall between two reads. What the coin owes comes from its own views, bucket by bucket; what holds
+that money is the test dollar's balance of the coin (`ft_balance_of` on `get_constants().usdc_token`) and what the
+lender's own books say the coin lent it (the lender's `get_account(<coin>).principal`, `crates/lender`). The rule is
+01 §9.7's, the one the contract's sandbox tests assert after every move:
+
+```
+USDC held by the coin = brave.total - brave.lent + brave.pending + safe.total + brave.income_waiting
+                        + jackpot + draw_pot + prizes_owed,      and brave.lent is at the lender
+```
+
+| Bucket | View field | Where the money is |
+|---|---|---|
+| BRAVE pool, split into idle, margin on open bets and lent | `get_pot.brave.total` (`idle`, `in_play`, `lent`) | the coin's USDC; `lent` at the lender |
+| BRAVE pending (paid in, coins at the next opening) | `get_pot.brave.pending` | the coin's USDC |
+| Outside income waiting for the next opening | `get_pot.brave.income_waiting` | the coin's USDC |
+| SAFE | `get_pot.safe.total` | the coin's USDC |
+| Streak jackpot, payday draw pot, prizes owed | `get_rewards.jackpot`, `.draw_pot`, `.prizes_owed` | the coin's USDC |
+
+`brave.interest` is shown but not added: it is a running total of interest collected, which since 01 1.4 sits in
+the draw pot or was paid as prizes. It prints the buckets, what holds them, each place's difference (the coin's
+USDC, the lender) and the total's, and two checks from 01: `idle + in_play + lent = brave.total` (§9.6) and
+`safe.lent` is 0 (the §9.7 rule counts all of SAFE as held by the coin).
+
+| Verdict | Means |
+|---|---|
+| `ADD UP` | Each place holds exactly what it should, to the micro-dollar |
+| `MOVING` | The total adds up, but the coin and the lender differ by the same amount: a loan or a repayment in flight |
+| `SURPLUS` | More is held and lent than is owed: dollars sent by a plain `ft_transfer`, or a payment in flight |
+| `SHORT` | Less is held and lent than is owed. A payment in flight can do this for a block or two; run it again |
+| `NOT CHECKED` | Money is lent and no lender was read (`--lender`) |
+
+Exit code: 0 `ADD UP` with both checks passing; 1 anything else; 2 a call failed. `--json` writes the same data;
+`--save <dir>` keeps every RPC exchange as received (the tests replay two such recordings).
+
+It says plainly what is not in these books. **Hyperliquid:** the bets' margin there was funded by hand, not by the
+contract (01 §14.3; the live coin's address got 100 test USDC once), so `brave.in_play` never leaves the coin's USDC
+and the Hyperliquid account is outside the books. **Results** are reported by the runner, and the contract mints or
+burns test dollars to match each round's result (01 §14.12), so the books add up whatever the bets did; `fills-check`
+is what checks the results against the fills. **The lender** is a stand-in: it pays interest out of the dollars it
+holds and mints any shortfall when it pays back (`crates/lender` `send`), so its own USDC can be below what it owes
+(on 2026-11-13 it held 0.000110 less than the two coins' principal, the same as the interest the live coin had
+collected from it). Its interest
+accrued and not yet collected is shown, not counted. `get_constants` does not name the lender; the default is
+`testnet.lender` in `interface/deployments.json`.
+
+Real runs (2026-11-13 15:09 UTC, read-only): the live coin at block 277526435 owes 1894.091972 (BRAVE pool 1572.985657,
+SAFE 221.106315, jackpot 100.000000, the rest 0); the coin holds 351.951646 and the lender 1542.140326 for it:
+`ADD UP`, difference 0.000000. `coin-fast` at block 277526441: owes 703.800000, holds 28.800000 and lent 675.000000:
+`ADD UP`.
+
+## supply-log: every mint and burn of $INTERN
+
+```
+npm run supply-log -- [--coin <account>] [--rpc <url>] [--json <file>] [--csv <file>] [--save <dir>]
+```
+
+Read-only; no key, no `.env`. It reads the whole feed (`get_feed`, every page) at one final block, rebuilds the coin
+supply event by event, and compares the total with `ft_total_supply` at the same block. What changes the supply is
+taken from the contract's code (`crates/coin`, `crates/rules`, read only):
+
+| In the feed | What it does to the supply | Kind |
+|---|---|---|
+| `round_opened` | The dollars waiting become coins at that moment: `floor(waiting × supply / pool)` (`shares.rs` `open_round_mint`). The first conversion ever makes as many coins as dollars and locks 1,000 units for ever in the contract's own balance. The event carries no coin count, so the count is worked out with that rule from the feed's own figures (`brave_at_open`, the dollars waiting) | MINT |
+| `coins_minted` | Nothing: one account's share of an opening, written to its balance the next time it acts (01 §5). Checked against what the rule gives that account | WRITE |
+| `cashed_out` from BRAVE with `coins` | Burns them | BURN |
+| `dial_turned` to SAFE | Burns `amount` coins | BURN |
+| `paid_in` to BRAVE, `dial_turned` to BRAVE | Dollars wait for the next opening | WAIT |
+| `cashed_out` from BRAVE with `coins: null` | Waiting dollars taken back | TAKEN BACK |
+
+Every other event in 01 §10 moves no coin. The output: one line per event (seq, time, round, kind, account, dollars,
+coins, the supply after it), one line per round that minted, wrote or burned coins (dollars in, coins minted, the
+price, written so far, not yet written, burned, the supply after), then the supply now: minted (locked for ever,
+written to accounts, not yet written, rounding dust), minus burned at cash-out and by the dial, against
+`ft_total_supply`. Checks: the rebuilt supply equals `ft_total_supply`; `ft_total_supply` equals
+`get_pot.coin_supply`; the locked units equal `ft_balance_of(<coin>)`; the dollars still waiting equal
+`get_pot.brave.pending`; every `coins_minted` gives its account exactly what the rule gives it. An opening that is
+due but not yet written by any transaction is counted as the views count it. `--csv` writes the event lines (amounts
+with 6 decimals), `--json` everything. Exit code: 0 the feed accounts for every coin; 1 a difference or a gap; 2 a
+call failed.
+
+**What the feed cannot account for** is listed, never filled in: a feed that no longer starts at seq 1 (it keeps the
+latest 1,000 events; then the supply before its first event is unknown, so the openings' coins cannot be worked out
+and nothing is compared), an event 01 §10 does not list, an event that disagrees with the rule, or a difference with
+`ft_total_supply`. A cash-out or dial turn in flight at the block burns its coins before the feed logs it: run again.
+
+Real runs (2026-11-13 15:09 UTC): the live coin at block 277526446, feed seq 1 to 313, all of it. Four openings made
+coins: round 2 (100.000000, of which 0.001000 locked), round 3 (900.000000), round 5 (49.947423), round 12
+(824.695144). Two cash-outs burned 474.999250 and two dial turns 101.000000. Rebuilt 1298.643317 = `ft_total_supply`
+1298.643317; the three `coins_minted` events match the rule. `coin-fast` at block 277526452: 700.000000 =
+`ft_total_supply`, its round 23 due and not yet written. Findings for the owner, printed by the tool:
+
+- `round_opened` carries no coin count and the 1,000 locked units have no event, so the log depends on the share
+  rule; a `minted` and `locked` field on `round_opened` would make the feed state it (an interface change).
+- 824.695144 coins (63.5% of the live supply), boss1's $1,000 of round 12, have no `coins_minted` event yet, because
+  that account has not acted since (by design, 01 §5). The contract emits its NEP-141 `ft_mint` log at that same later
+  moment, so adding up `ft_mint` and `ft_burn` logs gives 473.948173, not `ft_total_supply` (from the code; how an
+  explorer counts is UNVERIFIED).
+- The feed has used 313 of its 1,000 places, about 5.9 a round: in about 116 more rounds (around 2.4 days at 30-minute
+  rounds) seq 1 drops out and the log can no longer be rebuilt from the feed alone.
+
 ## What is in `src/`
 
 | File | What it is |
@@ -408,6 +517,9 @@ ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT`: its one full-access key, 
 | `verify-round.ts`, `near-rpc.ts`, `pinned.ts` | `verify-round`: the re-check of one proposal; a small read-only NEAR JSON-RPC client with the archival fallback; 01's pin, and the four models' recorded ed25519 keys (to name a signer that is not the pin) |
 | `attestation-check.ts`, `tdx-quote.ts`, `nvidia-gpu.ts` | `attestation-check`: the report's checks; the TDX quote and its signature chain; NVIDIA's GPU verdict and tokens |
 | `seed-temperature.ts`, `cli/seed-temperature.ts` | The fixed question of the seed and temperature research (`docs/seed-and-temperature.md`) |
+| `books-check.ts`, `books-text.ts` | `books`: the coin's buckets and what holds them, at one block; 01 §9.7's rule, the verdict, the text |
+| `supply-log.ts`, `supply-text.ts` | `supply-log`: the feed at one block, the supply rebuilt with the contract's share rule, the text and CSV |
+| `at-block.ts`, `view-fields.ts`, `deployed.ts` | Views read at one final block (testnet only); strict readers for view answers; any name from `deployments.json` |
 
 Tests drive the round loop against test doubles in `test/support/`: an in-memory stand-in for the contract and a
 `fetch` answering like NEAR AI and Hyperliquid testnet. They are labelled as test doubles, live only under `test/`,
@@ -431,3 +543,12 @@ and no command can select them. Hyperliquid's market data in them is a real test
 - `check` reads each model's signer from NEAR AI's attestation report without verifying the hardware evidence.
   `attestation-check` verifies part of that evidence for the pinned model; what it leaves UNVERIFIED is listed
   above. The runner itself does not run it before proposing.
+- **`books` checks the contract's books, not Hyperliquid's**: the bets' margin there is a hand-funded stand-in and is
+  outside them. The lender is the one `deployments.json` names, because `get_constants` names none (if it were the
+  wrong one, its principal for the coin would not match `brave.lent`). It cannot see a payment in flight; one shows
+  as a difference for a block or two.
+- **`supply-log` needs the whole feed**: once the feed drops seq 1 (it keeps 1,000 events) it says so and stops
+  short of a total. It works each opening's coins out with the contract's share rule, because `round_opened` does not
+  state them; if a round opened while a cash-out's payment was still in flight, that opening's count could be off
+  and the comparison with `ft_total_supply` would show it. The coin contract's NEP-141 logs (`ft_mint`, `ft_burn`)
+  are not read: RPC gives a transaction's logs only by its hash, so reading them all needs an indexer.
