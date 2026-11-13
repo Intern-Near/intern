@@ -21,7 +21,7 @@ step "1. Tools"
 note "rustc:      $(rustc --version 2>/dev/null || echo MISSING)   (expected 1.95.0, from rust-toolchain.toml)"
 note "cargo-near: $(cargo near --version 2>/dev/null || echo MISSING)   (expected 0.23.0)"
 note "near-sdk:   $(grep -A1 'name = "near-sdk"' Cargo.lock | grep version | head -1 | cut -d'"' -f2)   (pinned =5.30.1 in Cargo.toml)"
-note "node:       $(node --version 2>/dev/null || echo MISSING)   (expected 24, from .nvmrc; only for step 6)"
+note "node:       $(node --version 2>/dev/null || echo MISSING)   (expected 24, from .nvmrc; package.json asks for 24.11+; only for step 6)"
 
 step "2. Build every contract (wasm)"
 build() { # crate dir, extra args, log suffix
@@ -92,7 +92,7 @@ step "6. The off-chain parts: tests of the runner, Tail or Fade, the stream cues
 if command -v npm >/dev/null 2>&1; then
   for p in runner tailfade stream shadow; do
     l="$log/npm-$p.log"
-    if (cd "$p" && npm ci --no-audit --no-fund && npm test) >"$l" 2>&1; then r=""; else r="FAILED (see $l)"; fail=1; fi
+    if (cd "$p" && npm ci --no-audit --no-fund --engine-strict=false && npm test) >"$l" 2>&1; then r=""; else r="FAILED (see $l)"; fail=1; fi
     np=$(grep -aE '^(ℹ|#) pass [0-9]+' "$l" | tail -1 | grep -oE '[0-9]+$')
     nf=$(grep -aE '^(ℹ|#) fail [0-9]+' "$l" | tail -1 | grep -oE '[0-9]+$')
     note "$(printf '%-9s' "$p") passed: ${np:-?}   failed: ${nf:-?}   $r"
