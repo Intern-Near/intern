@@ -16,6 +16,7 @@ import { Usd } from "../ui/Usd";
 import { BOT_LINE, Who } from "../ui/BotTag";
 import { Waiting } from "../ui/Waiting";
 import { DrawLuck, RealDrawExample } from "./DrawLuck";
+import { Notice } from "../ui/Notice";
 
 const GUESSES: { verdict: Verdict3; say: string; means: string }[] = [
   { verdict: "YES", say: "YES", means: "the bet is allowed" },
@@ -93,9 +94,7 @@ export function RewardsPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {!r || !k ? (

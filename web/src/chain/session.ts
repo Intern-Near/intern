@@ -120,7 +120,7 @@ export function useMe(accountId: string | null, actions: Actions | null, changeK
   return { me, reload: useCallback(() => setTick((t) => t + 1), []) };
 }
 
-export type Doing = { busy: string | null; error: string | null; done: string | null; run: (name: string, what: () => Promise<void>, done?: string) => Promise<void> };
+export type Doing = { busy: string | null; error: string | null; done: string | null; run: (name: string, what: () => Promise<void>, done?: string) => Promise<void>; /** Puts the last message away. */ clear: () => void };
 
 /** Runs one action at a time, with busy, done and error states the buttons can show. */
 export function useDoing(after: () => void): Doing {
@@ -146,7 +146,11 @@ export function useDoing(after: () => void): Doing {
     },
     [busy, after],
   );
-  return { busy, error, done, run };
+  const clear = useCallback(() => {
+    setError(null);
+    setDone(null);
+  }, []);
+  return { busy, error, done, run, clear };
 }
 
 /** "12.5" → "12500000". Returns null for anything that is not a plain positive amount. */

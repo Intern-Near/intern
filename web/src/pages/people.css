@@ -61,6 +61,29 @@
   box-shadow: var(--lift);
   animation: row-in var(--t-enter) var(--ease) both;
 }
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+.notice-x {
+  flex: none;
+  margin: -4px -6px -4px auto;
+  width: 32px;
+  height: 32px;
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.notice-x:hover,
+.notice-x:focus-visible {
+  background: rgb(0 0 0 / 0.12);
+}
 .notice-ok {
   background: var(--mint);
 }

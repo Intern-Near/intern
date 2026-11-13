@@ -14,6 +14,7 @@ import { useAsync } from "../lib/useAsync";
 import { BOT_LINE, Who } from "../ui/BotTag";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 /** One week's record, written by the program from its own rounds. */
 function Review({ r, stamp, busy, canStamp }: { r: ReviewView; stamp: (() => void) | null; busy: boolean; canStamp: boolean }) {
@@ -159,9 +160,7 @@ export function WeekPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {!d ? (

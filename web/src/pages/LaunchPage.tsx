@@ -10,6 +10,7 @@ import { day } from "../lib/nav";
 import { useAsync } from "../lib/useAsync";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 /** Dollars per whole token right now, from the curve: (virtual + raised) / (supply - sold). */
 function priceOf(l: Launch, info: LaunchInfo): number {
@@ -85,9 +86,7 @@ function Trade({ l, bump }: { l: Launch; bump: () => void }) {
         </button>
       )}
       {(doing.error || doing.done) && (
-        <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-          {doing.error ?? doing.done}
-        </p>
+        <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
       )}
     </section>
   );
@@ -144,9 +143,7 @@ export function LaunchPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {info && (

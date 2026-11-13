@@ -14,6 +14,7 @@ import { account as hlAccount, exchange } from "../tailfade/hl.ts";
 import { addressFromDerivedKey, SIGNER, viewFunction } from "../tailfade/mpc.ts";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 const ADDRESS = /^0x[0-9a-f]{40}$/;
 const KIND_WORD: Record<string, string> = { approveAgent: "Trading-key approval", APPROVE_AGENT: "Trading-key approval", usdSend: "Withdrawal", USD_SEND: "Withdrawal" };
@@ -124,9 +125,7 @@ export function StickersPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {c && (

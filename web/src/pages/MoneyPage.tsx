@@ -14,6 +14,7 @@ import { RescuePanel, StakeCard } from "../ui/Auto17";
 import { TopBar } from "../ui/TopBar";
 import { Usd } from "../ui/Usd";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 const plain = (e6: bigint) => (Number(e6) / 1e6).toFixed(2);
 
@@ -221,9 +222,7 @@ export function MoneyPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {!session.accountId || !actions ? (

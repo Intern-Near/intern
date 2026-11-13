@@ -6,6 +6,7 @@ import type { Challenge, Position } from "../chain/types";
 import { isBot, shortAccount, titleCase, usd } from "../lib/format";
 import { href } from "../lib/nav";
 import { useAsync } from "../lib/useAsync";
+import { Notice } from "../ui/Notice";
 
 const STATE_WORD: Record<Challenge["state"], string> = {
   OPEN: "Vote open",
@@ -67,9 +68,7 @@ export function Challenges({ desk }: { desk: Desk }) {
       </p>
 
       {(doing.error || doing.done) && (
-        <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-          {doing.error ?? doing.done}
-        </p>
+        <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
       )}
 
       {ch.challenges.length === 0 ? (

@@ -14,6 +14,7 @@ import { useAsync } from "../lib/useAsync";
 import { Who } from "../ui/BotTag";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 const TICKETS = (deployments.testnet as { tickets?: string }).tickets ?? null;
 const codeOf = (tokenId: string) => tokenId.replace(/^golden:/, "");
@@ -127,9 +128,7 @@ export function MarketPage() {
         </header>
 
         {(doing.error || doing.done) && (
-          <p className={`notice ${doing.error ? "notice-bad" : "notice-ok"}`} role={doing.error ? "alert" : "status"}>
-            {doing.error ?? doing.done}
-          </p>
+          <Notice error={doing.error} done={doing.done} onClose={doing.clear} />
         )}
 
         {!onLive ? (

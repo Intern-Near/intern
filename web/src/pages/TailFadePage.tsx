@@ -15,6 +15,7 @@ import { FollowCard } from "./FollowCard";
 import { useNow } from "../lib/useNow";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
+import { Notice } from "../ui/Notice";
 
 let driver: Driver | undefined;
 function getDriver(): Driver {
@@ -196,9 +197,7 @@ export function TailFadePage() {
         </ol>
 
         {(error || said) && (
-          <p className={`notice ${error ? "notice-bad" : "notice-ok"}`} role={error ? "alert" : "status"}>
-            {error ?? said}
-          </p>
+          <Notice error={error} done={said} onClose={() => (setError(null), setSaid(null))} />
         )}
 
         <div className="money-grid">
