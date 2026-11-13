@@ -94,11 +94,14 @@ const stamp = (ms: number): string =>
     .replace(/\.\d+Z$/, "Z");
 
 /** The version of 01-SHARED-INTERFACE.md this runner follows. */
-export const INTERFACE_VERSION = "1.5";
-/** Versions of 01 this runner works with: 1.4 and 1.5 added the reward ladder, so a 1.3 contract still works. */
-export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5"];
+export const INTERFACE_VERSION = "1.6";
+/**
+ * Versions of 01 this runner works with: 1.4 and 1.5 added the reward ladder, 1.6 leagues, the weekly review and
+ * order tags (none of which the runner has to do anything for), so a 1.3 contract still works.
+ */
+export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5", "1.6"];
 /** Versions with `rewards_tick`. */
-const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5"];
+const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5", "1.6"];
 
 /**
  * A NEAR account id (NEAR's account-id rules: 2 to 64 characters, lower-case letters and digits in parts joined by
