@@ -1,0 +1,52 @@
+{
+  "fetched_at": "2026-11-13T13:58:50Z",
+  "rpc": "https://test.rpc.fastnear.com",
+  "request": {
+    "method": "query",
+    "params": {
+      "request_type": "view_access_key_list",
+      "finality": "final"
+    }
+  },
+  "results": {
+    "intern-runner-ed25519.testnet": {
+      "block_hash": "ChzHE8tSbe4mXwj4yMmZb2NPdqcTc3w2VmPivEZA173o",
+      "block_height": 277519234,
+      "keys": [
+        {
+          "access_key": {
+            "nonce": 277316784000001,
+            "permission": "FullAccess"
+          },
+          "public_key": "ed25519:5ymHpQp7aMbRG2sLuD4CkvoUoFqfw9uvXoWFoPAiikes"
+        },
+        {
+          "access_key": {
+            "nonce": 277344523000139,
+            "permission": {
+              "FunctionCall": {
+                "allowance": "874850646203922800000000",
+                "method_names": ["propose", "sign_next", "report_result"],
+                "receiver_id": "coin.desk-lab-2026.testnet"
+              }
+            }
+          },
+          "public_key": "ed25519:Cd5AKFazydp6F8rvUkKZsxV2mQYpUiAGAPEb464XF9wy"
+        }
+      ]
+    },
+    "intern-relayer-ed25519.testnet": {
+      "block_hash": "ChzHE8tSbe4mXwj4yMmZb2NPdqcTc3w2VmPivEZA173o",
+      "block_height": 277519234,
+      "keys": [
+        {
+          "access_key": {
+            "nonce": 277316448000132,
+            "permission": "FullAccess"
+          },
+          "public_key": "ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT"
+        }
+      ]
+    }
+  }
+}

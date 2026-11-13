@@ -35,6 +35,11 @@ interface World {
   relayerPermission: unknown;
   relayerBalance: bigint;
   signerInReport: string;
+  /** Other keys on the runner's account (view_access_key_list), beside the key the runner signs with. */
+  runnerOtherKeys?: unknown[];
+  /** No RUNNER_PRIVATE_KEY or RELAYER_PRIVATE_KEY set. */
+  withoutKeys?: boolean;
+  env?: Record<string, string>;
 }
 
 function world(over: Partial<World> = {}): World {
@@ -57,6 +62,13 @@ function world(over: Partial<World> = {}): World {
 async function run(w: World): Promise<Line[]> {
   const clock = { now: T0 + 950_000 };
   const chain = new FakeChain(w.constants, clock);
+  // Throwaway key pairs made in memory: the keys the runner and the relayer sign with.
+  const runnerPair = KeyPair.fromRandom("ed25519");
+  const relayerPair = KeyPair.fromRandom("ed25519");
+  const entry = (publicKey: string, permission: unknown) => ({
+    public_key: publicKey,
+    access_key: { nonce: 0, permission },
+  });
   // The stand-in for chain views is answered by FakeChain; preflight also uses the RPC directly for these:
   const rpc = {
     callFunction: async ({ contractId, method }: { contractId: string; method: string }) => {
@@ -69,6 +81,15 @@ async function run(w: World): Promise<Line[]> {
     }),
     viewAccount: async ({ accountId }: { accountId: string }) => ({
       amount: accountId === "relayer.test" ? w.relayerBalance : 10n ** 25n,
+    }),
+    viewAccessKeyList: async ({ accountId }: { accountId: string }) => ({
+      keys:
+        accountId === "runner.test"
+          ? [
+              entry(runnerPair.getPublicKey().toString(), w.runnerPermission),
+              ...(w.runnerOtherKeys ?? []).map((p, i) => entry(`ed25519:other${i}`, p)),
+            ]
+          : [entry(relayerPair.getPublicKey().toString(), w.relayerPermission)],
     }),
   } as unknown as JsonRpcProvider;
   // FakeChain's contract id is "fake-contract.test"; the real derived key is for the probe, so pretend that id.
@@ -90,14 +111,13 @@ async function run(w: World): Promise<Line[]> {
     }
     throw new Error(`no route ${url.href}`);
   };
-  const key = () => new Secret(KeyPair.fromRandom("ed25519").toString());
   return preflight({
     rpc,
     chain,
     fetchFn,
-    env: { NEARAI_API_KEY: "x" },
-    runner: { id: "runner.test", key: key() },
-    relayer: { id: "relayer.test", key: key() },
+    env: { NEARAI_API_KEY: "x", ...w.env },
+    runner: w.withoutKeys ? null : { id: "runner.test", key: new Secret(runnerPair.toString()) },
+    relayer: w.withoutKeys ? null : { id: "relayer.test", key: new Secret(relayerPair.toString()) },
   });
 }
 
@@ -121,6 +141,8 @@ describe("preflight", () => {
       "NEARAI_API_KEY",
       "runner account",
       "relayer account",
+      "runner key scope",
+      "relayer key scope",
     ]) {
       assert.equal(m[what], "ok", `${what}: ${lines.find((l) => l.what === what)?.detail}`);
     }
@@ -178,6 +200,45 @@ describe("preflight", () => {
     const fc = { FunctionCall: { allowance: null, receiver_id: "x", method_names: [] } };
     assert.equal(marks(await run(world({ relayerPermission: fc })))["relayer account"], "fail");
     assert.equal(marks(await run(world({ relayerBalance: 10n ** 23n })))["relayer account"], "warn");
+  });
+
+  it("key scope: the owner's full-access key beside the runner's key is a note, ok even with strict", async () => {
+    const w = world({ runnerOtherKeys: ["FullAccess"] });
+    const lines = await run(w);
+    assert.equal(marks(lines)["runner key scope"], "ok");
+    assert.match(
+      lines.find((l) => l.what === "runner key scope")?.detail ?? "",
+      /as declared: signs with ed25519:\w+, a function-call key .*; also holds 1 full-access key \(normally the account owner's key/,
+    );
+    assert.equal(marks(lines)["relayer key scope"], "ok");
+    assert.equal(marks(await run({ ...w, env: { INTERN_KEY_SCOPE: "strict" } }))["runner key scope"], "ok");
+  });
+
+  it("key scope: a runner key that can do more than declared is a warning; with strict a failure", async () => {
+    const w = world({ runnerPermission: "FullAccess" });
+    const lines = await run(w);
+    assert.equal(marks(lines)["runner key scope"], "warn");
+    assert.match(
+      lines.find((l) => l.what === "runner key scope")?.detail ?? "",
+      /NOT AS DECLARED: the signing key/,
+    );
+    assert.equal(marks(await run({ ...w, env: { INTERN_KEY_SCOPE: "strict" } }))["runner key scope"], "fail");
+    const off = await run({ ...w, env: { INTERN_KEY_SCOPE: "off" } });
+    assert.equal(marks(off)["runner key scope"], undefined);
+    assert.match(
+      off.find((l) => l.what === "key scope")?.detail ?? "",
+      /not checked \(INTERN_KEY_SCOPE=off\)/,
+    );
+  });
+
+  it("key scope: with no private key set, the keys that would pass are listed", async () => {
+    const lines = await run(world({ withoutKeys: true, runnerOtherKeys: ["FullAccess"] }));
+    assert.equal(marks(lines)["runner key scope"], "warn");
+    assert.match(
+      lines.find((l) => l.what === "runner key scope")?.detail ?? "",
+      /no verdict on which key the runner uses; would pass as its signing key: ed25519:\w+$/,
+    );
+    assert.equal(marks(lines)["relayer key scope"], undefined);
   });
 
   it("mainnet constants fail", async () => {

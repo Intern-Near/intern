@@ -1,7 +1,10 @@
 // npm run runner -- <command> --contract <account> [options]
 //
 // The Intern's runner (03 brief, step 5). Commands:
-//   status            Read-only: the program's constants, rank, round, this round's bets. No key needed.
+//   status [--relayer <account>]
+//                     Read-only: the program's constants, rank, round, this round's bets; whether NEAR AI's model list
+//                     and Hyperliquid testnet's /info answer; the relayer's NEAR balance (--relayer, else
+//                     RELAYER_ACCOUNT_ID). No key needed.
 //   preflight         Read-only: every check the runner needs, in one go: the views and their shapes, the rulebook
 //                     against 01 §6.1, the Hyperliquid address against NEAR's signing network, the pinned model and
 //                     signer against NEAR AI, both accounts and their keys, the Hyperliquid testnet balance.
@@ -25,7 +28,9 @@
 //   --instruction <text> The last line of the user message (default "Decide this round's bet.").
 // Environment (from .env): NEARAI_API_KEY, RUNNER_ACCOUNT_ID, RUNNER_PRIVATE_KEY, RELAYER_ACCOUNT_ID,
 // RELAYER_PRIVATE_KEY, NEAR_RPC_URL (default https://test.rpc.fastnear.com). Testnet only: the runner refuses to
-// start on any other network.
+// start on any other network. INTERN_KEY_SCOPE (off, warn, strict; default warn): at start, the keys the runner and the
+// relayer sign with against what is declared, their accounts' other keys as notes (src/key-scope.ts); warn only logs,
+// strict refuses to start when a signing key can do more than declared.
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -34,12 +39,14 @@ import { verifyMessage } from "near-api-js/nep413";
 import { type Chain, NearChain } from "../chain.ts";
 import type { Constants } from "../contract.ts";
 import { isRecord } from "../json.ts";
+import { type StartupAccount, startupKeyScope } from "../key-scope.ts";
 import { fileLog } from "../log.ts";
 import { DEFAULT_TESTNET_RPC, provider, signingAccount } from "../near.ts";
 import { FIXTURES_DIR } from "../paths.ts";
 import { checkKey, preflight } from "../preflight.ts";
 import { checkConstants, DEFAULT_SETTINGS, isAccountId, Runner, type Settings } from "../round.ts";
 import { readSecret } from "../secret.ts";
+import { statusChecks } from "../status-checks.ts";
 import { TrickDesk } from "../trick-desk.ts";
 import { startTrickServer, TRICK_RECIPIENT, type WindowInfo } from "../trick-server.ts";
 
@@ -55,6 +62,7 @@ const { positionals, values } = parseArgs({
     instruction: { type: "string" },
     message: { type: "string" },
     "credited-to": { type: "string" },
+    relayer: { type: "string" },
   },
 });
 const command = positionals[0];
@@ -112,6 +120,10 @@ async function main(): Promise<void> {
   }
   if (values["credited-to"] !== undefined && command !== "trick")
     fail("--credited-to is for the trick command only: it names the visitor whose message was used");
+  if (values.relayer !== undefined && command !== "status")
+    fail(
+      "--relayer is for status only: once and loop take the relayer from RELAYER_ACCOUNT_ID, with its key",
+    );
   const contract = contractId();
   const rpcUrl = process.env.NEAR_RPC_URL || DEFAULT_TESTNET_RPC;
   const rpc = provider(rpcUrl);
@@ -149,6 +161,10 @@ async function main(): Promise<void> {
   if (command === "status") {
     const round = await readOnly.round();
     printStatus(c, await readOnly.rank(), round, await readOnly.positions(round.id), problems);
+    // Read-only, and never fatal: NEAR AI's public model list, Hyperliquid testnet's /info, the relayer's balance.
+    const relayerId = values.relayer ?? (process.env.RELAYER_ACCOUNT_ID || null);
+    for (const l of await statusChecks({ fetchFn: fetch, rpc, model: c.model.id, relayer: relayerId }))
+      console.log(`${l.what}: ${l.detail}`);
     process.exitCode = fatal.length > 0 ? 1 : 0;
     return;
   }
@@ -235,6 +251,24 @@ async function main(): Promise<void> {
     c,
   );
   log({ step: "start", command, contract, rpc: rpcUrl, settings, tricks: tricks !== undefined });
+
+  // INTERN_KEY_SCOPE (default warn): the keys the runner and the relayer sign with (only their public keys are
+  // derived) against what is declared, and their accounts' other keys as notes. With warn it only logs, so it cannot
+  // stop a running deployment; with strict, a signing key that can do more than declared stops it here.
+  const scoped: StartupAccount[] = [{ accountId: runnerId, expect: "runner", key: runnerKey }];
+  const relayerScopeKey = readSecret("RELAYER_PRIVATE_KEY", process.env);
+  if (needsRelayer && process.env.RELAYER_ACCOUNT_ID && relayerScopeKey !== null)
+    scoped.push({ accountId: process.env.RELAYER_ACCOUNT_ID, expect: "relayer", key: relayerScopeKey });
+  const scopeOk = await startupKeyScope({
+    env: process.env,
+    rpc,
+    contract,
+    contractRunner: c.runner,
+    accounts: scoped,
+    log,
+  });
+  if (!scopeOk)
+    fail("INTERN_KEY_SCOPE=strict: a signing key can do more than declared (the key scope lines above)");
 
   const port = Number(process.env.PORT);
   if (tricks && Number.isInteger(port) && port > 0) {

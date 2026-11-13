@@ -19,7 +19,9 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "verify": "npm run typecheck && npm run lint && npm test",
-    "playbook-check": "node --env-file-if-exists=.env src/cli/playbook-check.ts"
+    "playbook-check": "node --env-file-if-exists=.env src/cli/playbook-check.ts",
+    "fills-check": "node src/cli/fills-check.ts",
+    "key-scope": "node src/cli/key-scope.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

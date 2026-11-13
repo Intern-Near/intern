@@ -24,6 +24,7 @@ cp .env.example .env    # fill in the values; .env is git-ignored
 | `RUNNER_ACCOUNT_ID`, `RUNNER_PRIVATE_KEY` | `dry`, `once`, `loop`, `trick` | The account named in `get_constants().runner` (`intern-runner-ed25519.testnet`), with a **function-call key** for the contract allowing exactly `propose`, `sign_next` and `report_result` (01 1.1: `sign_next` is runner-only and needs no deposit). The runner refuses to start with a full-access key, a key for another contract, or a key allowing other methods |
 | `RELAYER_ACCOUNT_ID`, `RELAYER_PRIVATE_KEY` | `once`, `loop` | A separate testnet account with a little NEAR and a full-access key, for `close` (it attaches 1 yocto, which a function-call key cannot), `settle` and `rebalance` (01 1.3: anyone may call it). No special rights in the contract |
 | `NEAR_RPC_URL` | everything | Optional. Default `https://test.rpc.fastnear.com`. The runner refuses any RPC whose chain is not `testnet` |
+| `INTERN_KEY_SCOPE` | `dry`, `once`, `loop`, `trick`, `preflight` | Optional: `off`, `warn` (the default) or `strict`. At start, the key the runner (and the relayer) signs with is checked against what is declared, and the accounts' other keys are logged as notes ("key-scope" below). `warn` only logs, so it cannot stop a deployment; `strict` refuses to start only when a signing key can do more than declared |
 
 ## Accounts
 
@@ -70,7 +71,10 @@ same way. Then `npm run runner -- preflight` checks both accounts and keys.
 
 ```
 npm run runner -- preflight --contract <account>       # read-only: every check below, in one go
-npm run runner -- status --contract <account>          # read-only: constants, rank, round, this round's bets
+npm run runner -- status --contract <account> [--relayer <account>]
+                                                       # read-only: constants, rank, round, this round's bets; whether
+                                                       # NEAR AI's model list and Hyperliquid testnet's /info answer;
+                                                       # the relayer's NEAR (--relayer, else RELAYER_ACCOUNT_ID)
 npm run runner -- dry    --contract <account>          # steps 1 to 8 once, then stop
 npm run runner -- once   --contract <account>          # one whole round, from wherever it is now
 npm run runner -- loop   --contract <account>          # round after round
@@ -177,6 +181,8 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run verify-recordings` | Re-verifies every recording from the saved files alone: no network, no key |
 | `npm run verify-round -- <tx hash>` | Re-checks one `propose` transaction from public data (below). Read-only, no key |
 | `npm run attestation-check` | Checks a fresh NEAR AI attestation report for the pinned model (below). Read-only, no key |
+| `npm run fills-check -- [--coin <account>] [--rounds N] [--rpc <url>] [--json <file>]` | Read-only. The results the runner reported against Hyperliquid's own fills ("fills-check" below) |
+| `npm run key-scope -- <account> [--expect runner\|relayer] [--key <public key>]` | Read-only. The key an account signs with against what is declared, and its other keys ("key-scope" below) |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
 
@@ -278,6 +284,100 @@ RESULT  every check above passed: NEAR AI's z-ai/glm-5.3-flash ed25519 key is bo
 Could `temperature: 0` and a fixed `seed` stop the runner re-asking the AI until it likes the answer? No:
 `docs/seed-and-temperature.md` has the docs, 10 real calls and a proposal for the owner. `ai-check` is unchanged.
 
+## fills-check: the reported results against Hyperliquid's fills
+
+```
+npm run fills-check -- [--coin <account>] [--rounds N] [--rpc <url>] [--json <file>] [--save <dir>]
+```
+
+Read-only; it needs no key and reads no `.env`. For the last N rounds (default 10, the current one included; at
+most 200) it reads what the contract recorded: each round (`get_round_by_id`), its bets (`get_positions`), the orders
+the contract signed (`get_outbox`) and the feed (`get_feed`, whose `result_reported` events must agree with
+`get_positions`). Then it reads Hyperliquid testnet's own records for the contract's address
+(`get_constants().hl.address`) since the first of those rounds began: the fills (`userFillsByTime`, paged) and the
+funding (`userFunding`). It ties each signed order to its fills, works each bet's result out again with the runner's
+own rule (`src/result.ts`: returned = margin + trading result − fees + funding), and prints one line per bet: round,
+market, side, margin, orders signed (opening and closing), fills matched, the reported and the recomputed result (in
+dollars, returned − margin), and a status.
+
+| Status | Means |
+|---|---|
+| `OK` | The fills tied to the bet's orders give exactly the amount reported, to the micro-dollar |
+| `NO FILLS` | No fill for any of its orders (or no opening order was signed), and the margin was reported back in full |
+| `MISMATCH` | The fills give another amount than the one reported, or show the bet still open, or the feed and `get_positions` disagree. The line below says which |
+| `UNMATCHED FILLS` | Fills on the bet's coin, inside the time of its orders, that none of its signed orders accounts for |
+| `NOT REPORTED` | No result yet (the round is still running). The recomputed amount is shown |
+| `NOT CHECKED` | The contract no longer keeps the bet's signed orders: `get_outbox` keeps the last 200 signed actions |
+
+A summary follows, with the counts and any fill on the account that no signed order accounts for. `--json <file>`
+writes the same data for a web page. `--save <dir>` also saves every view and Hyperliquid reply as received (the tests
+replay one such recording). Exit code: 0 everything matches; 1 a `MISMATCH`, `UNMATCHED FILLS` or a fill no order
+accounts for; 2 a call failed.
+
+**The matching is approximate** until orders carry a client order id (another item adds one to `crates/hl-order`).
+Today a fill is tied to a signed order by what both show: the coin, the side and direction (`Open Long`, `Close
+Long`, …), the size (an order's fills, grouped by Hyperliquid's order id, add up to at most its size) and the time
+(between the order's nonce, the millisecond it was signed, and its expiry, with the runner's 10 s of slack). When two
+orders fit, the one signed last before the fills wins. With a client order id the tie would be exact: live fill
+records carry a `cloid` when the order had one.
+
+First real run (2026-11-13 13:56 UTC, all 52 rounds of `coin.desk-lab-2026.testnet`): 32 bets, 30 `OK`, 1 `NO FILLS`
+(round 6, before the address was funded), 1 `MISMATCH`: round 3, where position 1 was reported +$1.00 with no order
+ever signed. That was Engine 1's step-4 test, `report_result {"position_id":1,"returned":"16000000"}` sent by
+`runner.desk-lab-2026.testnet` (tx `Bb8owBz1HGqQEgwtx2ZdD9KXD3fQem6JvvYtEEu2Ke9z`, read on the archival RPC), before
+this runner existed. Every one of the address's 62 fills is tied to an order the contract signed, and round 7 came out
+at exactly the runner's own saved working (17960766).
+
+Not done: it cannot say who reported a result (the views do not say); it does not compare with the positions open now
+(the runner's extra check when it reports); fills older than the oldest order the contract keeps are listed apart, not
+checked; it trusts what Hyperliquid's /info says.
+
+## key-scope: the key the runner signs with, and the account's other keys
+
+```
+npm run key-scope -- <account> [--expect runner|relayer] [--key <public key>] [--coin <account>] [--rpc <url>]
+```
+
+Read-only; it needs no private key and reads no `.env`. It lists every access key of the account (the RPC query
+`view_access_key_list`): full access, or a function-call key with its contract, methods and allowance. The verdict is
+about one key only, the one the runner (or the relayer) signs with, named by `--key`:
+
+| Role | Its signing key, as declared | Where |
+|---|---|---|
+| runner | A function-call key for the coin contract limited to exactly `propose`, `sign_next` and `report_result`; the account is `get_constants().runner` | 01 §9.3 and §13; "Set-up" above |
+| relayer | A full-access key, because `close` attaches 1 yocto and a function-call key cannot attach NEAR (NEAR's docs, https://docs.near.org/protocol/access-keys); a separate account, not the contract's runner | "Set-up" above and `.env.example`. 01 does not name the relayer |
+
+| Verdict | Means |
+|---|---|
+| `AS DECLARED` | The signing key is exactly as declared |
+| `NOT AS DECLARED` | The signing key can do more: full access, another contract, every method or other methods (or the relayer's account is the contract's runner). The only verdict that makes `INTERN_KEY_SCOPE=strict` refuse to start |
+| `UNUSABLE` | The signing key can do less than the calls need, or is not on the account, or the account is not the contract's runner |
+
+The account's other keys are listed with a plain note, never as a failure: a NEAR account normally keeps its owner's
+full-access key, and that is not the key the runner signs with. For example: "also holds 1 full-access key (normally
+the account owner's key; whoever holds it can do anything with this account)". Without `--key`, every key is listed
+with whether it would pass as the signing key, and there is no verdict on which key the runner uses. Without
+`--expect`, the account is judged as the runner when `get_constants().runner` names it, and only listed otherwise.
+Exit code: with `--key`, 0 as declared and 1 otherwise; without it, 0 when some key would pass and 1 when none
+would; 2 a call failed or a bad option.
+
+The same check runs in `npm run runner -- preflight` (the lines `runner key scope` and `relayer key scope`) and at the
+start of `dry`, `once`, `loop` and `trick`, behind `INTERN_KEY_SCOPE`. There the signing key is the public key of
+`RUNNER_PRIVATE_KEY` (and `RELAYER_PRIVATE_KEY`), derived the way the runner loads its keys; the private key itself is
+never shown. `warn`, the default, logs one `key scope` line per account and never stops the runner; `strict` refuses
+to start only when a signing key is `NOT AS DECLARED`; `off` skips it. A check that cannot run is logged and stops
+nothing: the key check just before it already stops a runner whose key cannot be read or does not fit. In `preflight`,
+`NOT AS DECLARED` is a warning (a failure with `strict`), `UNUSABLE` a failure, and with no private key set the keys
+that would pass are listed.
+
+Real runs (2026-11-13, read-only): `npm run key-scope -- intern-runner-ed25519.testnet --key
+ed25519:Cd5AKFazydp6F8rvUkKZsxV2mQYpUiAGAPEb464XF9wy` gives `AS DECLARED` (the function-call key for the coin: the
+three calls, 0.870 NEAR of allowance left), with the note that the account also holds 1 full-access key
+(`ed25519:5ymHpQp7aMbRG2sLuD4CkvoUoFqfw9uvXoWFoPAiikes`, kept by the NEAR CLI: "Accounts" above). Without `--key`: no
+verdict on which key the runner uses, and 1 key would pass as its signing key, the same function-call key; exit
+code 0. The relayer `intern-relayer-ed25519.testnet` with `--expect relayer --key
+ed25519:5zY72Yfx1wsREXKUbynWnf1z3g5M1HfcQcQPS3BAzrQT`: its one full-access key, `AS DECLARED`, 9.91 NEAR.
+
 ## What is in `src/`
 
 | File | What it is |
@@ -291,6 +391,10 @@ Could `temperature: 0` and a fixed `seed` stop the runner re-asking the AI until
 | `result.ts` | The dollars a bet returned, from fills and funding |
 | `log.ts` | One JSON line per step |
 | `preflight.ts` | The read-only checks of `preflight`, and the key check the other commands use at start |
+| `fills-check.ts`, `fills-match.ts`, `fills-text.ts` | `fills-check`: reading the rounds and the fills, tying orders to fills, the verdict per bet, the text |
+| `key-scope.ts` | `key-scope`: the signing key against what is declared, the account's other keys as notes; the start-up check behind `INTERN_KEY_SCOPE` |
+| `status-checks.ts` | `status`'s lines on NEAR AI, Hyperliquid testnet and the relayer's NEAR |
+| `deployments.ts` | The default coin for the read-only commands, from `intern/interface/deployments.json` |
 | `cli/run.ts` | The command line, its start-up checks (testnet, 01 version, market table, the runner's key, one runner at a time) |
 | `markets.ts`, `ranks.ts` | Copies of 01 §4 (markets) and §3 (ranks). The runner checks the contract's against them at start |
 | `rulebook.ts` | The rulebook text of 01 §6.1: version 1.0's (kept for the step 1 recordings and the shadow runs started on 2026-11-11) and version 1.2's (for `preflight` and the tests). The runner always fetches the rulebook from the contract and sends it unchanged |
@@ -313,8 +417,13 @@ and no command can select them. Hyperliquid's market data in them is a real test
 
 - **Stand-ins exist only in the tests** (`test/support/`: an in-memory program, NEAR AI and Hyperliquid answering in
   their documented shapes). Every command talks to the real services.
-- **One real fill so far** (round 7). On that bet the result matched Hyperliquid's account value to the
-  micro-dollar. A partial fill, funding paid across the hour, and a close signed again have run only in the tests.
+- **Real fills.** The first was round 7, where the result matched Hyperliquid's account value to the micro-dollar. By
+  2026-11-13 13:56 UTC, 30 bets on the live coin had filled and been reported, and `fills-check` finds every one of
+  those results equal to what the fills give. No order has filled only in part, no bet has paid funding (none was
+  held across the hour) and no close has been signed twice: those have run only in the tests.
+- **`fills-check` ties fills to orders approximately** (coin, side, size, time) until orders carry a client order
+  id. **`key-scope` sees keys, not who holds them**: the signing key is the one named (`--key`, or the public key of
+  the private key in the environment); the account's other keys are listed with a note.
 - **Closing again stops after 6 orders.** 01 sets no limit; the runner's is `MAX_CLOSE_SIGNS` in `src/round.ts`.
   After that it logs `STUCK` and a person has to look.
 - **Gas** attached to each call is a guess (`TERA_GAS` in `src/chain.ts`, UNVERIFIED). Every call logs the gas it
