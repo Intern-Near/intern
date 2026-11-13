@@ -30,19 +30,19 @@ or simply `./verify.sh --quick`, which runs these, the tests, and the comparison
 The coin includes Engine 2's crates `ai-check` (the "really the AI" check) and `hl-order` (Hyperliquid
 orders), from `crates/` in this folder; their code is part of the coin's hash.
 
-## The expected hashes (2026-11-12)
+## The expected hashes (2026-11-13, interface 1.4)
 
 | Account | Wasm | Size (bytes) | sha256, base58 (= the account's `code_hash`) |
 |---|---|---|---|
-| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 540,200 | `3yDwSmrChLAwwYX6fLq3VLsuo9QjZdkhtRc3U8Z4GkDb` |
+| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 621,944 | `4yqGNWQ9evz9exRC4zkt1xiua1UkJL1czDDtxm9K9XCT` |
 | `usdc.desk-lab-2026.testnet` | `target/near/mock_usdc/mock_usdc.wasm` | 149,106 | `C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H` |
 | `lender.desk-lab-2026.testnet` | `target/near/lender/lender.wasm` | 131,977 | `2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em` |
 | `stickers.desk-lab-2026.testnet` | `target/near/stickers/stickers.wasm` | 203,578 | `22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm` |
 | `launch.desk-lab-2026.testnet` | `target/near/launchpad/launchpad.wasm` | 208,384 | `Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT` |
-| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 290,399 | `FArWUwVDh57zyMX9cfLQHRY8x5yMMPqi4NdBZvfKkesB` |
-| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 537,862 | `9pJfHuEPH7H4qUunU3wrxMcvak5iHwwRc6CdEXnTmUv5` |
+| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,150 | `4d4Pp3gzwXwPjBSvK66G4wcdDQ1HgaXENx6jz3hfHiYu` |
+| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 619,669 | `4GgRc46n6fSQXuep8dfHWwvRsuVJhaEZhV1PAhdejYiZ` |
 
-`./verify.sh --quick` on 2026-11-12 printed `SAME` for all seven. To check one by hand:
+`./verify.sh --quick` on 2026-11-13 printed `SAME` for all seven. To check one by hand:
 
 ```
 python3 -c "import hashlib,sys;B='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';n=int.from_bytes(hashlib.sha256(open(sys.argv[1],'rb').read()).digest(),'big');s='';exec('while n: n,r=divmod(n,58); s=B[r]+s');print(s)" target/near/coin/coin.wasm
@@ -52,7 +52,7 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
 ## What has been checked, and what has not
 
 - **The same machine, another folder: identical.** The whole `intern/` folder was copied elsewhere and the coin
-  built there gave the same `3yDwSmrChLAwwYX6fLq3VLsuo9QjZdkhtRc3U8Z4GkDb`. The build does not depend on where
+  built there gave the same hash (then `3yDwSmrChLAwwYX6fLq3VLsuo9QjZdkhtRc3U8Z4GkDb`, the 1.3 code). The build does not depend on where
   the folder lives.
 - **Another machine: not yet checked.** The same Rust, cargo-near and `Cargo.lock` should give the same bytes on
   another Linux machine, but nobody has tried it. If a judge gets a different hash, the most likely cause is a

@@ -45,6 +45,20 @@ So the Intern's 2% limit is clear of the $11 minimum bet: `boss1.desk-lab-2026.t
 `GN9KQhByXUfjqNVqHXwPcumBbXMfkKSdYSND4nQua7BC`, 17:26 UTC; it opened round 11, so the money converts at round 12).
 From then on the Intern runs on Railway (project `intern-runner`), not from a laptop.
 
+## Interface 1.4: the reward ladder (2026-11-13)
+
+`migrate_rewards` upgraded both coins in place (balances, locks and records kept; tested first on a local node from
+coin-fast's exact 1.3 code). The runner on Railway was redeployed first so it accepts 1.4 and calls `rewards_tick`.
+
+| What | Transaction | Code hash now |
+|---|---|---|
+| `coin-fast` upgraded to 1.4 | `3GrpWAJNzu6cAucStsGSW4s7rFDKcEP4jDLwJgbtJVYK` | `4GgRc46n6fSQXuep8dfHWwvRsuVJhaEZhV1PAhdejYiZ` |
+| `coin` (live) upgraded to 1.4, after round 37 settled | `2hTuWk81QPYtpqWUF5bnVnBXqDBKPVJH8yKo8t9A9xq5` | `4yqGNWQ9evz9exRC4zkt1xiua1UkJL1czDDtxm9K9XCT` |
+| `stub` redeployed (reports 1.4) | `DmeHdMk2xkgAkU9Uuz1gqrjMvuedSVyzsyyVZYt96UNf` | `4d4Pp3gzwXwPjBSvK66G4wcdDQ1HgaXENx6jz3hfHiYu` |
+| The team's $100 jackpot seed (`boss1`, `{"jackpot":{}}`) | `6QEKWRguHaQ2m7c6Ud771sC45q4BdNsiH8EwbDYQiKy9` | |
+| coin-fast checks: a $2 tip ($1 to the jackpot), `enter_draw`, `rewards_tick` (2.6 TGas) | `3XaiPGkY2FuE6gjMMjwZwXVyAY7dB2s1BAqWysWHM65y`, `74MezKpeEipaMFPsKgqhvWQ7kLP1AkrWdPPCb2pQChWr`, `U4hCPzBdmx1wRA4LpWFyFxQymKXCpQCZqQDS8j9VCWY` | |
+| coin-fast round 18: boss1 guessed SKIP, boss2 YES; the runner proposed SKIP; `guess_settled` 1 right, 1 wrong | `JDq4wVUSzfEtXFKicnCYf1pzEdVDTto29dpxZZZad5sg`, `5FBtZFF7RQHnzF7AaJCqdU222DSY1yrsC6hiGicFJ5je`, `MZwWtVVKEjHCr1Ky8oHL1fegXLVTq6xyy3iGeW9kJVR` | |
+
 ## Using an account yourself
 
 The `near` command line finds the key by account name when you add `sign-with-legacy-keychain`.
