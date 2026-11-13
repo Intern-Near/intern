@@ -22,7 +22,14 @@ export function openVote(w: World, kind: VoteKind, openerId: string): Vote | nul
   const opener = w.byId.get(openerId);
   if (!opener || lockedOf(opener) === 0n) return null;
   if (w.votes.some((v) => v.state === "OPEN" && v.kind === kind)) return null;
-  const waiting = kind === "SET_PLAYBOOK" ? w.playbook.waiting_round !== null : w.waiting !== null;
+  // PROPOSAL b: RESUME only while new bets are halted.
+  if (kind === "RESUME" && !w.ps.halted) return null;
+  const waiting =
+    kind === "SET_PLAYBOOK"
+      ? w.playbook.waiting_round !== null
+      : kind === "RESUME"
+        ? w.ps.resume_round !== null
+        : w.waiting !== null;
   if (cannotOpen(kind, w.rank, w.status, waiting) !== null) return null;
   let total = 0n;
   for (const a of w.accounts) total += weightOf(a.lots, w.round);
@@ -80,6 +87,8 @@ export function finish(w: World, vote: Vote, round: number): void {
   vote.effective_round = eff;
   if (vote.kind === "SET_PLAYBOOK") {
     w.playbook.waiting_round = eff;
+  } else if (vote.kind === "RESUME") {
+    w.ps.resume_round = eff;
   } else if (isTightening(vote.kind)) {
     if (w.waiting?.kind === "PROMOTE") w.waiting = null;
     changeRank(w, vote.kind, round);
@@ -99,16 +108,37 @@ export function applyWaiting(w: World): void {
     w.playbook.active = true;
     w.playbook.waiting_round = null;
   }
+  // PROPOSAL b: a passed RESUME lifts the halt; the line is measured again from the price now.
+  if (w.ps.resume_round !== null && w.ps.resume_round <= w.round) {
+    w.ps.halted = false;
+    w.ps.resume_round = null;
+    w.ps.halted_round = null;
+    w.ps.halt_high = coinPriceE6(w.pot);
+  }
 }
 
-function changeRank(w: World, kind: VoteKind, round: number): void {
+/**
+ * PROPOSAL a: three strikes suspend the Intern as a firing would (FIRED: no new bets, open bets still close; a
+ * waiting promotion is cancelled, 01 §9.2 1.1), until holders rehire it.
+ */
+export function suspend(w: World, round: number): void {
+  if (w.waiting?.kind === "PROMOTE") w.waiting = null;
+  w.ps.suspended = true;
+  w.pc.suspensions += 1;
+  changeRank(w, "FIRE", round, "THREE_STRIKES");
+}
+
+function changeRank(w: World, kind: VoteKind, round: number, by: string = kind): void {
   const next = outcome(kind, w.rank, w.status);
   const from = w.status === "FIRED" ? "FIRED" : w.rank;
   const to = next.status === "FIRED" ? "FIRED" : next.rank;
   w.rank = next.rank;
   w.status = next.status;
+  if (next.status === "EMPLOYED") w.ps.suspended = false;
+  // PROPOSAL b: a rehire is a new start, so the halt's line is measured again from the price now.
+  if (from === "FIRED" && next.status === "EMPLOYED") w.ps.halt_high = coinPriceE6(w.pot);
   if (from === to) return;
-  w.counters.rank_changes.push({ round, from, to, by: kind });
+  w.counters.rank_changes.push({ round, from, to, by });
   w.change_round = round;
   const price = coinPriceE6(w.pot);
   w.price_at_change = price;

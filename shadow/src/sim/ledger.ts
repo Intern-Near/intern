@@ -10,8 +10,8 @@ import { LOCKED_FOREVER, MIN_FIRST_DEPOSIT_E6 } from "./rules01.ts";
  */
 
 export type Pool = "BRAVE" | "SAFE";
-/** Who an account is in a scenario: an ordinary boss, the whale, or a fake account. */
-export type Kind = "boss" | "whale" | "fake";
+/** Who an account is in a scenario: an ordinary boss, the whale, a fake account, or an abuse test's attacker. */
+export type Kind = "boss" | "whale" | "fake" | "griefer" | "sniper";
 
 /** Coins locked for voting in one round (01 §9.2). */
 export interface Lot {

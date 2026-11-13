@@ -1,6 +1,6 @@
 # $INTERN: 60 days simulated, 24-hour rounds, as in the product
 
-Generated 2026-11-13T14:33:26.151Z by `npm run sim` (shadow/src/sim). **A simulation, not a forecast:** real past Hyperliquid prices and the AI's real recorded answers, with assumed community behaviour; test dollars only. 5 seeds per scenario, each run twice: with the rank limits and, as a control, with them switched off.
+Generated 2026-11-13T15:19:46.020Z by `npm run sim` (shadow/src/sim). **A simulation, not a forecast:** real past Hyperliquid prices and the AI's real recorded answers, with assumed community behaviour; test dollars only. 5 seeds per scenario, each run twice: with the rank limits and, as a control, with them switched off.
 
 ## Pass marks (set before the results)
 

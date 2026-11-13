@@ -25,7 +25,7 @@ import type { Rng } from "./rng.ts";
 import type { RoundClock } from "./rules01.ts";
 import { REWARDS } from "./rules01.ts";
 import type { VoteKind } from "./votes.ts";
-import { addAccount, inOpenVote, type Moment, traitsOf, type World } from "./world.ts";
+import { addAccount, inOpenVote, traitsOf, type World } from "./world.ts";
 
 /**
  * What the people around the coin do. EVERY number in this file is a scenario input, an assumption, not a contract
@@ -160,6 +160,26 @@ export interface WhaleInputs {
   share_of_locked: number;
   /** He opens a vote to fire the Intern every this many days, besides a promotion whenever one can be opened. */
   fire_every_days: number;
+  /** ABUSE TEST: he also votes in a playbook of his own, so the 10% coach cut of winning rounds goes to him (01 §9.5). */
+  own_playbook?: boolean;
+}
+
+/**
+ * ABUSE TEST: a griefer, a holder who cashes out coins worth `usd` every round, either a minute before the proposal
+ * window (`before`) or a few seconds after the runner has fetched the rulebook (`in-flight`).
+ */
+export interface GrieferInputs {
+  usd: number;
+  at: "before" | "in-flight";
+}
+
+/**
+ * ABUSE TEST: a vote sniper: arrives on `day`, buys `share_of_locked` of the coins then locked, locks them as soon as it
+ * holds them, and opens a vote to fire the Intern every round, voting yes alone.
+ */
+export interface SniperInputs {
+  day: number;
+  share_of_locked: number;
 }
 
 /** Fake accounts: each registered, holding a little BRAVE (to be a boss) and enough SAFE to be jackpot-eligible. */
@@ -224,22 +244,20 @@ export function cashOutCounted(w: World, a: Account, coins: bigint): void {
   if (c.cashouts === 1 || drop > c.max_cashout_price_drop) c.max_cashout_price_drop = drop;
 }
 
+/** One cash-out planned for a round: who, when (ms after the round's start), and how much. */
 export interface CashOutPlan {
   id: string;
-  when: Moment;
+  at_ms: number;
+  /** A share of the account's unlocked coins, in bps; or, when `usd_e6` is set, coins worth that many dollars. */
   share_bps: number;
-}
-
-/** The moment of a round a uniform draw in [0, 1) falls in, by the clock's offsets (01 §5). */
-export function momentOf(x: number, clock: RoundClock): Moment {
-  const t = x * clock.round_ms;
-  return t < clock.propose_from_ms ? "before" : t < clock.close_from_ms ? "hold" : "after";
+  usd_e6?: bigint;
+  done: boolean;
 }
 
 /**
- * Who cashes out this round, and when: each boss, at a random moment of the round (before the proposal, during the
- * hold or after the close, by the clock's offsets), or only after the close when `cash_out_any_time` is false.
- * Every boss draws the same numbers whatever its state, so a run and its control stay in step.
+ * Who cashes out this round, and when: each boss at a random moment of the round (before the proposal window, while
+ * the model is answering, during the hold or after the close), or only after the close when `cash_out_any_time` is
+ * false. Every boss draws the same numbers whatever its state, so a run and its control stay in step.
  */
 export function planCashOuts(
   w: World,
@@ -255,18 +273,53 @@ export function planCashOuts(
     const roll = rng.next();
     const when = rng.next();
     const share = rng.between(inputs.cash_out_share[0], inputs.cash_out_share[1]);
-    const moment = inputs.cash_out_any_time ? momentOf(when, clock) : "after";
-    if (roll < chance) plan.push({ id: a.id, when: moment, share_bps: Math.round(share * 10_000) });
+    const at = inputs.cash_out_any_time ? Math.floor(when * clock.round_ms) : clock.round_ms - 1;
+    if (roll < chance) plan.push({ id: a.id, at_ms: at, share_bps: Math.round(share * 10_000), done: false });
   }
   return plan;
 }
 
-export function doCashOuts(w: World, plan: readonly CashOutPlan[], moment: Moment): void {
+/** Coins worth `usdE6` at the coin price (at least one unit), never more than `max`. */
+function coinsWorth(w: World, usdE6: bigint, max: bigint): bigint {
+  const h = w.pot.brave_total - w.pot.in_play;
+  const coins = h > 0n ? (usdE6 * w.pot.supply) / h : 0n;
+  const atLeastOne = coins > 0n ? coins : 1n;
+  return atLeastOne < max ? atLeastOne : max;
+}
+
+/**
+ * Every planned cash-out, and every run-on-BRAVE leaver, due before `untilMs` in this round, each once. Returns how
+ * many took money out of BRAVE.
+ */
+export function cashOutsDue(w: World, plan: readonly CashOutPlan[], untilMs: number): number {
+  let n = 0;
   for (const p of plan) {
+    if (p.done || p.at_ms >= untilMs) continue;
+    p.done = true;
     const a = w.byId.get(p.id);
-    if (!a || p.when !== moment) continue;
-    cashOutCounted(w, a, (freeCoins(a) * BigInt(p.share_bps)) / 10_000n);
+    if (!a) continue;
+    const coins =
+      p.usd_e6 !== undefined
+        ? coinsWorth(w, p.usd_e6, freeCoins(a))
+        : (freeCoins(a) * BigInt(p.share_bps)) / 10_000n;
+    if (coins > 0n) {
+      cashOutCounted(w, a, coins);
+      n += 1;
+    }
   }
+  for (const a of w.accounts) {
+    const t = traitsOf(w, a.id);
+    if (!t.leaves || t.leaves.round !== w.round || t.leaves.at_ms >= untilMs) continue;
+    // A leaver takes everything out of BRAVE: unlock (refused while they voted in an open vote, 01 §9.2), pending, coins.
+    if (!inOpenVote(w, a.id)) unlock(a, lockedOf(a));
+    takeBackPending(w.pot, a, a.pending);
+    if (freeCoins(a) > 0n) {
+      cashOutCounted(w, a, freeCoins(a));
+      n += 1;
+    }
+    t.leaves = null;
+  }
+  return n;
 }
 
 /** Tips: half to the jackpot, half to BRAVE at the next opening (01 §9.5 1.4, §9.6). The contract takes tips while FIRED too. */
@@ -308,6 +361,16 @@ export function communityVotes(w: World, inputs: CommunityInputs, rng: Rng, roun
   if (inputs.playbook_day !== null && w.round === (inputs.playbook_day - 1) * roundsPerDay + 1) {
     intents.push("SET_PLAYBOOK");
   }
+  // PROPOSAL b: the bosses open a RESUME vote as they would a rehire, `rehire_after_days` after a halt.
+  const halt = w.ps;
+  if (
+    halt.halted &&
+    halt.halted_round !== null &&
+    halt.resume_round === null &&
+    w.round - halt.halted_round >= inputs.rehire_after_days * roundsPerDay
+  ) {
+    intents.push("RESUME");
+  }
   for (const kind of intents) {
     const failed = w.failed_round[kind];
     if (failed !== undefined && w.round - failed < inputs.retry_after_days * roundsPerDay) continue;
@@ -318,7 +381,7 @@ export function communityVotes(w: World, inputs: CommunityInputs, rng: Rng, roun
     const yesShare =
       kind === "PROMOTE"
         ? inputs.yes_promote
-        : kind === "REHIRE"
+        : kind === "REHIRE" || kind === "RESUME"
           ? inputs.yes_rehire
           : kind === "SET_PLAYBOOK"
             ? inputs.yes_playbook
@@ -340,11 +403,9 @@ export function whaleActs(w: World, whale: WhaleInputs, roundsPerDay: number): v
   let a = w.accounts.find((x) => x.kind === "whale");
   if (!a) {
     if (w.round !== 1) return;
-    const lockedNow = w.accounts.reduce((s, x) => s + lockedOf(x), 0n);
-    const bps = BigInt(Math.round(whale.share_of_locked * 10_000));
-    const coins = (lockedNow * bps) / (10_000n - bps);
+    const dollars = shareOfLocked(w, whale.share_of_locked);
     a = addAccount(w, "whale");
-    payIn(w.pot, a, "BRAVE", (coins * coinPriceE6(w.pot)) / 1_000_000n);
+    payIn(w.pot, a, "BRAVE", dollars);
     return;
   }
   if (freeCoins(a) > 0n) lock(a, freeCoins(a), w.round);
@@ -354,13 +415,51 @@ export function whaleActs(w: World, whale: WhaleInputs, roundsPerDay: number): v
     const fire = openVote(w, "FIRE", a.id);
     if (fire) cast(w, fire, a.id, true);
   }
+  if (whale.own_playbook && !w.playbook.active) {
+    const playbook = openVote(w, "SET_PLAYBOOK", a.id);
+    if (playbook) cast(w, playbook, a.id, true);
+  }
+}
+
+/** Sizes an attacker's deposit so that its coins will be `share` of all coins locked once it locks them. */
+function shareOfLocked(w: World, share: number): bigint {
+  const lockedNow = w.accounts.reduce((s, x) => s + lockedOf(x), 0n);
+  const bps = BigInt(Math.round(share * 10_000));
+  return (((lockedNow * bps) / (10_000n - bps)) * coinPriceE6(w.pot)) / 1_000_000n;
+}
+
+/** Before the first round: the griefer pays $100 into BRAVE, so it holds coins to cash out a sliver of each round. */
+export function addGriefer(w: World): void {
+  payIn(w.pot, addAccount(w, "griefer"), "BRAVE", usd(100));
+}
+
+/** The griefer's cash-out for this round. The runner fetches the rulebook one second into the window (runner/src/round.ts). */
+export function grieferPlan(w: World, g: GrieferInputs, clock: RoundClock): CashOutPlan | null {
+  const a = w.accounts.find((x) => x.kind === "griefer");
+  if (!a || freeCoins(a) === 0n) return null;
+  const at = g.at === "before" ? clock.propose_from_ms - 60_000 : clock.propose_from_ms + 5_000;
+  return { id: a.id, at_ms: at, share_bps: 0, usd_e6: usd(g.usd), done: false };
+}
+
+/** The vote sniper (ABUSE TEST): arrives, locks everything as soon as it can, opens a firing every round. */
+export function sniperActs(w: World, s: SniperInputs, roundsPerDay: number): void {
+  let a = w.accounts.find((x) => x.kind === "sniper");
+  if (!a) {
+    if (w.round !== (s.day - 1) * roundsPerDay + 1) return;
+    a = addAccount(w, "sniper");
+    payIn(w.pot, a, "BRAVE", shareOfLocked(w, s.share_of_locked));
+    return;
+  }
+  if (freeCoins(a) > 0n) lock(a, freeCoins(a), w.round);
+  const fire = openVote(w, "FIRE", a.id);
+  if (fire) cast(w, fire, a.id, true);
 }
 
 // ---------------------------------------------------------------- the run on BRAVE
 
 /**
  * On the run's first round, each boss holding coins decides whether to leave (chance `share`), and when: a random
- * round of the run and a random moment of it (some leave while bets are open).
+ * round of the run and a random moment of it (some leave while bets are open). `cashOutsDue` carries it out.
  */
 export function planRun(w: World, run: RunInputs, rng: Rng, roundsPerDay: number, clock: RoundClock): void {
   if (w.round !== (run.day - 1) * roundsPerDay + 1) return;
@@ -372,44 +471,57 @@ export function planRun(w: World, run: RunInputs, rng: Rng, roundsPerDay: number
     if (a.kind !== "boss" || a.coins === 0n || roll >= run.share) continue;
     traitsOf(w, a.id).leaves = {
       round: w.round + Math.floor(whichRound * span),
-      when: momentOf(moment, clock),
+      at_ms: Math.floor(moment * clock.round_ms),
     };
-  }
-}
-
-/** Leavers take everything out of BRAVE: unlock (refused while they voted in an open vote, 01 §9.2), pending, coins. */
-export function runLeavers(w: World, moment: Moment): void {
-  for (const a of w.accounts) {
-    const t = traitsOf(w, a.id);
-    if (!t.leaves || t.leaves.round !== w.round || t.leaves.when !== moment) continue;
-    if (!inOpenVote(w, a.id)) unlock(a, lockedOf(a));
-    takeBackPending(w.pot, a, a.pending);
-    cashOutCounted(w, a, freeCoins(a));
-    t.leaves = null;
   }
 }
 
 // ---------------------------------------------------------------- the reward ladder
 
-/** R3 eligibility (01 §9.7, §14.15): became a boss at least 7 rounds ago and holds at least $10 now. */
-export function jackpotEligible(w: World, a: Account): boolean {
-  return (
-    a.joined_round !== null &&
-    a.joined_round + REWARDS.min_boss_rounds <= w.round &&
-    usdOf(w.pot, a) >= REWARDS.min_boss_usd_e6
-  );
+/**
+ * The dollars an account counts for the reward ladder now. Today (01 §9.7): BRAVE at today's value, pending, SAFE.
+ * PROPOSAL f2: no more than it held when the current round opened.
+ */
+export function heldForRewards(w: World, a: Account): bigint {
+  const now = usdOf(w.pot, a);
+  if (!w.proposals.held_across) return now;
+  const atOpen = w.ps.at_open.get(a.id) ?? 0n;
+  // biome-ignore lint/complexity/useMathMinMax: these are bigints, and Math.min throws on bigint.
+  return atOpen < now ? atOpen : now;
 }
 
-/** Bosses who join the draw try once, as soon as they hold money; a full draw turns them away (01 §9.7). */
+/**
+ * R3 eligibility (01 §9.7, §14.15): became a boss at least 7 rounds ago and holds at least $10 now. PROPOSAL f1: the
+ * $10 must also have been held at the end of each of the last 7 rounds.
+ */
+export function jackpotEligible(w: World, a: Account): boolean {
+  if (a.joined_round === null || a.joined_round + REWARDS.min_boss_rounds > w.round) return false;
+  let held = heldForRewards(w, a);
+  if (w.proposals.lowest_balance) {
+    for (const x of w.ps.balances.get(a.id) ?? []) if (x < held) held = x;
+  }
+  return held >= REWARDS.min_boss_usd_e6;
+}
+
+/**
+ * Bosses who join the draw try once, as soon as they hold money; a full draw turns them away (01 §9.7). PROPOSAL f3:
+ * a full draw takes a newcomer holding more in place of the entrant holding least.
+ */
 export function drawEntries(w: World): void {
   for (const a of w.accounts) {
     const t = traitsOf(w, a.id);
     if (!t.joins_draw || t.draw_tried) continue;
-    const held = usdOf(w.pot, a);
+    const held = heldForRewards(w, a);
     if (held === 0n) continue;
     t.draw_tried = true;
-    enterDraw(w.rewards, a.id, held, w.round);
+    if (w.proposals.lowest_balance) w.ps.period_low.set(a.id, held);
+    enterDraw(w.rewards, a.id, held, w.round, w.proposals.dollar_draw ? (id) => heldOf(w, id) : undefined);
   }
+}
+
+function heldOf(w: World, id: string): bigint {
+  const a = w.byId.get(id);
+  return a ? heldForRewards(w, a) : 0n;
 }
 
 /** The Intern's most common first ruling so far (a guesser's sensible pick); a random one before any ruling. */
