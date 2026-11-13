@@ -23,7 +23,7 @@ import { record, six, text, u128, u128Value, ViewShapeError, whole } from "./vie
  * Nothing else in 01 §10 touches the coin's supply (tips, prizes, coach cuts and results move test dollars).
  */
 
-/** 01 §10's event names: the same 52 as crates/coin/wire's `EventName` (1.7). */
+/** 01 §10's event names: the same 54 as crates/coin/wire's `EventName` (1.7). */
 export const EVENTS_01: readonly string[] = [
   "round_opened",
   "paid_in",
@@ -79,6 +79,8 @@ export const EVENTS_01: readonly string[] = [
   "rescued",
   "rescue_paid",
   "nft_earnings_claimed",
+  "stake_grew",
+  "stake_burned",
 ];
 
 /** crates/rules/src/shares.rs `LOCKED_FOREVER`: coin units locked at the first conversion (01 §9.1). */
@@ -567,6 +569,45 @@ export function rebuild(s: SupplySnapshot): SupplyReport {
         const paid = u128(d, "paid", p);
         if (coins === null) takeBack(f, account, paid);
         else burn(f, account, coins, paid, "cash-out");
+        break;
+      }
+      // 01 1.7: the Intern's stake of coins in the contract's own account: minted on a win, burned on a loss.
+      case "stake_grew": {
+        const coins = u128(d, "coins", p);
+        if (supply !== null) supply += coins;
+        row(
+          f.seq,
+          f.at,
+          f.event,
+          "MINT",
+          null,
+          null,
+          coins,
+          coins,
+          "minted to the Intern's stake (5% of a win, in coins)",
+        );
+        break;
+      }
+      case "stake_burned": {
+        const coins = u128(d, "coins", p);
+        if (supply !== null) {
+          if (coins > supply)
+            problems.push(
+              `seq ${f.seq}: ${six(coins)} stake coins burned, more than the ${six(supply)} rebuilt`,
+            );
+          supply -= coins;
+        }
+        row(
+          f.seq,
+          f.at,
+          f.event,
+          "BURN",
+          null,
+          null,
+          coins,
+          -coins,
+          "the Intern's stake burned first on a loss",
+        );
         break;
       }
       case "coins_minted": {

@@ -633,6 +633,28 @@
       "mascot": null,
       "intern": null,
       "system": "NFT EARNINGS — {account} claimed {amount} earned by {token_id}."
+    },
+    "stake_grew": {
+      "speak": true,
+      "priority": 4,
+      "intern_pose": "happy",
+      "mascot": "tin:coin",
+      "intern": [
+        "A win, so I keep a little of it, in coins: {fee} of value into my own stake. It's the first thing to go if I lose.",
+        "Round {round_id}: {fee} of the win went into my stake. My own coins take the next loss first."
+      ],
+      "system": "STAKE GREW — round {round_id}: {fee} of the win (5%) became {coins} coins in the Intern's stake."
+    },
+    "stake_burned": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "refused",
+      "mascot": "shredder:awake",
+      "intern": [
+        "I lost, and my own coins paid first: {covered} of the loss came out of my stake.",
+        "Round {round_id}: my stake took the hit first, {covered} of it. That's what it's for."
+      ],
+      "system": "STAKE BURNED — round {round_id}: {coins} of the Intern's coins burned, covering {covered} of the loss."
     }
   },
   "refusals": {

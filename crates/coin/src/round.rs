@@ -171,6 +171,8 @@ impl Coin {
         let rescue = if result > 0 { self.pay_rescuers(round_id, result as u128) } else { 0 };
         self.books.brave_total =
             (self.books.brave_total as i128 + result - coach as i128 - rescue as i128).max(0) as u128;
+        // 1.7: the Intern's stake of coins grows on a win (a 5% fee in coins) and burns first on a loss.
+        self.stake_after_settle(round_id, result - coach as i128 - rescue as i128);
         r.settled = true;
         r.result = result;
         self.save_round(r);

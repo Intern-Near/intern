@@ -166,6 +166,8 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
     "pot",
     "fund",
     "target",
+    "fee",
+    "covered",
   ])
     if (k in d) out[k] = usd(d[k]);
   if ("result" in d) out.result = signedUsd(d.result);

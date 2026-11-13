@@ -31,6 +31,7 @@ pub mod sign;
 pub mod auto;
 pub mod earn;
 pub mod rescue;
+pub mod stake;
 pub mod tricks;
 pub mod vote;
 pub mod weekly;

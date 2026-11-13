@@ -312,6 +312,7 @@ Read-only and free. The site and the runner use only these.
 | `get_bounty` *(1.7)* | — | `{ pot, paid_total, added_total, from_tricks_total: Usdc; tricks_paid: number; trick_price: Usdc; bounty_bps: number }` (section 9.10) |
 | `get_nft_earnings` *(1.7)* | — | `{ owed_total, paid_total: Usdc; tokens: { token_id, owed: Usdc }[]; careers_minted: number }` (section 9.12) |
 | `get_career` *(1.7)* | — | `{ rank, status, level, rounds, bets, refusals: number; result: Signed; svg: string }` (section 9.12) |
+| `get_stake` *(1.7)* | — | `{ coins: U128; value: Usdc; fee_bps: number; grew_total, burned_total: U128 }` (section 9.13) |
 | `get_rescue` *(1.7)* | — | `{ fund, target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round, until_round: number; cut_bps: number; paid_total: Usdc; rescues: number }` (section 9.11) |
 | `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
 | `get_rebalance` *(1.7)* | — | `{ action: "LEND" \| "RECALL" \| "NONE" \| "BUSY" \| "NO_LENDER", amount: Usdc }`: what `rebalance` would move now, without moving it |
@@ -802,6 +803,10 @@ Owner's decisions on Engine 2's list (items 13, 14, 24). The tokens live on the 
 - **Claiming.** `claim_nft_earnings({ token_id })`, at least 50 TGas: the coin asks the sticker contract who holds the token; if it is the caller, what the token earned becomes the caller's prize (`claim_prizes`; event `nft_earnings_claimed { token_id, account_id, amount }`).
 - **Career cards.** `mint_career_card()`, 0.02 NEAR, at least 60 TGas: `career:<n>`, transferable. Its picture (`media`) is an SVG `data:` URI the contract draws from the Intern's record (rank, status, level, rounds, bets, refusals, result); `refresh_career_card({ n })` (anyone, at least 30 TGas) redraws it with the record now, through the sticker contract's new `update_token` (callable by the coin only). The level is the number of whole weeks (7 rounds) the record covers. `get_career()` shows the record and the picture.
 
+### 9.13 The Intern's stake: supply that reacts *(1.7)*
+
+Owner's decision on Engine 2's list (item 15). The Intern holds a stake of $INTERN coins in the contract's own account (apart from the 1,000 units locked for ever). When a round wins, 5% of what the pool keeps (after the coach and rescue cuts) becomes new coins for the stake (`stake_grew { round_id, coins, fee }`): the supply grows, and holders pay a 5% performance fee in coins. When a round loses, the stake's coins are burned first, up to the loss's worth (`stake_burned { round_id, coins, covered }`): the supply shrinks and the holders' coins are worth more, which covers the loss as far as the stake goes. No dollar moves; NEP-141 `ft_mint`/`ft_burn` logs carry the memo "the Intern's stake". `round_opened.coin_supply` includes the stake.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -865,6 +870,8 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `rescued` *(1.7)* | `{ round_id, effective_round, fund, rescuers }` |
 | `rescue_paid` *(1.7)* | `{ round_id, amount }` |
 | `nft_earnings_claimed` *(1.7)* | `{ token_id, account_id, amount }` |
+| `stake_grew` *(1.7)* | `{ round_id, coins, fee }` |
+| `stake_burned` *(1.7)* | `{ round_id, coins, covered }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 

@@ -114,6 +114,8 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   rescued: { round_id: 70, effective_round: 71, fund: "50000000", rescuers: ["boss1.desk-lab-2026.testnet"] },
   rescue_paid: { round_id: 72, amount: "120000" },
   nft_earnings_claimed: { token_id: "original:FIRED", account_id: "boss2.desk-lab-2026.testnet", amount: "500000" },
+  stake_grew: { round_id: 73, coins: "1500000", fee: "1250000" },
+  stake_burned: { round_id: 74, coins: "1500000", covered: "1251000" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

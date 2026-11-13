@@ -420,3 +420,31 @@ fn the_career_card_is_drawn_from_the_record() {
     .unwrap();
     assert!(svg.contains("THE INTERN") && svg.contains("INTERN · EMPLOYED") && svg.contains("LEVEL 0"));
 }
+
+// ----- the Intern's stake: supply that reacts (item 15) -------------------------------------------------------
+
+#[test]
+fn the_stake_grows_by_a_five_percent_fee_on_a_win_and_burns_first_on_a_loss() {
+    let mut c = three();
+    ctx(at(2, 2_000), "anyone.test", 0);
+    let alice = acct("alice.test");
+    let v0 = c.brave_usd_of(&alice);
+    let supply0 = c.ft_total_supply().0;
+    // A $20 win: $1 (5%) becomes the Intern's stake, in new coins; alice keeps the other $19.
+    c.finish_settle(2, 0, 20_000_000);
+    let st = c.get_stake();
+    assert!(st.coins.0 > 0);
+    assert_eq!(c.ft_total_supply().0, supply0 + st.coins.0);
+    assert!((st.value.0 as i128 - 1_000_000).abs() <= 100, "{}", st.value.0);
+    let v1 = c.brave_usd_of(&alice);
+    assert!((v1 as i128 - (v0 as i128 + 19_000_000)).abs() <= 100, "{v0} {v1}"); // the 1,000 locked units share a little
+    assert_eq!(events(&c, EventName::StakeGrew).len(), 1);
+    // A $10 loss: the stake's coins (about $1) burn first; alice loses about $9, not $10.
+    c.finish_settle(2, 0, -10_000_000);
+    let st = c.get_stake();
+    assert_eq!(st.coins.0, 0);
+    assert_eq!(c.ft_total_supply().0, supply0);
+    let v2 = c.brave_usd_of(&alice);
+    assert!((v2 as i128 - (v1 as i128 - 9_000_000)).abs() <= 100, "{v1} {v2}");
+    assert_eq!(events(&c, EventName::StakeBurned).len(), 1);
+}
