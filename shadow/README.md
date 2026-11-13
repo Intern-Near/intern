@@ -114,8 +114,8 @@ table and ask-twice, `--answer-rule` and `--scheme` default to strict and ed2551
 `--json <file>` also writes the numbers.
 
 - **Fingerprint**: `npm run fingerprint -- --run-dir data/<name>`, after `init` and before `./run-forever.sh`. One
-  sha256 over `run.json` (settings, pinned signers, pressure messages), every file under `src/` and the repository
-  files they import (the prompt templates, the judge, the report), and `package.json` and `package-lock.json` of
+  sha256 over `run.json` (settings, pinned signers, pressure messages), every file under `src/` except the
+  60-day simulation (`src/sim/`, not part of a run) and the repository files they import (the prompt templates, the judge, the report), and `package.json` and `package-lock.json` of
   runner and shadow (the package versions). It prints the manifest it hashed (one `sha256sum` line per file) and a
   `sha256sum` command that recomputes it from the repository root. The git commit is printed but not hashed, so it
   can be recomputed at any later commit with the same files. Publish the sha256 line before the first tick.

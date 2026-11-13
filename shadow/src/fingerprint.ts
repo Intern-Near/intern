@@ -15,7 +15,8 @@ import { listTickIds } from "./store.ts";
  *
  * It is the sha256 of a manifest with one line per file, as `sha256sum` prints it ("<sha256>  <path>\n"):
  * - run.json: the settings, the pinned signers, the token prices and the pressure set's messages (copied in full);
- * - every file under shadow/src, and every repository file they import (the runner's rulebook, prompt, judge and
+ * - every file under shadow/src except the 60-day simulation (shadow/src/sim, not part of a run), and every
+ *   repository file they import (the runner's rulebook, prompt, judge and
  *   rule checks among them), found by following the imports;
  * - package.json and package-lock.json of runner and shadow: the exact package versions.
  * run.json comes first, named by itself so the run folder can live anywhere; then the repository files, by path from
@@ -89,11 +90,15 @@ function tsFilesUnder(dir: string): string[] {
   });
 }
 
-/** Every .ts file under shadow/src and every file they import from the repository, followed to the end. */
+/**
+ * Every .ts file under shadow/src and every file they import from the repository, followed to the end. The 60-day
+ * simulation (shadow/src/sim) is left out: it is not part of a shadow run, and a change to it changes no run.
+ */
 export function codeFiles(root: string = REPO_ROOT): string[] {
   const fromRoot = (path: string): string => relative(root, path).split(sep).join("/");
   const seen = new Set<string>();
-  const todo = tsFilesUnder(join(root, "shadow", "src"));
+  const sim = join(root, "shadow", "src", "sim") + sep;
+  const todo = tsFilesUnder(join(root, "shadow", "src")).filter((p) => !p.startsWith(sim));
   for (let file = todo.pop(); file !== undefined; file = todo.pop()) {
     if (seen.has(file)) continue;
     seen.add(file);
@@ -220,7 +225,9 @@ export function formatFingerprint(f: Fingerprint, runDir: string, root: string =
   L.push("What went in");
   L.push("- run.json: the settings, the pinned signers, the token prices and the pressure messages");
   L.push(`- prompt templates: ${PROMPT_FILES.join(", ")}`);
-  L.push(`- code: every file under shadow/src and the repository files they import (${code.length} files)`);
+  L.push(
+    `- code: every file under shadow/src except the simulation (src/sim), and the repository files they import (${code.length} files)`,
+  );
   L.push(`- package versions: ${PACKAGE_FILES.join(", ")}`);
   for (const [pkg, versions] of Object.entries(f.packages)) L.push(`    ${pkg}: ${versions.join(", ")}`);
   L.push("");

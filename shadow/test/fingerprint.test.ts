@@ -69,6 +69,10 @@ describe("a run's fingerprint", () => {
       assert.ok(paths.includes(p), `${p} is not in the manifest`);
     }
     assert.ok(!paths.some((p) => p.includes("/test/")));
+    assert.ok(
+      !paths.some((p) => p.startsWith("shadow/src/sim/")),
+      "the 60-day simulation is not part of a run",
+    );
     assert.ok(!paths.includes("runner/src/round.ts"), "runner code the shadow run never imports stays out");
   });
 
