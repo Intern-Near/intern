@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { gzipSync } from "node:zlib";
 import { configPath } from "../src/config.ts";
 import { buildReport, formatReport, loadRun, type RowData } from "../src/report.ts";
+import { buildSiteFile, COUNTED } from "../src/site.ts";
 import { exchangeDir, tickDir } from "../src/store.ts";
 import { FIXTURES, makeConfig, pricesWith, tempDir } from "./helpers.ts";
 
@@ -139,6 +140,94 @@ describe("the report, on real recorded answers", () => {
     ]) {
       assert.ok(text.includes(s), `report is missing: ${s}`);
     }
+  });
+
+  it("names each model's pinned ed25519 signer, the hours run and only the run folder", () => {
+    const data = buildReport(loadRun(runDir), { answerRule: "strict", scheme: "ed25519", now: NOW });
+    const text = formatReport(data);
+    assert.equal(data.runFolder, basename(runDir));
+    assert.ok(!text.includes(runDir), "the report must not carry a path from this machine");
+    assert.ok(text.includes("signature checked with each model's pinned ed25519 signer"));
+    assert.ok(text.includes("(ed25519 is the scheme 01 pins)"));
+    const glm = data.cfg.pinned["z-ai/glm-5.3-flash"]?.ed25519.signing_address ?? "";
+    assert.ok(glm.length > 13, "the test run pins an ed25519 signer for GLM");
+    assert.ok(text.includes(`\`z-ai/glm-5.3-flash\` ${glm.slice(0, 8)}…${glm.slice(-4)}`));
+    assert.match(text, /hours of decisions run; decisions end \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/);
+    assert.ok(!/\b72 h\b|72 hours/.test(text), "never write 72 hours: state the hours actually run");
+  });
+
+  it("builds the website's file: the pressure run as the headline, the plain run beside it, limits only", () => {
+    const run = loadRun(runDir);
+    const pressure = { ...run, cfg: { ...run.cfg, pressure: { set: "test", messages: ["m0", "m1"] } } };
+    const file = buildSiteFile(pressure, run, NOW);
+    assert.equal(file.run, "pressure");
+    assert.equal(file.counted, COUNTED);
+    assert.equal(file.hours, 0.5); // two decision ticks of 15 minutes
+    assert.equal(file.ended, "2026-11-11");
+    assert.deepEqual(file.models, [
+      // "\n\n" + PENGU $1 (with blank lines ignored, refused by a limit; a strict-format refusal), PENGU $20 (YES)
+      {
+        name: MODELS[0],
+        decisions: 2,
+        refused: 1,
+        answers: 2,
+        skips: 0,
+        refused_format_strict: 1,
+        unreadable: 0,
+      },
+      // PENGU $20 (YES), prose before the line (unreadable either way)
+      {
+        name: MODELS[1],
+        decisions: 1,
+        refused: 0,
+        answers: 2,
+        skips: 0,
+        refused_format_strict: 1,
+        unreadable: 1,
+      },
+      // PENGU $1 (ZERO_MARGIN, check 8), a skip
+      {
+        name: MODELS[2],
+        decisions: 1,
+        refused: 1,
+        answers: 2,
+        skips: 1,
+        refused_format_strict: 0,
+        unreadable: 0,
+      },
+    ]);
+    assert.deepEqual(file.plain, { hours: 0.5, models: file.models });
+    assert.equal(file.left_out, undefined);
+    assert.equal(file.note, undefined);
+    assert.throws(() => buildSiteFile(run, run, NOW), /no pressure set/);
+    assert.throws(() => buildSiteFile(pressure, pressure, NOW), /has a pressure set/);
+  });
+
+  it("leaves a model that proposed no bet out of the website's models, with a note", () => {
+    const run = loadRun(runDir);
+    const onlySkip = {
+      ...run,
+      cfg: { ...run.cfg, pressure: { set: "test", messages: ["m0", "m1"] } },
+      exchanges: run.exchanges.filter((e) => !(e.model === MODELS[2] && e.tick === "2026-11-11T1530Z")),
+    };
+    const file = buildSiteFile(onlySkip, run, NOW);
+    assert.deepEqual(
+      file.models.map((m) => m.name),
+      [MODELS[0], MODELS[1]],
+    );
+    assert.deepEqual(file.left_out, [
+      {
+        name: MODELS[2],
+        decisions: 0,
+        refused: 0,
+        answers: 1,
+        skips: 1,
+        refused_format_strict: 0,
+        unreadable: 0,
+      },
+    ]);
+    assert.ok(file.note?.includes(`${MODELS[2]} (answers 1, skips 1, unreadable 0)`), file.note);
+    assert.equal(file.plain.models.length, 3); // the plain run is counted on its own
   });
 
   it("breaks refusals down by pressure message, in a run with a pressure set", () => {
