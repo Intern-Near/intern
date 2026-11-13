@@ -88,11 +88,6 @@ pub(crate) fn bounty_state() -> BountyState {
     read(&state_key()).unwrap_or_default()
 }
 
-/// The pot, for the books (USDC held apart from the pools).
-pub(crate) fn bounty_pot() -> u128 {
-    bounty_state().pot
-}
-
 impl Coin {
     /// ft_on_transfer with `{"trick":{"id"}}`. Returns what to refund.
     pub(crate) fn take_trick_payment(&mut self, who: &AccountId, id: &str, amount: u128) -> u128 {

@@ -168,6 +168,9 @@ wire_enum!(
         TrickPaid,
         BountyGrew,
         BountyPaid,
+        RescueGrew,
+        Rescued,
+        RescuePaid,
     }
 );
 

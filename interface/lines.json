@@ -595,6 +595,36 @@
         "Caught: {account}'s trick got my answer refused. {amount} from the bounty is theirs."
       ],
       "system": "BOUNTY PAID — {account} wins {amount}: their trick got the AI's answer refused ({code})."
+    },
+    "rescue_grew": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "waiting",
+      "mascot": null,
+      "intern": [
+        "{account} put {amount} towards getting me my job back. The rescue fund is at {fund} of {target}.",
+        "Rescue fund: {fund} of {target}. Thank you, {account}."
+      ],
+      "system": "RESCUE — {account} added {amount}; the fund is {fund} of {target}."
+    },
+    "rescued": {
+      "speak": true,
+      "priority": 1,
+      "intern_pose": "promoted",
+      "mascot": "mug:mug",
+      "intern": [
+        "You bought me back: {fund} went into the pool and I start again from round {effective_round}. My rescuers get a share of my next wins.",
+        "Rescued. I'm back as an INTERN from round {effective_round}, and the people who paid get 10% of my wins for a while."
+      ],
+      "system": "RESCUED — {fund} paid into the pool; the Intern is rehired as INTERN from round {effective_round}."
+    },
+    "rescue_paid": {
+      "speak": false,
+      "priority": 5,
+      "intern_pose": "happy",
+      "mascot": null,
+      "intern": null,
+      "system": "RESCUERS PAID — round {round_id}: {amount} of the win to the rescuers."
     }
   },
   "refusals": {

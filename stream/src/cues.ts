@@ -164,6 +164,8 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
     "jackpot",
     "rolled_over",
     "pot",
+    "fund",
+    "target",
   ])
     if (k in d) out[k] = usd(d[k]);
   if ("result" in d) out.result = signedUsd(d.result);

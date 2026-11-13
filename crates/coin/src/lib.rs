@@ -29,6 +29,7 @@ mod round;
 mod safe;
 pub mod sign;
 pub mod auto;
+pub mod rescue;
 pub mod tricks;
 pub mod vote;
 pub mod weekly;
@@ -1290,6 +1291,9 @@ impl Coin {
         // 1.7: a paid trick (half to the bounty, half to the pool), and additions to the trick bounty.
         if let Ok(tricks::TrickMsg { trick }) = serde_json::from_str(&msg) {
             return PromiseOrValue::Value(U128(self.take_trick_payment(&sender_id, &trick.id, amount.0)));
+        }
+        if serde_json::from_str::<rescue::RescueMsg>(&msg).is_ok() {
+            return PromiseOrValue::Value(U128(self.take_rescue(&sender_id, amount.0)));
         }
         if serde_json::from_str::<tricks::BountyMsg>(&msg).is_ok() {
             if amount.0 < goals::MIN_TIP {

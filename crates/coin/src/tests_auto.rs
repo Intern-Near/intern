@@ -306,3 +306,45 @@ fn a_paid_trick_splits_between_the_bounty_and_the_pool_and_a_caught_trick_wins_a
     assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 1_000_000);
     assert_eq!(events(&c, EventName::BountyPaid)[0]["account_id"], "bob.test");
 }
+
+// ----- rescuing a fired Intern (item 16) -------------------------------------------------------------------
+
+#[test]
+fn holders_rescue_a_fired_intern_and_share_its_next_wins() {
+    let mut c = three();
+    // Not fired: a rescue is refunded.
+    assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 5_000_000, r#"{"rescue":{}}"#), 5_000_000);
+    c.rank.status = 1; // FIRED
+    assert_eq!(transfer_in(&mut c, at(2, 2_100), "bob.test", 30_000_000, r#"{"rescue":{}}"#), 0);
+    assert_eq!(c.get_rescue().fund.0, 30_000_000);
+    assert_eq!(c.get_rank().status, Status::Fired);
+    // $20 more reaches the $50 target: the money goes to the pool, the Intern is rehired from the next round.
+    assert_eq!(transfer_in(&mut c, at(2, 2_200), "carol.test", 20_000_000, r#"{"rescue":{}}"#), 0);
+    let r = c.get_rescue();
+    assert_eq!((r.fund.0, r.rescuers.len(), r.from_round, r.until_round), (0, 2, 3, 17));
+    assert_eq!(events(&c, EventName::Rescued)[0]["effective_round"], 3);
+    goto(&mut c, 3, 1_000);
+    assert_eq!(c.get_rank().status, Status::Employed);
+    // A winning round in their window: 10% of the result to bob and carol, 3:2.
+    ctx(at(3, 2_000), "anyone.test", 0);
+    let before = c.books.brave_total;
+    c.finish_settle(3, 0, 10_000_000);
+    let (b, k) = (c.get_player(acct("bob.test")).prize_owed.0, c.get_player(acct("carol.test")).prize_owed.0);
+    assert_eq!((b, k), (600_000, 400_000));
+    assert_eq!(c.books.brave_total, before + 10_000_000 - 1_000_000);
+    assert_eq!(c.get_rescue().paid_total.0, 1_000_000);
+}
+
+#[test]
+fn a_rehire_by_vote_gives_a_waiting_rescue_back() {
+    let mut c = three();
+    c.rank.status = 1; // FIRED
+    assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 10_000_000, r#"{"rescue":{}}"#), 0);
+    // A passed rehire takes effect (as a vote's would).
+    c.rank.pending = Some((0, 0, 3));
+    goto(&mut c, 3, 1_000);
+    assert_eq!(c.get_rank().status, Status::Employed);
+    assert_eq!(c.get_rescue().fund.0, 0);
+    ctx(at(3, 2_000), "anyone.test", 0);
+    assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 10_000_000);
+}

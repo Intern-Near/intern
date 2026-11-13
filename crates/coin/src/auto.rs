@@ -22,7 +22,7 @@
 //! State lives under its own storage keys (prefix `a7`), outside the `Coin` struct: no migration.
 
 use crate::*;
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::borsh;
 use rules::vote::VoteKind;
 
 pub const STRIKES_OUT: u8 = 3;

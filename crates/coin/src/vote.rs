@@ -313,6 +313,7 @@ impl Coin {
             if id >= e {
                 if self.rank.status != s && s == status_code(Status::Employed) {
                     self.auto_new_term(); // 1.7: a rehire starts a new 30-day term
+                    self.rescue_refund_waiting(); // 1.7: a rescue still collecting gives its money back
                 }
                 self.rank = RankRec {
                     rank: r,

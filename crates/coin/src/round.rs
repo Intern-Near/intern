@@ -158,7 +158,7 @@ impl Coin {
     }
 
     /// Writes a settled round's result into the books (section 9.3 `settle`).
-    fn finish_settle(&mut self, round_id: u64, margin_total: u128, result: i128) {
+    pub(crate) fn finish_settle(&mut self, round_id: u64, margin_total: u128, result: i128) {
         let mut r = *self.rounds.get(&round_id).expect("round");
         self.books.in_play = self.books.in_play.saturating_sub(margin_total);
         // 1.3: a winning round with an active playbook sends the coach cut to its authors first.
@@ -167,8 +167,10 @@ impl Coin {
         } else {
             0
         };
+        // 1.7: in the rounds after a rescue, the rescuers' cut of a win (as prizes, held apart from the pool).
+        let rescue = if result > 0 { self.pay_rescuers(round_id, result as u128) } else { 0 };
         self.books.brave_total =
-            (self.books.brave_total as i128 + result - coach as i128).max(0) as u128;
+            (self.books.brave_total as i128 + result - coach as i128 - rescue as i128).max(0) as u128;
         r.settled = true;
         r.result = result;
         self.save_round(r);

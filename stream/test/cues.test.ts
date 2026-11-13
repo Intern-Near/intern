@@ -110,6 +110,9 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   trick_paid: { id: "7f3a", account_id: "boss2.desk-lab-2026.testnet", amount: "1000000", to_bounty: "500000" },
   bounty_grew: { amount: "5000000", by: "boss1.desk-lab-2026.testnet", pot: "12500000" },
   bounty_paid: { account_id: "boss2.desk-lab-2026.testnet", amount: "1250000", refusal_id: 3, code: "OVER_LEVERAGE" },
+  rescue_grew: { amount: "20000000", by: "boss1.desk-lab-2026.testnet", fund: "30000000", target: "50000000" },
+  rescued: { round_id: 70, effective_round: 71, fund: "50000000", rescuers: ["boss1.desk-lab-2026.testnet"] },
+  rescue_paid: { round_id: 72, amount: "120000" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,
