@@ -172,7 +172,7 @@
       "mascot": null,
       "intern": [
         "Round {round_id} is closed: {result}. The pot is {brave_after}. I've filed it.",
-        "That's round {round_id}. Result {result}. I've put it in the diary.",
+        "That's round {round_id}. Result {result}. It's on the record now.",
         "Round {round_id}, closed. {result}. The pot stands at {brave_after}. I'm going to get a glass of water."
       ],
       "system": "SETTLED — round {round_id}, result {result}, pool after {brave_after}."
