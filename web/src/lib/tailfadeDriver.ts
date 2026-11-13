@@ -3,6 +3,7 @@
  * unchanged from intern/tailfade/src) to the visitor's wallet and to
  * the faucet. A pretend one stands in on sample data so every state of the page can be opened.
  */
+import { rpcFetch } from "../chain/near";
 import { account as hlAccount, type Account, type Reply } from "../tailfade/hl.ts";
 import { hlAddressOf, sigFromOutcome, signTransaction } from "../tailfade/mpc.ts";
 import { agentFromHex, agentToHex, approveAgent, closePosition, isApproved, newAgent, placeChip, submitApproval, type Agent, type Chip, type Choice, type Leverage } from "../tailfade/tailfade.ts";
@@ -69,7 +70,7 @@ async function fullOutcome(rpc: string, accountId: string, outcome: unknown): Pr
   if (typeof o?.status?.SuccessValue === "string" && o.status.SuccessValue.length > 0) return o;
   const hash = o?.transaction?.hash ?? o?.transaction_outcome?.id;
   if (!hash) return outcome;
-  const res = await fetch(rpc, {
+  const res = await rpcFetch(rpc, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tx", params: { tx_hash: hash, sender_account_id: accountId, wait_until: "FINAL" } }),
@@ -81,7 +82,7 @@ export function liveDriver(rpc: string, faucetUrl: string | undefined): Driver {
   const faucetRoot = faucetUrl?.replace(/\/$/, "");
   return {
     pretend: false,
-    address: (accountId) => hlAddressOf(accountId, rpc),
+    address: (accountId) => hlAddressOf(accountId, rpc, rpcFetch),
     async faucetStatus() {
       if (!faucetRoot) return { configured: false, amount_usd: 0, granted: 0, max: 0, balance_usd: 0 };
       const res = await fetch(`${faucetRoot}/faucet`);

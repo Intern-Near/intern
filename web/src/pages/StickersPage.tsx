@@ -4,6 +4,7 @@ import "./people.css";
 import "./v17-mine.css";
 import deployments from "../../../interface/deployments.json";
 import { signIn, useDoing, useSession } from "../chain/session";
+import { rpcFetch } from "../chain/near";
 import { getChain, getSource, useDesk } from "../chain/store";
 import type { RefusalCode, StickerHl, StickerHlSigned } from "../chain/types";
 import { shortAccount, signedUsd, titleCase, usd, when } from "../lib/format";
@@ -68,7 +69,7 @@ export function StickersPage() {
         let worth: number | null = null;
         if (!sample) {
           try {
-            address = addressFromDerivedKey(String(await viewFunction("derived_public_key", { path: hl.path, predecessor: coin, domain_id: 0 }, SIGNER, deployments.testnet.rpc)));
+            address = addressFromDerivedKey(String(await viewFunction("derived_public_key", { path: hl.path, predecessor: coin, domain_id: 0 }, SIGNER, deployments.testnet.rpc, rpcFetch)));
             worth = (await hlAccount(address)).accountValue;
           } catch {
             /* shown as unknown */

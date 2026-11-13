@@ -24,17 +24,23 @@ export async function accessKeyCount(rpcUrl: string, accountId: string): Promise
 /** A second public door to the same test network, used when the first one says "too many requests" or cannot be reached. */
 const FALLBACK_RPC = "https://rpc.testnet.near.org";
 
-async function post(rpcUrl: string, body: string): Promise<Response> {
-  const ask = (url: string) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
-  if (!rpcUrl.includes("testnet") || rpcUrl === FALLBACK_RPC) return ask(rpcUrl);
+/**
+ * `fetch` for NEAR's test-network RPC that tries the second door when the first is busy. Engine 1's Tail or Fade
+ * library takes a fetch function, so it gets the same safety net as the site's own reads.
+ */
+export const rpcFetch: typeof fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  if (!url.includes("testnet") || url === FALLBACK_RPC || init?.method !== "POST") return fetch(input, init);
   try {
-    const res = await ask(rpcUrl);
+    const res = await fetch(input, init);
     // A busy public RPC answers 429 (and a browser may see that as a failed request); the other door has the same data
-    return res.status === 429 || res.status >= 500 ? await ask(FALLBACK_RPC) : res;
+    return res.status === 429 || res.status >= 500 ? await fetch(FALLBACK_RPC, init) : res;
   } catch {
-    return ask(FALLBACK_RPC);
+    return fetch(FALLBACK_RPC, init);
   }
-}
+};
+
+const post = (rpcUrl: string, body: string): Promise<Response> => rpcFetch(rpcUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body });
 
 /** One read-only question to any contract. */
 export async function view<T>(rpcUrl: string, contractId: string, method: string, args: object = {}): Promise<T> {
