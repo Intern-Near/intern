@@ -105,7 +105,7 @@ fn propose(c: &mut Coin, round: u64, d: &Decision) -> wire::Verdict {
 
 fn guess(c: &mut Coin, round: u64, who: &str, v: Verdict3) {
     ctx(at(round, BEFORE_CLOSE), who, 0);
-    c.guess(v);
+    c.guess(v, None);
 }
 
 fn tick_rewards(c: &mut Coin, round: u64) {
@@ -368,4 +368,57 @@ fn get_rebalance_says_what_a_rebalance_would_move_without_moving_it() {
     let v = c.get_rebalance();
     assert_eq!(v.action, "RECALL");
     assert!(v.amount.0 > 0 && v.amount.0 <= 15_000_000);
+}
+
+// ----- 1.7: point wagers and banking a streak -----------------------------------------------------------------
+
+#[test]
+fn wagered_points_go_to_the_right_guessers_in_proportion() {
+    let mut c = three();
+    // Round 2: all three guess SKIP and are right: a point each.
+    for who in ["alice.test", "bob.test", "carol.test"] {
+        guess(&mut c, 2, who, Verdict3::Skip);
+    }
+    propose(&mut c, 2, &Decision::Skip);
+    // Round 3: alice wagers 1 point on SKIP, bob 1 on YES; carol wagers nothing. The Intern skips.
+    goto(&mut c, 3, 1_000);
+    ctx(at(3, BEFORE_CLOSE), "alice.test", 0);
+    c.guess(Verdict3::Skip, Some(1));
+    ctx(at(3, BEFORE_CLOSE), "bob.test", 0);
+    c.guess(Verdict3::Yes, Some(1));
+    guess(&mut c, 3, "carol.test", Verdict3::Skip);
+    assert_eq!(c.get_rewards().wagers_this_round.map(|w| w.0), [1, 0, 1]);
+    ctx(at(3, BEFORE_CLOSE), "alice.test", 0);
+    assert_eq!(c.get_player(acct("alice.test")).guess.unwrap().wager, 1);
+    propose(&mut c, 3, &Decision::Skip);
+    // alice: 1 - 1 (staked) + 2 (her 1 × the pool of 2 / SKIP's 1) + 1 (right) = 3; bob: 1 - 1 = 0; carol: 2.
+    ctx(at(3, IN_WINDOW + 1_000), "anyone.test", 0);
+    let pts = |who: &str| c.get_player(acct(who)).points;
+    assert_eq!((pts("alice.test"), pts("bob.test"), pts("carol.test")), (3, 0, 2));
+    // More than you hold is refused.
+    goto(&mut c, 4, 1_000);
+    ctx(at(4, BEFORE_CLOSE), "bob.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.guess(Verdict3::Skip, Some(1))))).is_err());
+}
+
+#[test]
+fn a_streak_can_be_banked_for_its_square_in_points() {
+    let mut c = three();
+    for r in 2..=4 {
+        if r > 2 {
+            goto(&mut c, r, 1_000);
+        }
+        guess(&mut c, r, "alice.test", Verdict3::Skip);
+        propose(&mut c, r, &Decision::Skip);
+    }
+    goto(&mut c, 5, 1_000);
+    ctx(at(5, 2_000), "alice.test", 0);
+    let before = c.get_player(acct("alice.test"));
+    assert_eq!((before.points, before.streak), (3, 3));
+    let after = c.bank_streak();
+    assert_eq!((after.points, after.streak), (3 + 9, 0));
+    assert_eq!(events(&c, EventName::StreakBanked)[0]["points"], 9);
+    // Nothing left to bank.
+    ctx(at(5, 2_100), "alice.test", 0);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.bank_streak()))).is_err());
 }

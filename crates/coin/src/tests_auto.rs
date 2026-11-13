@@ -106,7 +106,7 @@ fn propose(c: &mut Coin, round: u64, d: &Decision) -> wire::Verdict {
 
 fn guess(c: &mut Coin, round: u64, who: &str, v: Verdict3) {
     ctx(at(round, BEFORE_CLOSE), who, 0);
-    c.guess(v);
+    c.guess(v, None);
 }
 
 fn tick_rewards(c: &mut Coin, round: u64) {

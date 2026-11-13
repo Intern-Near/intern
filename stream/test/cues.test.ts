@@ -106,6 +106,7 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   term_lapsed: { round_id: 80, term_ended_at: 1797178800000 },
   term_renewed: { term_ends_at: 1799770800000 },
   abandoned: { round_id: 63, bets_booked_lost: 1 },
+  streak_banked: { account_id: "boss1.desk-lab-2026.testnet", streak: 4, points: 16 },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

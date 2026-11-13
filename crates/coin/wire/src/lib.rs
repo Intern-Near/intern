@@ -164,6 +164,7 @@ wire_enum!(
         TermLapsed,
         TermRenewed,
         Abandoned,
+        StreakBanked,
     }
 );
 

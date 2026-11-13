@@ -105,7 +105,7 @@ fn propose(c: &mut Coin, round: u64, d: &Decision) -> wire::Verdict {
 
 fn guess(c: &mut Coin, round: u64, who: &str, v: Verdict3) -> crate::rewards::PlayerView {
     ctx(at(round, BEFORE_CLOSE), who, 0);
-    c.guess(v)
+    c.guess(v, None)
 }
 
 fn player(c: &Coin, who: &str) -> crate::rewards::PlayerView {
@@ -196,7 +196,7 @@ fn guesses_close_before_the_window_once_per_round_and_only_registered_accounts()
     assert!(catch_unwind(AssertUnwindSafe(|| guess(&mut c, 2, "stranger.test", Verdict3::Yes))).is_err());
     register(&mut c, at(2, 1_500), "late.test");
     ctx(at(2, 42_900_000), "late.test", 0);
-    assert!(catch_unwind(AssertUnwindSafe(|| c.guess(Verdict3::Yes))).is_err());
+    assert!(catch_unwind(AssertUnwindSafe(|| c.guess(Verdict3::Yes, None))).is_err());
     assert_eq!(c.get_rewards().guesses_this_round, [1, 0, 0]);
     assert_eq!(events(&c, EventName::Guessed).len(), 1);
 }

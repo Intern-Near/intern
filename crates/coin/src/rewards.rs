@@ -266,10 +266,19 @@ impl Coin {
     fn resolved(&self, who: &AccountId, current_round: u64) -> PlayerRec {
         let mut p = self.rw.players.get(who).cloned().unwrap_or_default();
         if let Some((round, guess)) = p.last {
+            // 1.7: points wagered on this guess (already taken from the player's points when guessing).
+            let wager = read_wager(who).filter(|w| w.0 == round).map_or(0, |w| w.1);
             match self.rw.round_verdict.get(&round) {
                 Some(&v) => {
                     p.last = None;
                     if v == guess {
+                        // Winners share the losers' wagered points in proportion to their own wagers.
+                        let pool = read_pool(round);
+                        let total: u64 = pool.iter().sum();
+                        let side = pool[v as usize];
+                        if wager > 0 && side > 0 {
+                            p.points = p.points.saturating_add((wager as u64 * total / side) as u32);
+                        }
                         p.points += 1;
                         p.right += 1;
                         p.streak += 1;
@@ -283,8 +292,11 @@ impl Coin {
                         p.streak = 0;
                     }
                 }
-                // The round ended with no ruling at all: the guess counts for nothing.
-                None if round < current_round => p.last = None,
+                // The round ended with no ruling at all: the guess counts for nothing (its wager comes back).
+                None if round < current_round => {
+                    p.last = None;
+                    p.points = p.points.saturating_add(wager);
+                }
                 None => {}
             }
         }
@@ -488,6 +500,8 @@ pub struct PlayerView {
 pub struct GuessView {
     pub round_id: u64,
     pub verdict: Verdict3,
+    /// 1.7: points wagered on it (0: none).
+    pub wager: u32,
 }
 
 #[near(serializers = [json])]
@@ -510,6 +524,8 @@ pub struct RewardsView {
     pub round_id: u64,
     pub guess_closes_at: u64,
     pub guesses_this_round: [u32; 3],
+    /// 1.7: points wagered this round on YES, NOPE, SKIP.
+    pub wagers_this_round: [near_sdk::json_types::U64; 3],
     pub jackpot: U128,
     /// Of the jackpot's history: added directly (the team's seed, gifts) and from tips.
     pub jackpot_added_total: U128,
@@ -556,7 +572,9 @@ pub struct RewardConstants {
 #[near]
 impl Coin {
     /// R1. Free; registered accounts only; once per round, before the guess closes (`guess_close_ms`).
-    pub fn guess(&mut self, verdict: Verdict3) -> PlayerView {
+    /// 1.7: `wager` (optional) is points staked on this guess, at most the points held; winners of the round share
+    /// the losers' wagered points in proportion to their wagers. Points have no cash value.
+    pub fn guess(&mut self, verdict: Verdict3, wager: Option<u32>) -> PlayerView {
         let who = env::predecessor_account_id();
         require!(self.registered(&who), "register first (storage_deposit): a guess is stored for you");
         self.tick();
@@ -577,6 +595,17 @@ impl Coin {
             }
         }
         p.last = Some((r.id, g));
+        let wager = wager.unwrap_or(0);
+        require!(wager <= p.points, "you cannot wager more points than you hold");
+        if wager > 0 {
+            p.points -= wager;
+            write_wager(&who, (r.id, wager));
+            let mut pool = read_pool(r.id);
+            pool[g as usize] += wager as u64;
+            write_pool(r.id, &pool);
+        } else {
+            clear_wager(&who);
+        }
         let mut counts = self.rw.round_counts.get(&r.id).copied().unwrap_or_default();
         counts[g as usize] += 1;
         self.rw.round_counts.insert(r.id, counts);
@@ -711,6 +740,7 @@ impl Coin {
             round_id: r.id,
             guess_closes_at: r.started_at + self.cfg.guess_close_ms,
             guesses_this_round: rw.round_counts.get(&r.id).copied().unwrap_or_default(),
+            wagers_this_round: read_pool(r.id).map(near_sdk::json_types::U64),
             jackpot: U128(rw.jackpot),
             jackpot_added_total: U128(rw.jackpot_added),
             jackpot_from_tips_total: U128(rw.jackpot_from_tips),
@@ -753,7 +783,11 @@ impl Coin {
             wrong: p.wrong,
             streak: p.streak,
             best: p.best,
-            guess: p.last.map(|(round_id, g)| GuessView { round_id, verdict: Verdict3::of(g) }),
+            guess: p.last.map(|(round_id, g)| GuessView {
+                round_id,
+                verdict: Verdict3::of(g),
+                wager: read_wager(&account_id).filter(|w| w.0 == round_id).map_or(0, |w| w.1),
+            }),
             jackpot_eligible: self.jackpot_eligible(&account_id, r.id),
             prize_owed: U128(self.rw.prizes.get(&account_id).copied().unwrap_or(0)),
             goldens: p
@@ -811,5 +845,53 @@ impl Coin {
     /// TEST ONLY. The golden sticker odds (1 drops one on every guess).
     pub fn test_set_golden_odds(&mut self, odds: u32) {
         self.rw.golden_odds = odds;
+    }
+}
+
+// ----- 1.7: point wagers and banking a streak (own storage keys, no migration) ------------------------------
+
+fn wager_key(who: &AccountId) -> Vec<u8> {
+    [b"g7w".as_slice(), who.as_bytes()].concat()
+}
+fn pool_key(round: u64) -> Vec<u8> {
+    [b"g7p".as_slice(), &round.to_le_bytes()].concat()
+}
+/// (round, points wagered) of an account's last wagered guess.
+fn read_wager(who: &AccountId) -> Option<(u64, u32)> {
+    env::storage_read(&wager_key(who)).and_then(|b| near_sdk::borsh::from_slice(&b).ok())
+}
+fn write_wager(who: &AccountId, w: (u64, u32)) {
+    env::storage_write(&wager_key(who), &near_sdk::borsh::to_vec(&w).expect("wager"));
+}
+fn clear_wager(who: &AccountId) {
+    env::storage_remove(&wager_key(who));
+}
+/// Points wagered in a round on YES, NOPE, SKIP.
+fn read_pool(round: u64) -> [u64; 3] {
+    env::storage_read(&pool_key(round)).and_then(|b| near_sdk::borsh::from_slice(&b).ok()).unwrap_or_default()
+}
+fn write_pool(round: u64, p: &[u64; 3]) {
+    env::storage_write(&pool_key(round), &near_sdk::borsh::to_vec(p).expect("pool"));
+}
+
+#[near]
+impl Coin {
+    /// 1.7. Turns the current streak into points (streak × streak) and starts it again: sure points now instead of
+    /// the jackpot's seven in a row. Not while a guess waits for its ruling.
+    pub fn bank_streak(&mut self) -> PlayerView {
+        let who = env::predecessor_account_id();
+        require!(self.registered(&who), "register first (storage_deposit)");
+        self.tick();
+        let r = self.current.expect("a round is always open");
+        let mut p = self.resolved(&who, r.id);
+        require!(p.last.is_none(), "wait for your guess's ruling before banking");
+        require!(p.streak > 0, "there is no streak to bank");
+        let streak = p.streak as u32;
+        let points = streak * streak;
+        p.points = p.points.saturating_add(points);
+        p.streak = 0;
+        self.rw.players.insert(who.clone(), p);
+        self.feed.push(EventName::StreakBanked, json!({"account_id": who, "streak": streak, "points": points}));
+        self.get_player(who)
     }
 }

@@ -554,6 +554,17 @@
         "The dead-man switch: round {round_id} was abandoned, {bets_booked_lost} bet(s) written off. Money can leave; a rehire brings me back."
       ],
       "system": "ABANDONED — round {round_id}: no result 3 rounds after close; {bets_booked_lost} bet(s) booked as lost; the Intern is fired."
+    },
+    "streak_banked": {
+      "speak": true,
+      "priority": 4,
+      "intern_pose": "happy",
+      "mascot": null,
+      "intern": [
+        "{account} banked a streak of {streak} for {points} points. Sure points over the jackpot. Sensible.",
+        "{account} cashed in a {streak}-in-a-row streak: {points} points."
+      ],
+      "system": "STREAK BANKED — {account}: a streak of {streak} for {points} points."
     }
   },
   "refusals": {
