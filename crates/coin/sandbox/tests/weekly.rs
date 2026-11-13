@@ -103,7 +103,7 @@ async fn a_week_with_a_win_a_loss_and_a_refusal_is_reviewed_and_its_league_close
 }
 
 #[tokio::test]
-async fn a_1_5_contract_upgrades_to_1_6_keeping_everything() -> anyhow::Result<()> {
+async fn a_1_5_contract_upgrades_in_place_keeping_everything() -> anyhow::Result<()> {
     // The exact code coin-fast runs on testnet today.
     let old = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/coin-fast-1.5.wasm"))?;
     let worker = near_workspaces::sandbox().await?;
@@ -134,7 +134,7 @@ async fn a_1_5_contract_upgrades_to_1_6_keeping_everything() -> anyhow::Result<(
     assert_eq!(w.view(&w.coin, "get_constants", json!({})).await?["interface_version"], "1.5");
 
     w.coin.as_account().deploy(&wasm("target/near/coin-fake/coin.wasm")).await?.into_result()?;
-    assert_eq!(w.view(&w.coin, "get_constants", json!({})).await?["interface_version"], "1.6");
+    assert_eq!(w.view(&w.coin, "get_constants", json!({})).await?["interface_version"], "1.7"); // v2: 1.6 and 1.7 together
     assert_eq!(w.pot().await?, pot_before, "the pool is exactly as it was");
     assert_eq!(u(&w.view(&w.coin, "get_rewards", json!({})).await?["jackpot"]), u(&rewards_before["jackpot"]));
     assert_eq!(w.view(&w.coin, "get_feed", json!({"limit": 100})).await?, feed_before, "the feed reads as before");

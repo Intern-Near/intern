@@ -542,3 +542,40 @@ fn a_golden_sticker_can_be_claimed_as_a_multi_token_and_comes_back_if_the_mint_f
     ctx(at(2, 3_400), "bob.test", 0);
     assert_eq!(c.get_player(acct("bob.test")).goldens.len(), 1);
 }
+
+// ----- the originals' Hyperliquid accounts (item 19) ----------------------------------------------------------
+
+#[test]
+fn only_the_holder_of_a_claimed_original_has_its_account_signed_for() {
+    let mut c = three();
+    // Not claimed yet: refused before anything is asked.
+    ctx_full(at(2, 2_000), "bob.test", 1, vec![]);
+    let agent = "0x1563915e194d8cfba1943570603f7606a3115508".to_string();
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.sticker_hl_approve(Refusal::Fired, agent.clone())))).is_err());
+    c.s9.sticker_firsts[Refusal::Fired as usize] = Some((acct("bob.test"), 2, true));
+    // A bad address or amount: refused.
+    ctx_full(at(2, 2_100), "bob.test", 1, vec![]);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.sticker_hl_approve(Refusal::Fired, "0xABC".into())))).is_err());
+    ctx_full(at(2, 2_200), "bob.test", 1, vec![]);
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.sticker_hl_withdraw(Refusal::Fired, agent.clone(), "1.2345678".into())))).is_err());
+    // The sticker contract says carol holds it: bob's request stops there.
+    let token = br#"{"token_id":"original:FIRED","owner_id":"carol.test"}"#.to_vec();
+    ctx_full(at(2, 2_300), ME, 0, vec![PromiseResult::Successful(token.clone())]);
+    assert!(matches!(
+        c.on_sticker_owner(Refusal::Fired, acct("bob.test"), "APPROVE_AGENT".into(), agent.clone(), String::new()),
+        PromiseOrValue::Value(false)
+    ));
+    // Carol holds it: the contract asks the signing network (a promise), for the path sticker-FIRED.
+    ctx_full(at(2, 2_400), ME, 0, vec![PromiseResult::Successful(token)]);
+    assert!(matches!(
+        c.on_sticker_owner(Refusal::Fired, acct("carol.test"), "APPROVE_AGENT".into(), agent, String::new()),
+        PromiseOrValue::Promise(_)
+    ));
+    assert_eq!(c.get_sticker_hl(Refusal::Fired).path, "sticker-FIRED");
+    // A failed signing keeps nothing.
+    ctx_full(at(2, 2_500), ME, 0, vec![PromiseResult::Failed]);
+    assert!(c
+        .on_sticker_signed(Refusal::Fired, acct("carol.test"), "APPROVE_AGENT".into(), "{}".into(), "00".repeat(32), near_sdk::json_types::U64(1))
+        .is_none());
+    assert!(c.get_sticker_hl(Refusal::Fired).signed.is_empty());
+}

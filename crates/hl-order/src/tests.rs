@@ -717,3 +717,44 @@ fn never_panics_on_extreme_or_random_inputs() {
         let _ = size_for(u128::from(x) << 32, y, sz_decimals);
     }
 }
+
+// ---- 1.7: user-signed actions, against the official SDK's vectors (tailfade/test/vectors.json) ------------------
+
+fn h32(s: &str) -> [u8; 32] {
+    let s = s.trim_start_matches("0x");
+    let mut out = [0u8; 32];
+    for i in 0..32 {
+        out[i] = u8::from_str_radix(&s[2 * i..2 * i + 2], 16).unwrap();
+    }
+    out
+}
+fn a20(s: &str) -> [u8; 20] {
+    let s = s.trim_start_matches("0x");
+    let mut out = [0u8; 20];
+    for i in 0..20 {
+        out[i] = u8::from_str_radix(&s[2 * i..2 * i + 2], 16).unwrap();
+    }
+    out
+}
+
+#[test]
+fn approve_agent_digests_match_the_sdk() {
+    let agent = a20("0x1563915e194d8cfba1943570603f7606a3115508");
+    let (json, d) = approve_agent(&TestHost, agent, "tailfade", 1794500000000, true);
+    assert_eq!(d, h32("0xfabef0942deeafb03999b82a5e0d79759bab85f5a3bb53e6729276edbb89299c"));
+    assert_eq!(
+        json,
+        r#"{"type":"approveAgent","signatureChainId":"0x66eee","hyperliquidChain":"Testnet","agentAddress":"0x1563915e194d8cfba1943570603f7606a3115508","agentName":"tailfade","nonce":1794500000000}"#
+    );
+    let (_, d) = approve_agent(&TestHost, agent, "", 1794500000123, true);
+    assert_eq!(d, h32("0x9db282d61489ee73303de6c1f6f745fa02b968ca6715499c9b63f911f455efbc"));
+}
+
+#[test]
+fn usd_send_digests_match_the_sdk() {
+    let (_, d) = usd_send(&TestHost, "0x66726d2cf438f3d9b3b61bc6e1f52dbf51f4df43", "30", 1794500001000, true);
+    assert_eq!(d, h32("0x01a1fcfc669415a61e9692e02095b6553a6b541ca6d165acb50fbedf33a0bca3"));
+    let (json, d) = usd_send(&TestHost, "0x46f8eb2a044a826c70e9682fe3bfd65970340132", "12.5", 1794500002000, true);
+    assert_eq!(d, h32("0x00b09a8fd97f5830e6347b1e796b138e4e9db3ebd9155377bb4ebd0ce4cb7baf"));
+    assert!(json.contains(r#""amount":"12.5""#) && json.contains(r#""time":1794500002000"#));
+}

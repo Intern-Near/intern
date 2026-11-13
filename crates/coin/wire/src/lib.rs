@@ -177,6 +177,7 @@ wire_enum!(
         StakeBurned,
         ResultChallenged,
         ResultCorrected,
+        StickerHlSigned,
     }
 );
 

@@ -677,6 +677,14 @@
         "Corrected: bet {position_id} now shows {to}. The challenger was right."
       ],
       "system": "CORRECTED — bet {position_id}: {from} → {to} ({delta}); pool after {brave_after}."
+    },
+    "sticker_hl_signed": {
+      "speak": false,
+      "priority": 5,
+      "intern_pose": "idle",
+      "mascot": null,
+      "intern": null,
+      "system": "STICKER ACCOUNT — the {code} original's Hyperliquid account: {kind} signed for its holder {account}."
     }
   },
   "refusals": {

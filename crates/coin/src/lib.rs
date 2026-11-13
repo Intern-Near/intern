@@ -33,6 +33,7 @@ pub mod challenge;
 pub mod earn;
 pub mod rescue;
 pub mod stake;
+pub mod sticker_hl;
 pub mod tricks;
 pub mod vote;
 pub mod weekly;

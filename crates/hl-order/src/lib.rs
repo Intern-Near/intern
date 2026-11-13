@@ -418,3 +418,88 @@ fn l1_digest<H: Host>(
     message.extend_from_slice(&struct_hash);
     (connection_id, host.keccak256(&message))
 }
+
+// ---- 1.7 (Engine 1, for 01 §9.17): user-signed actions, for accounts the contract derives for stickers ----------
+
+/// The chain id Hyperliquid's user-signed actions carry (`signatureChainId`, Arbitrum Sepolia's, as the SDK uses).
+pub const SIGNATURE_CHAIN_ID: u32 = 0x66eee;
+
+fn user_domain<H: Host>(host: &H) -> [u8; 32] {
+    let mut domain = Vec::with_capacity(160);
+    domain.extend_from_slice(&host.keccak256(
+        b"EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)",
+    ));
+    domain.extend_from_slice(&host.keccak256(b"HyperliquidSignTransaction"));
+    domain.extend_from_slice(&host.keccak256(b"1"));
+    let mut chain_id = [0u8; 32];
+    chain_id[28..].copy_from_slice(&SIGNATURE_CHAIN_ID.to_be_bytes());
+    domain.extend_from_slice(&chain_id);
+    domain.extend_from_slice(&[0u8; 32]);
+    host.keccak256(&domain)
+}
+
+fn user_digest<H: Host>(host: &H, struct_hash: [u8; 32]) -> [u8; 32] {
+    let mut message = Vec::with_capacity(66);
+    message.extend_from_slice(&[0x19, 0x01]);
+    message.extend_from_slice(&user_domain(host));
+    message.extend_from_slice(&struct_hash);
+    host.keccak256(&message)
+}
+
+fn word_u64(v: u64) -> [u8; 32] {
+    let mut w = [0u8; 32];
+    w[24..].copy_from_slice(&v.to_be_bytes());
+    w
+}
+
+/// `approveAgent`: lets `agent` (20 bytes) trade the signing account, never withdraw. `agent_name` "" is the one
+/// unnamed agent, which a later unnamed approval replaces. Returns (the action's JSON, the digest to sign).
+pub fn approve_agent<H: Host>(host: &H, agent: [u8; 20], agent_name: &str, nonce: u64, testnet: bool) -> (String, [u8; 32]) {
+    let chain = if testnet { "Testnet" } else { "Mainnet" };
+    let mut agent_word = [0u8; 32];
+    agent_word[12..].copy_from_slice(&agent);
+    let mut s = Vec::with_capacity(160);
+    s.extend_from_slice(&host.keccak256(
+        b"HyperliquidTransaction:ApproveAgent(string hyperliquidChain,address agentAddress,string agentName,uint64 nonce)",
+    ));
+    s.extend_from_slice(&host.keccak256(chain.as_bytes()));
+    s.extend_from_slice(&agent_word);
+    s.extend_from_slice(&host.keccak256(agent_name.as_bytes()));
+    s.extend_from_slice(&word_u64(nonce));
+    let digest = user_digest(host, host.keccak256(&s));
+    let json = format!(
+        r#"{{"type":"approveAgent","signatureChainId":"0x{SIGNATURE_CHAIN_ID:x}","hyperliquidChain":"{chain}","agentAddress":"{}","agentName":"{agent_name}","nonce":{nonce}}}"#,
+        hex_lower(&agent)
+    );
+    (json, digest)
+}
+
+/// `usdSend`: sends `amount` (a decimal string, as Hyperliquid writes it) of USDC to `destination` (0x + 40 lower-case
+/// hex). Returns (the action's JSON, the digest to sign).
+pub fn usd_send<H: Host>(host: &H, destination: &str, amount: &str, time: u64, testnet: bool) -> (String, [u8; 32]) {
+    let chain = if testnet { "Testnet" } else { "Mainnet" };
+    let mut s = Vec::with_capacity(160);
+    s.extend_from_slice(&host.keccak256(
+        b"HyperliquidTransaction:UsdSend(string hyperliquidChain,string destination,string amount,uint64 time)",
+    ));
+    s.extend_from_slice(&host.keccak256(chain.as_bytes()));
+    s.extend_from_slice(&host.keccak256(destination.as_bytes()));
+    s.extend_from_slice(&host.keccak256(amount.as_bytes()));
+    s.extend_from_slice(&word_u64(time));
+    let digest = user_digest(host, host.keccak256(&s));
+    let json = format!(
+        r#"{{"type":"usdSend","signatureChainId":"0x{SIGNATURE_CHAIN_ID:x}","hyperliquidChain":"{chain}","destination":"{destination}","amount":"{amount}","time":{time}}}"#
+    );
+    (json, digest)
+}
+
+fn hex_lower(b: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut s = String::with_capacity(2 + b.len() * 2);
+    s.push_str("0x");
+    for x in b {
+        s.push(char::from(DIGITS[usize::from(x >> 4)]));
+        s.push(char::from(DIGITS[usize::from(x & 0x0f)]));
+    }
+    s
+}

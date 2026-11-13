@@ -313,6 +313,7 @@ Read-only and free. The site and the runner use only these.
 | `get_nft_earnings` *(1.7)* | — | `{ owed_total, paid_total: Usdc; tokens: { token_id, owed: Usdc }[]; careers_minted: number }` (section 9.12) |
 | `get_career` *(1.7)* | — | `{ rank, status, level, rounds, bets, refusals: number; result: Signed; svg: string }` (section 9.12) |
 | `get_challenges` *(1.7)* | — | `{ bonds_held, bond: Usdc; window_rounds: number; challenges: { vote_id, position_id, challenger, bond, reported, claimed, reason, state: "OPEN" \| "PASSED" \| "APPLYING" \| "APPLIED" \| "FAILED" }[] }`, newest first, at most 20 (section 9.14) |
+| `get_sticker_hl` *(1.7)* | `{ code: RefusalCode }` | the original's Hyperliquid path and its latest signed actions (section 9.17) |
 | `get_stake` *(1.7)* | — | `{ coins: U128; value: Usdc; fee_bps: number; grew_total, burned_total: U128 }` (section 9.13) |
 | `get_rescue` *(1.7)* | — | `{ fund, target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round, until_round: number; cut_bps: number; paid_total: Usdc; rescues: number }` (section 9.11) |
 | `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
@@ -823,6 +824,14 @@ Owner's decision on Engine 2's list (item 23). A separate contract, `tickets` (`
 
 On `tickets`: `mt_transfer`, `mt_batch_transfer` (1 yocto), `mt_balance_of`, `mt_batch_balance_of`, `mt_supply`, `mt_batch_supply`, `mt_token`; NEP-297 events `mt_mint`, `mt_transfer` (standard `nep245`). Not built: `mt_transfer_call`, approvals. **The market:** `list({ token_id, amount, price_each })` (1 yocto; the units are held by the contract), `unlist({ listing_id })` (the seller), `get_listings({ from?, limit? })`; a buyer pays on the USDC token with `ft_transfer_call({ receiver_id: <tickets>, amount, msg: '{"buy":{"listing_id":N,"amount":"…"}}' })`: the units go to the buyer, the USDC to the seller (who must be registered on the USDC token), the change back; anything wrong is refunded in full. No fee.
 
+### 9.17 The originals' Hyperliquid accounts *(1.7)*
+
+Owner's decision on Engine 2's list (item 19). Each "first of its kind" original (`original:<CODE>`) has its own Hyperliquid testnet account, derived from the coin by NEAR's signing network with the path `sticker-<CODE>` (Tail or Fade's derivation, with the coin as the predecessor: `tailfade/src/mpc.ts` `hlAddressOf` computes it), so only the coin can sign for it. Whoever holds the original (checked with the sticker contract's `nft_token`) may call, with 1 yocto and 300 TGas:
+- `sticker_hl_approve({ code, agent })`: the coin signs an `approveAgent` for `agent` (0x + 40 lower-case hex), unnamed, so it replaces the previous holder's key; the key can trade the sticker's account, never withdraw.
+- `sticker_hl_withdraw({ code, destination, amount })`: the coin signs a `usdSend` of `amount` (a decimal, at most 6 decimals) from the sticker's account.
+
+The signed action is kept: `get_sticker_hl({ code })` → `{ code, token_id, path, signed: { code, kind, action, nonce, r, s, v, signer, for_account, at }[] }` (newest first, at most 10), for the holder to send to Hyperliquid's `/exchange` (`{ action, nonce, signature: { r, s, v } }`). Event `sticker_hl_signed { code, kind, account_id, signer }`. The digests are built by `hl-order`'s `approve_agent` and `usd_send`, checked against the official SDK's vectors. Funding the account is up to anyone (send it test USDC).
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -890,6 +899,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `stake_burned` *(1.7)* | `{ round_id, coins, covered }` |
 | `result_challenged` *(1.7)* | `{ vote_id, position_id, challenger, reported, claimed, bond }` |
 | `result_corrected` *(1.7)* | `{ vote_id, position_id, from, to, delta, brave_after }` |
+| `sticker_hl_signed` *(1.7)* | `{ code, kind, account_id, signer }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
