@@ -1,0 +1,20 @@
+{
+  "brave": {
+    "total": "1573096502",
+    "lent": "1542140326",
+    "in_play": "0",
+    "idle": "30956176",
+    "pending": "0",
+    "interest": "110",
+    "income_waiting": "0"
+  },
+  "safe": {
+    "total": "221106315",
+    "lent": "0",
+    "idle": "221106315"
+  },
+  "coin_supply": "1298643317",
+  "coin_price_e6": "1211338",
+  "bosses": 2,
+  "outside_income_total": "100299970"
+}

@@ -4,6 +4,14 @@ import type { Chain } from "./chain.ts";
 import type { Constants, Round } from "./contract.ts";
 import { fetchOpenPositions, HL_TESTNET_INFO } from "./hl-exchange.ts";
 import { isRecord } from "./json.ts";
+import {
+  checkKeyScope,
+  describeScope,
+  type Expect,
+  keyScopeMode,
+  RUNNER_METHODS,
+  signingPublicKey,
+} from "./key-scope.ts";
 import { addressFromDerivedKey, view } from "./near.ts";
 import { fetchAttestation, fetchModels, parseModelSigners } from "./nearai.ts";
 import { checkConstants } from "./round.ts";
@@ -61,7 +69,7 @@ export function rulebookDifferences(
 }
 
 /** The calls the runner's function-call key makes (01 1.3 §9.3, §13): exactly these, on the contract only. */
-export const RUNNER_METHODS = ["propose", "sign_next", "report_result"] as const;
+export { RUNNER_METHODS };
 
 /** Checks that a key is what the brief says it must be. Returns a problem, or null. */
 export async function checkKey(
@@ -313,6 +321,45 @@ export async function preflight(input: PreflightInput): Promise<Line[]> {
           `${r.id}: ${k.detail}; balance ${near(balance)}${low ? " (low: each signing call attaches up to 300 TGas)" : ""}`,
       );
     });
+  }
+
+  // Key scope, as the runner checks it at start (INTERN_KEY_SCOPE: off, warn, strict; default warn): the key the runner
+  // and the relayer sign with (the public key of RUNNER_PRIVATE_KEY, RELAYER_PRIVATE_KEY) against what is declared,
+  // and their accounts' other keys as notes (src/key-scope.ts). A signing key that can do more than declared is a
+  // warning, a failure with strict; one that cannot do the calls is a failure; with no private key set, the keys that
+  // would pass are listed.
+  const scope = keyScopeMode(input.env);
+  if (scope.note !== null) add("warn", "key scope", scope.note);
+  if (scope.mode === "off") add("warn", "key scope", "not checked (INTERN_KEY_SCOPE=off)");
+  else {
+    const targets: { expect: Expect; accountId: string; key: Secret | null }[] = [
+      { expect: "runner", accountId: input.runner?.id ?? constants.runner, key: input.runner?.key ?? null },
+    ];
+    const relayerId = input.relayer?.id ?? (input.env.RELAYER_ACCOUNT_ID || null);
+    if (relayerId !== null)
+      targets.push({ expect: "relayer", accountId: relayerId, key: input.relayer?.key ?? null });
+    for (const t of targets) {
+      await attempt(`${t.expect} key scope`, async () => {
+        const s = await checkKeyScope(rpc, {
+          accountId: t.accountId,
+          expect: t.expect,
+          contract: chain.contractId,
+          contractRunner: constants.runner,
+          signingKey: t.key === null ? null : await signingPublicKey(t.key),
+        });
+        const mark: Mark =
+          s.verdict === "as declared"
+            ? "ok"
+            : s.verdict === "not as declared"
+              ? scope.mode === "strict"
+                ? "fail"
+                : "warn"
+              : s.verdict === "unusable" || s.passing.length === 0
+                ? "fail"
+                : "warn";
+        add(mark, `${t.expect} key scope`, describeScope(s));
+      });
+    }
   }
   return lines;
 }

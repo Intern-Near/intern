@@ -1,0 +1,7 @@
+{
+  "what": "Saved by `npm run attestation-check -- --save`: GET https://cloud-api.near.ai/v1/attestation/report (provider=near, include_tls_fingerprint=false), trimmed to the fields the check reads; NVIDIA NRAS's reply to POST https://nras.attestation.nvidia.com/v3/attest/gpu with the candidate's nvidia_payload; the keys of https://nras.attestation.nvidia.com/.well-known/jwks.json that the reply's tokens name.",
+  "model": "z-ai/glm-5.3-flash",
+  "signing_algo": "ed25519",
+  "nonce": "8ea290d0c8243aeddb60d5b7d4f0f668edf77b03cb064c45244a39c319082abd",
+  "fetched_at": "2026-11-13T14:01:03.388Z"
+}

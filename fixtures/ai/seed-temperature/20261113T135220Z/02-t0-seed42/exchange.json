@@ -1,0 +1,24 @@
+{
+  "case": "t0-seed42",
+  "what": "Plus \"temperature\":0,\"seed\":42.",
+  "started_at": "2026-11-13T13:53:07.180Z",
+  "ms": 47343,
+  "status": 200,
+  "headers": {
+    "access-control-expose-headers": "*",
+    "alt-svc": "h3=\":8443\"; ma=86400",
+    "cache-control": "no-store",
+    "connection": "keep-alive",
+    "content-length": "2215",
+    "content-type": "application/json",
+    "date": "Fri, 13 Nov 2026 13:53:54 GMT",
+    "inference-id": "f77572aa-65cf-5fbd-8faa-13e12ee219a2",
+    "server": "nginx",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "vary": "origin, access-control-request-headers, accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-request-id": "f630ff03-50d1-424c-95c4-2b9e04fdac4e",
+    "x-serving-provider": "near"
+  },
+  "chat_id": "daf9fdeb91284e50b47c50f5582856dd"
+}

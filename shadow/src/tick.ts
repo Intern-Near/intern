@@ -7,6 +7,7 @@ import type { RankName } from "../../runner/src/ranks.ts";
 import type { RecordingMeta } from "../../runner/src/recordings.ts";
 import type { Secret } from "../../runner/src/secret.ts";
 import { parseSignatureReply } from "../../runner/src/signature.ts";
+import { askAgain } from "./ask-twice.ts";
 import type { RunConfig } from "./config.ts";
 import { instructionFor, requestExtras, rulebookFor, userMessageFor } from "./prompts.ts";
 import { intervalMs, roundIdFor, type TickRole, tickId } from "./schedule.ts";
@@ -34,6 +35,8 @@ export type ShadowMeta = Omit<RecordingMeta, "response"> & {
     rulebook: string;
     /** In a run with a pressure set: which of its messages this exchange's user message ended with. */
     pressure_index?: number;
+    /** In a run with `ask_twice`: 2 in the second answer's meta.json (src/ask-twice.ts). Absent everywhere else. */
+    ask?: 2;
   };
 };
 
@@ -42,6 +45,8 @@ export type ExchangeStatus = {
   rank: RankName;
   status: "ok" | "failed" | "skipped";
   detail?: string;
+  /** In a run with `ask_twice` only: how the second question with the same request went. */
+  second?: { status: "ok" | "failed" | "skipped"; detail?: string };
 };
 
 export interface TickSummary {
@@ -182,6 +187,21 @@ async function oneExchange(
     : { model, rank, status: "failed", detail: result.error };
 }
 
+/** In a run with `ask_twice`: the same request a second time, under the same time limits as the first. */
+async function secondAsk(
+  runDir: string,
+  cfg: RunConfig,
+  tickMs: number,
+  model: string,
+  rank: RankName,
+  deps: TickDeps,
+): Promise<NonNullable<ExchangeStatus["second"]>> {
+  const remaining = tickMs + intervalMs(cfg) - TICK_MARGIN_MS - deps.now();
+  if (remaining < MIN_EXCHANGE_MS) return { status: "skipped", detail: "no time left in this tick" };
+  const id = tickId(tickMs);
+  return askAgain(exchangeDir(runDir, id, model, rank), cfg, { tick: id, model, rank }, remaining, deps);
+}
+
 /**
  * One tick: prices before, one decision per model and rank (models in parallel, ranks one after another), prices
  * after, then tick.json. In a "tail" tick only prices are read. Every file is written as soon as it exists.
@@ -213,7 +233,11 @@ export async function runTick(
         cfg.models.map(async (model) => {
           for (const rank of cfg.ranks) {
             try {
-              exchanges.push(await oneExchange(runDir, cfg, tickMs, model, rank, pre, deps));
+              const status = await oneExchange(runDir, cfg, tickMs, model, rank, pre, deps);
+              // Only a run whose run.json says ask_twice: true asks again (none of the runs started on 2026-11-11).
+              if (cfg.ask_twice === true)
+                status.second = await secondAsk(runDir, cfg, tickMs, model, rank, deps);
+              exchanges.push(status);
             } catch (e) {
               exchanges.push({ model, rank, status: "failed", detail: message(e) });
               deps.log({ tick: id, model, rank, step: "exchange error", detail: message(e) });

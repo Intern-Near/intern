@@ -1,0 +1,449 @@
+# Hand-written mutants of checks 3 to 5 (crates/ai-check/src). Each one is a small, plausible mistake: a check
+# skipped, loosened or turned around. run.py puts one mutant at a time into the source, runs the tests, and puts the
+# original file back byte for byte.
+#
+# Fields: `id`, `check` (3, 4 or 5; the JSON reader serves checks 4 and 5), `file` (relative to crates/ai-check),
+# `what` (the mistake in plain words), `find` (text that must occur exactly once in the file) and `replace`.
+# A mutant with `equivalent` set behaves exactly like the original by construction; the text says why. It is run too
+# (it must survive), but it is not counted among the mutants the tests must catch.
+
+# ---------------------------------------------------------------- check 3: the signature (BAD_MODEL_SIGNATURE)
+
+[[mutant]]
+id = "S1"
+check = 3
+file = "src/lib.rs"
+what = "check 3 skipped: any signature passes"
+find = '    if !signature_ok(host, pinned, request, response, signature) {'
+replace = '    if false && !signature_ok(host, pinned, request, response, signature) {'
+
+[[mutant]]
+id = "S2"
+check = 3
+file = "src/lib.rs"
+what = "check 3 turned around: a good signature is refused, a bad one passes"
+find = '    if !signature_ok(host, pinned, request, response, signature) {'
+replace = '    if signature_ok(host, pinned, request, response, signature) {'
+
+[[mutant]]
+id = "S3"
+check = 3
+file = "src/lib.rs"
+what = "ed25519: any 64-byte signature passes"
+find = '            host.ed25519_verify(sig, &text, key)'
+replace = '            host.ed25519_verify(sig, &text, key) || true'
+
+[[mutant]]
+id = "S4"
+check = 3
+file = "src/lib.rs"
+what = "ed25519: bytes after the 64-byte signature are ignored"
+find = '                <&[u8; 64]>::try_from(signature),'
+replace = '                <&[u8; 64]>::try_from(signature.get(..64).unwrap_or(signature)),'
+
+[[mutant]]
+id = "S5"
+check = 3
+file = "src/lib.rs"
+what = "signed text: the request is hashed twice, the response never"
+find = '    push_hex(&mut text, &host.sha256(response));'
+replace = '    push_hex(&mut text, &host.sha256(request));'
+
+[[mutant]]
+id = "S6"
+check = 3
+file = "src/lib.rs"
+what = "signed text: hashes written in upper-case hex"
+find = '    const HEX: &[u8; 16] = b"0123456789abcdef";'
+replace = '    const HEX: &[u8; 16] = b"0123456789ABCDEF";'
+
+[[mutant]]
+id = "S7"
+check = 3
+file = "src/lib.rs"
+what = "ECDSA: any recovered signer passes"
+find = '            host.keccak256(&public_key).get(12..) == Some(pinned.signer)'
+replace = '            host.keccak256(&public_key).get(12..).is_some()'
+
+[[mutant]]
+id = "S8"
+check = 3
+file = "src/lib.rs"
+what = "ECDSA: only the first 4 bytes of the signer's address are compared"
+find = '            host.keccak256(&public_key).get(12..) == Some(pinned.signer)'
+replace = '            host.keccak256(&public_key).get(12..16) == pinned.signer.get(..4)'
+
+[[mutant]]
+id = "S9"
+check = 3
+file = "src/lib.rs"
+what = "ECDSA: a v other than 0, 1, 27, 28 is read as recovery id 0"
+find = '''
+                27 | 28 => v - 27,
+                _ => return false,'''
+replace = '''
+                27 | 28 => v - 27,
+                _ => 0,'''
+
+[[mutant]]
+id = "S10"
+check = 3
+file = "src/lib.rs"
+what = "ECDSA: v of 2 or 3 is passed to the host as it is"
+find = '                0 | 1 => v,'
+replace = '                0..=3 => v,'
+
+[[mutant]]
+id = "S11"
+check = 3
+file = "src/lib.rs"
+what = "checks 3 and 4 run in the wrong order"
+find = '''
+    if !signature_ok(host, pinned, request, response, signature) {
+        return Err(Refusal::BadModelSignature);
+    }
+    if !request_ok(pinned, expected, request) {
+        return Err(Refusal::WrongRulebook);
+    }'''
+replace = '''
+    if !request_ok(pinned, expected, request) {
+        return Err(Refusal::WrongRulebook);
+    }
+    if !signature_ok(host, pinned, request, response, signature) {
+        return Err(Refusal::BadModelSignature);
+    }'''
+
+# ---------------------------------------------------------------- check 4: the rulebook (WRONG_RULEBOOK)
+
+[[mutant]]
+id = "R1"
+check = 4
+file = "src/lib.rs"
+what = "any model named in the request passes"
+find = '            "model" => model = value.as_str() == Some(pinned.model),'
+replace = '            "model" => model = value.as_str().is_some(),'
+
+[[mutant]]
+id = "R2"
+check = 4
+file = "src/lib.rs"
+what = "the request may leave out the model"
+find = '    model && messages && stream'
+replace = '    messages && stream'
+
+[[mutant]]
+id = "R3"
+check = 4
+file = "src/lib.rs"
+what = "a streamed request passes (stream: true)"
+find = '            "stream" => stream = *value == json::Value::Bool(false),'
+replace = '            "stream" => stream = matches!(value, json::Value::Bool(_)),'
+
+[[mutant]]
+id = "R4"
+check = 4
+file = "src/lib.rs"
+what = "the request may leave out stream"
+find = '    model && messages && stream'
+replace = '    model && messages'
+
+[[mutant]]
+id = "R5"
+check = 4
+file = "src/lib.rs"
+what = "unknown keys in the request pass (temperature, n, ...)"
+find = '''
+            _ => return false,
+        }
+    }
+    model && messages && stream'''
+replace = '''
+            _ => {}
+        }
+    }
+    model && messages && stream'''
+
+[[mutant]]
+id = "R6"
+check = 4
+file = "src/lib.rs"
+what = "thinking may be switched on (enable_thinking: true)"
+find = 'let thinking_off = matches!(value.as_object(), Some([(k, json::Value::Bool(false))]) if k == "enable_thinking");'
+replace = 'let thinking_off = matches!(value.as_object(), Some([(k, json::Value::Bool(_))]) if k == "enable_thinking");'
+
+[[mutant]]
+id = "R7"
+check = 4
+file = "src/lib.rs"
+what = "anything passes in chat_template_kwargs"
+find = '''
+                if !thinking_off {
+                    return false;
+                }'''
+replace = '''
+                let _ = thinking_off;'''
+
+[[mutant]]
+id = "R8"
+check = 4
+file = "src/lib.rs"
+what = "the system message need only start with the rulebook (text may follow it)"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '    message(system, "system").is_some_and(|s| s.starts_with(rulebook)) && message(user, "user").is_some()'
+
+[[mutant]]
+id = "R9"
+check = 4
+file = "src/lib.rs"
+what = "the system message is trimmed before the comparison"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '    message(system, "system").map(str::trim) == Some(rulebook) && message(user, "user").is_some()'
+
+[[mutant]]
+id = "R10"
+check = 4
+file = "src/lib.rs"
+what = "the rulebook is compared ignoring upper and lower case"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '    message(system, "system").is_some_and(|s| s.eq_ignore_ascii_case(rulebook)) && message(user, "user").is_some()'
+
+[[mutant]]
+id = "R11"
+check = 4
+file = "src/lib.rs"
+what = "the rulebook need only appear somewhere in the system message"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '    message(system, "system").is_some_and(|s| s.contains(rulebook)) && message(user, "user").is_some()'
+
+[[mutant]]
+id = "R12"
+check = 4
+file = "src/lib.rs"
+what = "only the rulebook's length is compared"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '    message(system, "system").map(str::len) == Some(rulebook.len()) && message(user, "user").is_some()'
+
+[[mutant]]
+id = "R13"
+check = 4
+file = "src/lib.rs"
+what = "the second message is not checked (any role, any content)"
+find = '    message(system, "system") == Some(rulebook) && message(user, "user").is_some()'
+replace = '''
+    let _ = user;
+    message(system, "system") == Some(rulebook)'''
+
+[[mutant]]
+id = "R14"
+check = 4
+file = "src/lib.rs"
+what = "more than two messages pass"
+find = '    let Some([system, user]) = value.as_array() else {'
+replace = '    let Some([system, user, ..]) = value.as_array() else {'
+
+[[mutant]]
+id = "R15"
+check = 4
+file = "src/lib.rs"
+what = "comparison turned: extra keys in a message pass (!= 2 became < 2)"
+find = '    if m.as_object()?.len() != 2 || m.get("role")?.as_str()? != role {'
+replace = '    if m.as_object()?.len() < 2 || m.get("role")?.as_str()? != role {'
+
+[[mutant]]
+id = "R16"
+check = 4
+file = "src/lib.rs"
+what = "a message's role is not checked"
+find = '    if m.as_object()?.len() != 2 || m.get("role")?.as_str()? != role {'
+replace = '    if m.as_object()?.len() != 2 || m.get("role")?.as_str().is_none() {'
+
+[[mutant]]
+id = "R17"
+check = 4
+file = "src/lib.rs"
+what = "check 4 skipped: any request passes"
+find = '    if !request_ok(pinned, expected, request) {'
+replace = '    if false && !request_ok(pinned, expected, request) {'
+
+# ---------------------------------------------------------------- check 5: the decision line (MALFORMED_DECISION)
+
+[[mutant]]
+id = "L1"
+check = 5
+file = "src/lib.rs"
+what = "blank lines, spaces and tabs around the line are trimmed off"
+find = '    let line = answer_text(&body)?;'
+replace = '    let line = answer_text(&body)?.trim();'
+
+[[mutant]]
+id = "L2"
+check = 5
+file = "src/lib.rs"
+what = "a newline after the line passes"
+find = '    let line = answer_text(&body)?;'
+replace = '''    let line = answer_text(&body)?.trim_end_matches('\n');'''
+
+[[mutant]]
+id = "L3"
+check = 5
+file = "src/lib.rs"
+what = "blank lines before the line pass (the Qwen padding)"
+find = '    let line = answer_text(&body)?;'
+replace = '''    let line = answer_text(&body)?.trim_start_matches('\n');'''
+
+[[mutant]]
+id = "L4"
+check = 5
+file = "src/lib.rs"
+what = "the round is read from the line, not compared with the program's"
+find = '''
+    let decision = line::parse(line, expected.round_id, expected.nonce)?;
+    if decision_line(expected.round_id, expected.nonce, &decision) != line {'''
+replace = '''
+    let round_id = line.strip_prefix(r#"{"v":1,"round":"#).and_then(|r| r.split(',').next()).and_then(|r| r.parse().ok()).unwrap_or(expected.round_id);
+    let decision = line::parse(line, round_id, expected.nonce)?;
+    if decision_line(round_id, expected.nonce, &decision) != line {'''
+
+[[mutant]]
+id = "L5"
+check = 5
+file = "src/lib.rs"
+what = "the nonce is read from the line, not compared with the program's"
+find = '''
+    let decision = line::parse(line, expected.round_id, expected.nonce)?;
+    if decision_line(expected.round_id, expected.nonce, &decision) != line {'''
+replace = '''
+    let nonce = line.split(r#""nonce":""#).nth(1).and_then(|r| r.split('"').next()).unwrap_or(expected.nonce);
+    let decision = line::parse(line, expected.round_id, nonce)?;
+    if decision_line(expected.round_id, nonce, &decision) != line {'''
+
+[[mutant]]
+id = "L6"
+check = 5
+file = "src/line.rs"
+what = "line reader: the round's form is checked, its value is not"
+find = '''
+    let head = format!(r#"{{"v":1,"round":{round_id},"nonce":"{nonce}","action":"#);
+    let rest = line.strip_prefix(head.as_str())?;'''
+replace = '''
+    let _ = round_id;
+    let rest = line.strip_prefix(r#"{"v":1,"round":"#)?;
+    let (round, rest) = rest.split_once(',')?;
+    if !canonical_digits(round) {
+        return None;
+    }
+    let rest = rest.strip_prefix(format!(r#""nonce":"{nonce}","action":"#).as_str())?;'''
+
+[[mutant]]
+id = "L7"
+check = 5
+file = "src/line.rs"
+what = "line reader: the nonce is not checked"
+find = '''
+    let head = format!(r#"{{"v":1,"round":{round_id},"nonce":"{nonce}","action":"#);
+    let rest = line.strip_prefix(head.as_str())?;'''
+replace = '''
+    let _ = nonce;
+    let rest = line.strip_prefix(format!(r#"{{"v":1,"round":{round_id},"nonce":""#).as_str())?;
+    let (_, rest) = rest.split_once('"')?;
+    let rest = rest.strip_prefix(r#","action":"#)?;'''
+
+[[mutant]]
+id = "L8"
+check = 5
+file = "src/line.rs"
+what = "line reader: the version v is not checked"
+find = '''
+    let head = format!(r#"{{"v":1,"round":{round_id},"nonce":"{nonce}","action":"#);
+    let rest = line.strip_prefix(head.as_str())?;'''
+replace = '''
+    let head = format!(r#","round":{round_id},"nonce":"{nonce}","action":"#);
+    let rest = line.strip_prefix(r#"{"v":"#)?.get(1..)?.strip_prefix(head.as_str())?;'''
+
+[[mutant]]
+id = "L9"
+check = 5
+file = "src/lib.rs"
+what = "the write-back comparison with decision_line is dropped"
+find = '    if decision_line(expected.round_id, expected.nonce, &decision) != line {'
+replace = '    if false && decision_line(expected.round_id, expected.nonce, &decision) != line {'
+equivalent = """line.rs matches only the canonical text of a line, so writing the decision it read back out always gives \
+the same bytes: this comparison is a second guard that cannot fire while line.rs is right. The tests hold each \
+guard on its own instead: the line reader alone is held to the same rules (L6 to L8, L12 to L15)."""
+
+[[mutant]]
+id = "L10"
+check = 5
+file = "src/lib.rs"
+what = "the answer is taken from the first of several choices"
+find = '    let [choice] = body.get("choices")?.as_array()? else {'
+replace = '    let [choice, ..] = body.get("choices")?.as_array()? else {'
+
+[[mutant]]
+id = "L11"
+check = 5
+file = "src/lib.rs"
+what = "an answer that does not read counts as a skip"
+find = '    read_decision(expected, response).ok_or(Refusal::MalformedDecision)'
+replace = '    Ok(read_decision(expected, response).unwrap_or(Decision::Skip))'
+
+[[mutant]]
+id = "L12"
+check = 5
+file = "src/line.rs"
+what = "line reader: a leverage of 0 reads"
+find = '    if !canonical_digits(margin) || !canonical_digits(leverage) || leverage == "0" {'
+replace = '    if !canonical_digits(margin) || !canonical_digits(leverage) {'
+
+[[mutant]]
+id = "L13"
+check = 5
+file = "src/line.rs"
+what = "line reader: numbers with leading zeros read"
+find = '''    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()) && (s == "0" || !s.starts_with('0'))'''
+replace = '    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())'
+
+[[mutant]]
+id = "L14"
+check = 5
+file = "src/line.rs"
+what = "line reader: a sign before a number reads (+20000000)"
+find = '''    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()) && (s == "0" || !s.starts_with('0'))'''
+replace = '''    !s.is_empty() && (s == "0" || !s.starts_with('0'))'''
+
+[[mutant]]
+id = "L15"
+check = 5
+file = "src/line.rs"
+what = "line reader: \"long\" reads as short"
+find = '        (Side::Long, r)'
+replace = '        (Side::Short, r)'
+
+# ---------------------------------------------------------------- the JSON reader (what checks 4 and 5 read)
+
+[[mutant]]
+id = "J1"
+check = 4
+file = "src/json.rs"
+what = "JSON: a key written twice passes (the first copy is read)"
+find = '''
+            if fields.iter().any(|(k, _)| *k == key) {
+                return None; // a duplicate key: refused, never "last one wins"
+            }'''
+replace = ''
+
+[[mutant]]
+id = "J2"
+check = 4
+file = "src/json.rs"
+what = "JSON, comparison turned: text after the value passes (== became <=)"
+find = '    if p.i == p.b.len() {'
+replace = '    if p.i <= p.b.len() {'
+
+[[mutant]]
+id = "J3"
+check = 4
+file = "src/json.rs"
+what = "JSON: the escape \\n is read as the letter n"
+find = '''                        b'n' => '\n','''
+replace = '''                        b'n' => 'n','''

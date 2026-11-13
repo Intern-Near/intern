@@ -1,0 +1,24 @@
+{
+  "case": "default",
+  "what": "The runner's request today: no temperature, no seed (the model's defaults).",
+  "started_at": "2026-11-13T13:56:03.536Z",
+  "ms": 21266,
+  "status": 200,
+  "headers": {
+    "access-control-expose-headers": "*",
+    "alt-svc": "h3=\":8443\"; ma=86400",
+    "cache-control": "no-store",
+    "connection": "keep-alive",
+    "content-length": "1602",
+    "content-type": "application/json",
+    "date": "Fri, 13 Nov 2026 13:56:24 GMT",
+    "inference-id": "3be2a1e1-9b77-58a7-8b87-1136a1cec062",
+    "server": "nginx",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "vary": "origin, access-control-request-headers, accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-request-id": "7de778ab-9a56-4b63-8ed2-889d0462d19f",
+    "x-serving-provider": "near"
+  },
+  "chat_id": "b8e6c85dd1024f7db5d0912e21df1aaf"
+}

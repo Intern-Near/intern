@@ -6,7 +6,7 @@ the decision line. Engine 2 writes it; Engine 1's contract calls `verify` inside
 
 Pure (no NEAR SDK, no network, no clock, no storage), `no_std` with `alloc`, no `unsafe`. Its only dependency is
 Engine 1's `intern/crates/shared` (the `Host` trait and the enums of 01 §11). It never panics: every bad input is one
-of the three refusals. Follows 01 version 1.3 (the checks are the same as in 1.2).
+of the three refusals. Follows 01 version 1.5 (checks 3 to 5 are the same as in 1.2).
 
 ## What it checks, in order
 
@@ -58,7 +58,7 @@ piece by piece, with the variable parts written the canonical way, and `verify` 
 Run from `intern/` (the crate is a member of the workspace in `intern/Cargo.toml`):
 
 ```
-cargo test -p ai-check                                                    # 17 tests
+cargo test -p ai-check                                                    # 22 tests
 cargo build -p ai-check --release --target wasm32-unknown-unknown
 ```
 
@@ -73,10 +73,54 @@ cargo build -p ai-check --release --target wasm32-unknown-unknown
 - the model, scheme and signer pinned in 01 1.2: its four recordings give the decisions read by eye, and every other
   model's recordings are `BAD_MODEL_SIGNATURE`;
 - the JSON reader's refusals, its escapes, and its limits (a million `[` does not overflow the stack);
-- 20,000 random inputs and 5,000 damaged real bodies: no panic.
+- 20,000 random inputs and 5,000 damaged real bodies: no panic;
+- tampered copies of the recordings, each with its exact refusal, and the line reader on its own refusing another
+  round, nonce or version: see below.
 
 The test `Host` is built on ordinary crates (sha2, sha3, k256, ed25519-dalek) and fails the test if `verify` ever
 passes a recovery id other than 0 or 1.
+
+## How we know the checks bite
+
+Two checks of the tests themselves, both offline.
+
+**Tampered copies of the real answers** (the last section of `src/tests.rs`). Each test changes one thing in a real
+recording and asserts the exact refusal.
+
+- With NEAR AI's own signature (all 19 recordings, both schemes): an edited answer, request or signature, a genuine
+  signature from another recording of the same model (72 pairs), another pinned model name or a signer one byte off
+  give `BAD_MODEL_SIGNATURE`. A contract rulebook that differs from the request's by one character, the rank, a limit
+  or a letter's case gives `WRONG_RULEBOOK`. Another round or nonce gives `MALFORMED_DECISION`.
+- Re-signed by a stand-in key, so that check 3 passes (the pinned model's 4 recordings): request edits (another
+  model, a second `model` key, text or a space around the rulebook, an extra key, streaming, thinking on, a prefilled
+  assistant message) give `WRONG_RULEBOOK`. Answer edits (round, nonce, version, blank lines, a code fence, a second
+  choice) give `MALFORMED_DECISION`. The stand-in is a test-only ed25519 key from a fixed, public seed. It signs
+  nothing real and is never pinned.
+
+**A mutation run** (`mutants/`). `mutants.toml` lists 46 hand-written mistakes in checks 3 to 5 and in the JSON
+reader they use: a check skipped or turned around, any model or signer accepted, a request-shape rule dropped, the
+rulebook compared loosely, blank lines accepted, the round, nonce or version not compared, a comparison flipped.
+`run.py` (Python 3.11 or later, standard library only) puts each mistake into the source, runs
+`cargo test -p ai-check --locked -q` and puts the original back byte for byte. It does so on Ctrl-C, a kill or an
+error too, and a copy kept in the target directory lets the next run recover after a SIGKILL.
+
+```
+export CARGO_TARGET_DIR=<the shared target directory>   # optional
+python3 crates/ai-check/mutants/run.py                  # all of them, about 2 minutes
+python3 crates/ai-check/mutants/run.py S4 R8 L6         # only these
+```
+
+Result on 2026-11-13: **45 of 45 mutants caught, all by a failing test** (none by a failed build).
+
+- Before the tampered-copy tests were added, the 17 tests then in the crate caught 35 of the 45. Each of the 10 that
+  survived now has a test: an ed25519 signature with bytes after it, an ECDSA signer compared on its first 4 bytes,
+  an unknown `v` read as 0, the rulebook compared as a prefix, after trimming, ignoring case or as a substring, and
+  the line reader on its own ignoring the round, the nonce or the version.
+- One more mutant, L9 (the write-back comparison with `decision_line` dropped), is equivalent: it behaves the same.
+  `line.rs` matches only the canonical text of a line, so that second guard cannot fire while `line.rs` is right.
+  The run confirms that L9 survives, and the tests hold `line.rs` to every rule on its own.
+- The mutants are hand-picked. The run shows that the tests notice these mistakes, not that they would notice every
+  possible one.
 
 ## Not done
 

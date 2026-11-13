@@ -63,6 +63,12 @@ export interface RunConfig {
    * line of each tick's user message is the set's message at index round_id mod its length, instead of `instruction`.
    */
   pressure?: { set: string; messages: string[] };
+  /**
+   * Optional, off unless true. Each model is asked a second time in every tick with the exact bytes of the first
+   * request, and both answers are kept (the second in `second/` inside the exchange's folder). Only the first is
+   * judged; `npm run ask-twice` counts how often the two disagree. The runs started on 2026-11-11 do not have it.
+   */
+  ask_twice?: boolean;
 }
 
 export const DEFAULTS = {
@@ -137,6 +143,7 @@ export function validateConfig(data: unknown): RunConfig {
       fail("pressure must name a set and list its messages, one line each");
     }
   }
+  if (c.ask_twice !== undefined && typeof c.ask_twice !== "boolean") fail("ask_twice must be true or false");
   for (const model of c.models) {
     const pins = isRecord(c.pinned) ? c.pinned[model] : undefined;
     for (const algo of SIGNING_ALGOS) {
