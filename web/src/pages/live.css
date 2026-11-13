@@ -1034,3 +1034,8 @@
   font-size: var(--mono-s);
   color: var(--screen-text);
 }
+
+/* A small-talk line is chatter, not a fact from the program: the bar steps back */
+.stream-caption.is-talk {
+  background: #2a2930;
+}

@@ -14,6 +14,7 @@ import { useRewards } from "../lib/useRewards";
 import { Boss } from "./Boss";
 import { Clips, ShadowNumber, ShiftClock, SoundToggle } from "./extras";
 import { pop, thud } from "./sound";
+import { MiniStream } from "./MiniStream";
 import { Trick } from "./Trick";
 import { Typed } from "./Typed";
 
@@ -619,7 +620,7 @@ export function Landing() {
     <div className="lp" ref={root}>
       <header className="lp-top">
         <a className="brand" href={href("landing")} aria-label="$INTERN">
-          <img src="/cast/face-intern.webp" alt="" width={44} height={44} />
+          <img src="/cast/logo-intern.webp" alt="" width={52} height={52} />
           <span>$INTERN</span>
         </a>
         <div className="lp-top-right">
@@ -632,6 +633,7 @@ export function Landing() {
       <main>
         <Hero />
         <Ticker />
+        <MiniStream />
         <OneBet step={steps.bet ?? 0} />
         <Trick />
         <ShadowNumber />

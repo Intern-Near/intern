@@ -18,5 +18,6 @@ ENV NODE_ENV=production
 COPY --from=build /repo/web/dist ./dist
 COPY web/server ./server
 COPY interface/lines.json ./lines.json
+COPY web/src/stream/idle.json ./idle.json
 USER node
 CMD ["node", "server/server.mjs"]
