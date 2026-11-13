@@ -1,0 +1,38 @@
+# The judge check, every day and on every push to main: build every contract with the pinned tools, run every test,
+# and compare the code on NEAR testnet with this source (./verify.sh --quick). Read-only towards the network: it sends
+# no transaction and uses no key or secret.
+name: verify
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Rust toolchain of rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-near
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: verify-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+      - name: cargo-near 0.23.0
+        run: command -v cargo-near || cargo install cargo-near --version 0.23.0 --locked
+      - name: ./verify.sh --quick
+        run: ./verify.sh --quick
