@@ -84,6 +84,8 @@ export const EVENTS_01: readonly string[] = [
   "result_challenged",
   "result_corrected",
   "sticker_hl_signed",
+  "draw_pending",
+  "drand_submitted",
 ];
 
 /** crates/rules/src/shares.rs `LOCKED_FOREVER`: coin units locked at the first conversion (01 §9.1). */

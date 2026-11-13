@@ -109,11 +109,6 @@ fn guess(c: &mut Coin, round: u64, who: &str, v: Verdict3) {
     c.guess(v, None);
 }
 
-fn tick_rewards(c: &mut Coin, round: u64) {
-    ctx(at(round, 3_000), "anyone.test", 0);
-    c.rewards_tick();
-}
-
 fn events(c: &Coin, name: EventName) -> Vec<Value> {
     c.get_feed(None, Some(100)).into_iter().filter(|f| f.event == name).map(|f| f.data).collect()
 }
@@ -128,8 +123,6 @@ fn three() -> Coin {
     goto(&mut c, 2, 1_000);
     c
 }
-
-const OVER_: Decision = Decision::Bet { market: Market::Doge, side: Side::Long, margin_e6: 500_000_000, leverage: 1 };
 
 
 const SMALL: Decision = Decision::Bet { market: Market::Doge, side: Side::Long, margin_e6: 11_000_000, leverage: 1 };

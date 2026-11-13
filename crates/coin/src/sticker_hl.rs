@@ -6,6 +6,7 @@
 //! - `sticker_hl_approve(code, agent)`: have the contract sign an `approveAgent` for a trading key of theirs (unnamed:
 //!   it replaces the previous holder's key), which can then trade the sticker's account, never withdraw;
 //! - `sticker_hl_withdraw(code, destination, amount)`: have the contract sign a `usdSend` from the sticker's account.
+//!
 //! The coin checks with the sticker contract that the caller holds the token, then asks the signing network; the
 //! signed action is kept (`get_sticker_hl`) for the holder to send to Hyperliquid. Funding the account is up to anyone
 //! (send it test USDC). State lives under its own storage keys (prefix `h7`): no migration.

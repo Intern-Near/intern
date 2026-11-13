@@ -178,6 +178,8 @@ wire_enum!(
         ResultChallenged,
         ResultCorrected,
         StickerHlSigned,
+        DrawPending,
+        DrandSubmitted,
     }
 );
 

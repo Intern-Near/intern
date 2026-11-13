@@ -358,7 +358,47 @@ impl Coin {
         if current <= end {
             return;
         }
-        // Tickets: the smaller of the period's base dollars and the dollars now, times the rounds in the period.
+        // 1.7 (item 22): two steps. When the period is over, the tickets are fixed and a drand round about a minute
+        // in the future is chosen; the winners are drawn once that beacon is verified (`submit_drand`), or from the
+        // block seed after `DRAND_WAIT_ROUNDS` of our rounds without it.
+        let Some(pending) = read_pending(p) else {
+            let weights = self.rw_draw_tickets(start, end);
+            // Nothing left to luck (nobody in it, one entrant, or no interest yet): held at once.
+            if weights.len() <= 1 || self.rw.draw_pot == 0 {
+                let seed = random(&[b"draw".as_slice(), &p.to_le_bytes()].concat());
+                self.rw_draw_hold(p, current, weights, seed, "none", 0);
+                return;
+            }
+            let target = crate::drand::drand_round_at(Self::now() + 60_000);
+            write_pending(
+                p,
+                &PendingDraw {
+                    weights,
+                    drand_round: target,
+                    due_round: current,
+                },
+            );
+            self.feed.push(
+                EventName::DrawPending,
+                json!({"period": p, "drand_round": target}),
+            );
+            return;
+        };
+        let (seed, source) = match crate::drand::drand_randomness(pending.drand_round) {
+            Some(r) => (r, "drand"),
+            None if current >= pending.due_round + crate::drand::DRAND_WAIT_ROUNDS => (
+                random(&[b"draw".as_slice(), &p.to_le_bytes()].concat()),
+                "block",
+            ),
+            None => return,
+        };
+        clear_pending(p);
+        let weights = pending.weights;
+        self.rw_draw_hold(p, current, weights, seed, source, pending.drand_round);
+    }
+
+    /// Tickets: the smaller of the period's base dollars and the dollars now, times the rounds in the period.
+    fn rw_draw_tickets(&mut self, start: u64, end: u64) -> Vec<(AccountId, u128)> {
         let mut weights: Vec<(AccountId, u128)> = Vec::new();
         let mut gone: Vec<AccountId> = Vec::new();
         let entrants: Vec<AccountId> = self.rw.entrants.iter().cloned().collect();
@@ -381,6 +421,18 @@ impl Coin {
             self.rw.entrants.remove(&who);
             self.rw.entries.remove(&who);
         }
+        weights
+    }
+
+    fn rw_draw_hold(
+        &mut self,
+        p: u64,
+        current: u64,
+        mut weights: Vec<(AccountId, u128)>,
+        seed0: [u8; 32],
+        source: &str,
+        drand_round: u64,
+    ) {
         let prize = self.rw.draw_pot;
         let total: u128 = weights.iter().map(|(_, w)| *w).sum();
         let mut result = DrawResult {
@@ -394,7 +446,7 @@ impl Coin {
             tickets_total: U128(total),
         };
         if total > 0 && prize > 0 {
-            let mut seed = random(&[b"draw".as_slice(), &p.to_le_bytes()].concat());
+            let mut seed = seed0;
             let pick = |weights: &mut Vec<(AccountId, u128)>, seed: &mut [u8; 32]| -> Option<AccountId> {
                 let t: u128 = weights.iter().map(|(_, w)| *w).sum();
                 if t == 0 {
@@ -444,17 +496,20 @@ impl Coin {
             self.feed.push(
                 EventName::DrawHeld,
                 json!({"period": p, "winner": winner, "prize": U128(winner_prize),
-                       "runners_up": runners, "each": U128(each), "tickets_total": U128(total)}),
+                       "runners_up": runners, "each": U128(each), "tickets_total": U128(total),
+                       "randomness": source, "drand_round": drand_round}),
             );
         } else {
             // Nobody in it, or no interest yet: the pot rolls over to the next period.
             self.feed.push(
                 EventName::DrawHeld,
                 json!({"period": p, "winner": null, "prize": U128(0), "runners_up": [], "each": U128(0),
-                       "tickets_total": U128(total), "rolled_over": U128(prize)}),
+                       "tickets_total": U128(total), "rolled_over": U128(prize),
+                       "randomness": source, "drand_round": drand_round}),
             );
         }
         self.rw.draws.insert(p, result);
+        crate::drand::note_draw_source(p, drand_round, source);
         self.rw.draw_period = p + 1;
     }
 
@@ -626,7 +681,7 @@ impl Coin {
         // R2: a golden sticker, 1 in `golden_odds`, of a code chosen by the same draw, while that code has some left.
         let h = random(&[b"golden".as_slice(), who.as_bytes(), &r.id.to_le_bytes()].concat());
         let roll = u128_of(&h);
-        if self.rw.golden_odds > 0 && roll % self.rw.golden_odds as u128 == 0 {
+        if self.rw.golden_odds > 0 && roll.is_multiple_of(self.rw.golden_odds as u128) {
             let code = ((roll >> 64) % 16) as usize;
             if self.rw.golden_minted[code] < GOLDEN_CAP {
                 self.rw.golden_minted[code] += 1;
@@ -899,4 +954,29 @@ impl Coin {
         self.feed.push(EventName::StreakBanked, json!({"account_id": who, "streak": streak, "points": points}));
         self.get_player(who)
     }
+}
+
+// ----- 1.7 (item 22): a draw waiting for its drand beacon ----------------------------------------------------
+
+#[near(serializers = [borsh])]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PendingDraw {
+    pub weights: Vec<(AccountId, u128)>,
+    pub drand_round: u64,
+    pub due_round: u64,
+}
+fn pending_key(p: u64) -> Vec<u8> {
+    [b"d7p".as_slice(), &p.to_le_bytes()].concat()
+}
+pub(crate) fn read_pending(p: u64) -> Option<PendingDraw> {
+    env::storage_read(&pending_key(p)).and_then(|b| near_sdk::borsh::from_slice(&b).ok())
+}
+fn write_pending(p: u64, d: &PendingDraw) {
+    env::storage_write(
+        &pending_key(p),
+        &near_sdk::borsh::to_vec(d).expect("pending draw"),
+    );
+}
+fn clear_pending(p: u64) {
+    env::storage_remove(&pending_key(p));
 }

@@ -228,6 +228,17 @@ export class FakeChain implements Chain {
     this.rewardTicks.push(this.#round.id);
     return { txHash: this.#tx(), value: null, tgas: null };
   }
+  /** 01 1.7: the drand round a draw waits for (null: none); `submitDrand` records each beacon handed in. */
+  drandRound: number | null = null;
+  readonly drandSubmitted: { round: number; signature: string }[] = [];
+  async drandWaiting(): Promise<number | null> {
+    return this.drandRound;
+  }
+  async submitDrand(round: number, signature: string): Promise<Sent<string>> {
+    this.drandSubmitted.push({ round, signature });
+    this.drandRound = null;
+    return { txHash: this.#tx(), value: "fe290bec", tgas: null };
+  }
   async rebalance(): Promise<Sent<string>> {
     this.calls.push("rebalance");
     if (this.rebalanceReply instanceof Error) throw this.rebalanceReply;

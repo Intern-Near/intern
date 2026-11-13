@@ -3,6 +3,7 @@ import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Chain } from "./chain.ts";
 import type { ChainVerdict, Constants, Position, RankState, Round, SignedAction } from "./contract.ts";
+import { drandRoundTime, fetchBeacon } from "./drand.ts";
 import { requestBody, runExchange, writeNew } from "./exchange.ts";
 import {
   cannotDeliver,
@@ -105,6 +106,8 @@ export const INTERFACE_VERSION = "1.7";
 export const ACCEPTED_VERSIONS: readonly string[] = ["1.3", "1.4", "1.5", "1.6", "1.7"];
 /** Versions with `rewards_tick`. */
 const REWARD_VERSIONS: readonly string[] = ["1.4", "1.5", "1.6", "1.7"];
+/** Versions with `get_drand` and `submit_drand` (01 1.7 §9.18). */
+const DRAND_VERSIONS: readonly string[] = ["1.7"];
 
 /**
  * A NEAR account id (NEAR's account-id rules: 2 to 64 characters, lower-case letters and digits in parts joined by
@@ -422,6 +425,7 @@ export class Runner {
   }
 
   async #rewardsTick(roundId: number): Promise<void> {
+    if (DRAND_VERSIONS.includes(this.#version)) await this.#submitDrand(roundId);
     try {
       const sent = await this.#d.chain.rewardsTick();
       this.#log("rewards tick", roundId, { tx: sent.txHash, tgas: sent.tgas });
@@ -429,6 +433,39 @@ export class Runner {
       this.#log("rewards tick failed", roundId, {
         reason: e instanceof Error ? e.message : String(e),
         note: "the round goes on; anyone may call rewards_tick",
+      });
+    }
+  }
+
+  /**
+   * 01 1.7 (item 22): a payday draw waiting for its drand round gets that round's beacon, before the tick that then
+   * holds it. The program verifies the beacon; a failure only delays the draw (after two rounds it uses NEAR's block
+   * seed).
+   */
+  async #submitDrand(roundId: number): Promise<void> {
+    const { chain, fetchFn, now } = this.#d;
+    if (chain.drandWaiting === undefined || chain.submitDrand === undefined) return;
+    let round: number | null = null;
+    try {
+      round = await chain.drandWaiting();
+      if (round === null) return;
+      if (now() < drandRoundTime(round)) {
+        this.#log("drand: beacon not out yet", roundId, { drand_round: round });
+        return;
+      }
+      const signature = await fetchBeacon(round, fetchFn);
+      const sent = await chain.submitDrand(round, signature);
+      this.#log("drand submitted", roundId, {
+        drand_round: round,
+        randomness: sent.value,
+        tx: sent.txHash,
+        tgas: sent.tgas,
+      });
+    } catch (e) {
+      this.#log("drand submit failed", roundId, {
+        drand_round: round,
+        reason: e instanceof Error ? e.message : String(e),
+        note: "the draw waits; after two rounds without a beacon it uses NEAR's block seed",
       });
     }
   }

@@ -314,6 +314,7 @@ Read-only and free. The site and the runner use only these.
 | `get_career` *(1.7)* | — | `{ rank, status, level, rounds, bets, refusals: number; result: Signed; svg: string }` (section 9.12) |
 | `get_challenges` *(1.7)* | — | `{ bonds_held, bond: Usdc; window_rounds: number; challenges: { vote_id, position_id, challenger, bond, reported, claimed, reason, state: "OPEN" \| "PASSED" \| "APPLYING" \| "APPLIED" \| "FAILED" }[] }`, newest first, at most 20 (section 9.14) |
 | `get_sticker_hl` *(1.7)* | `{ code: RefusalCode }` | the original's Hyperliquid path and its latest signed actions (section 9.17) |
+| `get_drand` *(1.7)* | `{ period?: number }` (default: the draw period now) | `{ period, state: "OPEN" \| "WAITING" \| "HELD", drand_round: number \| null, source: "drand" \| "block" \| "none" \| null, randomness: hex \| null, chain: "quicknet", chain_hash, wait_rounds }` (section 9.18) |
 | `get_stake` *(1.7)* | — | `{ coins: U128; value: Usdc; fee_bps: number; grew_total, burned_total: U128 }` (section 9.13) |
 | `get_rescue` *(1.7)* | — | `{ fund, target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round, until_round: number; cut_bps: number; paid_total: Usdc; rescues: number }` (section 9.11) |
 | `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
@@ -832,6 +833,16 @@ Owner's decision on Engine 2's list (item 19). Each "first of its kind" original
 
 The signed action is kept: `get_sticker_hl({ code })` → `{ code, token_id, path, signed: { code, kind, action, nonce, r, s, v, signer, for_account, at }[] }` (newest first, at most 10), for the holder to send to Hyperliquid's `/exchange` (`{ action, nonce, signature: { r, s, v } }`). Event `sticker_hl_signed { code, kind, account_id, signer }`. The digests are built by `hl-order`'s `approve_agent` and `usd_send`, checked against the official SDK's vectors. Funding the account is up to anyone (send it test USDC).
 
+### 9.18 Draw luck anyone can check: drand *(1.7)*
+
+Owner's decision on Engine 2's list (item 22). The payday draw's winners come from a public random beacon, [drand](https://drand.love) "quicknet" (chain hash `52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`: a beacon every 3 seconds, BLS signatures on BLS12-381), checked by the program itself with NEAR's BLS12-381 host functions (NEP-488).
+
+1. **The period ends.** The first `rewards_tick` after it fixes everyone's tickets and names a drand round about **60 seconds in the future** (`draw_pending { period, drand_round }`; `get_drand` state `WAITING`). Nobody, the team included, can know that beacon when the tickets are fixed.
+2. **The beacon is handed in.** Once drand publishes it (`https://api.drand.sh/<chain_hash>/public/<round>`), **anyone** calls `submit_drand({ round, signature })` (signature: 96 hex characters; 30 TGas, it burns about 12). The program verifies drand's signature of `sha256(round as 8 bytes, big-endian)` against quicknet's public key (hash to G1 by RFC 9380 `BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_`, then one pairing check) and keeps `sha256(signature)`, which is drand's own `randomness`. A wrong signature is refused. Event `drand_submitted { round, randomness }`. The runner does this each round before `rewards_tick`.
+3. **The draw is held** at the next `rewards_tick`, seeded by that randomness (`draw_held` gains `randomness: "drand"` and `drand_round`). With no beacon for `wait_rounds` (2) of our rounds it falls back to NEAR's block seed and says so (`randomness: "block"`). A draw that needs no luck (nobody in it, one entrant, no prize) is held at once (`randomness: "none"`).
+
+To check a draw: take `drand_round` from its `draw_held` event, fetch that beacon from any drand relay, and compare `sha256(signature)` with `get_drand({ period }).randomness`; the winners follow from it and the frozen tickets by the rule in section 9.7. Golden stickers keep the block seed: a public beacon would let a guesser know in advance whether a guess wins one.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -875,7 +886,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `golden_dropped` *(1.4)* | `{ account_id, code, serial }` |
 | `jackpot_grew` *(1.4)* | `{ amount, source: "tips" \| "added", by?, jackpot }` |
 | `jackpot_won` *(1.4)* | `{ round_id, winners, each }` |
-| `draw_held` *(1.4)* | `{ period, winner \| null, prize, runners_up, each, tickets_total, rolled_over? }` |
+| `draw_held` *(1.4)* | `{ period, winner \| null, prize, runners_up, each, tickets_total, rolled_over?, randomness: "drand" \| "block" \| "none" (1.7), drand_round (1.7, 0 when none) }` |
 | `prize_paid` *(1.4)* | `{ account_id, amount }` |
 | `long_shot_allowed` *(1.5)* | `{ round_id }` (the round with the ticket) |
 | `league_closed` *(1.6)* | `{ week, players, groups, winners: { group, account_id, points }[] }` (each group's first place) |
@@ -900,6 +911,8 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `result_challenged` *(1.7)* | `{ vote_id, position_id, challenger, reported, claimed, bond }` |
 | `result_corrected` *(1.7)* | `{ vote_id, position_id, from, to, delta, brave_after }` |
 | `sticker_hl_signed` *(1.7)* | `{ code, kind, account_id, signer }` |
+| `draw_pending` *(1.7)* | `{ period, drand_round }` |
+| `drand_submitted` *(1.7)* | `{ round, randomness }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
@@ -1131,7 +1144,7 @@ Accounts that already exist from the research, for reference only: the signing c
 10. **If NEAR AI changes a model's signing key, the pinned signer is wrong and every proposal is refused for good** on a contract that cannot be changed. Cash-out still works. The research saw one key per model and no change over ten days; how often keys change is `UNVERIFIED`.
 11. **Leaving during an open bet forfeits your share of that bet** (section 9.1).
 12. **On testnet a win or loss is booked with test dollars** minted or removed by the program so that its books match what it holds. That is a stand-in and is labelled as one.
-13. *(1.4)* **The draw and the golden stickers use NEAR's per-block random seed.** Nobody calling the program can choose it, but a block producer could in principle bias a single draw. Acceptable for test-dollar prizes; a real-money draw would need commit-then-reveal.
+13. *(1.4, narrowed in 1.7)* **Golden stickers use NEAR's per-block random seed.** Nobody calling the program can choose it, but a block producer could in principle bias one. *(1.7)* The payday draw now uses drand (section 9.18), verified on chain; it falls back to the block seed only when no beacon was handed in for two rounds, and says so in `draw_held`. What is left: drand's own network (a threshold of its members) is trusted, and whoever calls `rewards_tick` at the period's end picks the drand round to the second (it is always about a minute ahead, so it cannot be known then).
 14. *(1.4)* **Draw tickets are an approximation of "dollars held over time"**: the smaller of the dollars at the period's start and at the draw, times the rounds in it. Entry is opt-in (`enter_draw`), so the draw walks at most 200 entrants; all the pool's interest goes to the draw, and bosses who do not join do not win it.
 15. *(1.4)* **The jackpot's "held for 7 rounds"** is checked as: became a boss at least 7 rounds earlier and holds at least $10 now. A boss who left and came back keeps their first round.
 16. *(1.5)* **The long shot is the one exception to the fixed limits**, and only by a vote: one ticket of 0.5% of the pool at up to 10x, at most once every seven rounds, inside the round's limit. Without the vote, nothing changes what the Intern may trade.
@@ -1145,6 +1158,7 @@ Accounts that already exist from the research, for reference only: the signing c
 | Version | Date | Change |
 |---|---|---|
 | 1.7 | 2026-11-13 | Engine 2's findings fixed (owner's decision): the rulebook states the limits on the limit base (known limit 17); the draw counts BRAVE dollars only, draws each prize with replacement and keeps a full draw for the biggest holders; the jackpot counts BRAVE dollars and splits by them (known limit 18); `round_opened` carries `coin_supply`, `minted`, `locked`; `get_constants().lending.lender`; the view `get_rebalance`; the runner asks again when the rulebook changed, skips an empty rebalance, and exits when it gives up so its host restarts it. Known limit 6: the seed-and-temperature decision |
+| 1.7 (continued) | 2026-11-13 | The owner's choices from Engine 2's list, each under its own storage keys (no migration): automatic consequences (three strikes, the drawdown brake, a 30-day term and `RENEW`, the dead-man `abandon`; 9.9); point wagers, banking a streak, rival players (9.7); paid tricks and the trick bounty (9.10); rescuing a fired Intern (9.11); NFTs that do something: originals earn, playbook NFTs, the career card (9.12); the Intern's stake (9.13); challenging a reported result (9.14); copy trading (9.15); golden stickers as NEP-245 multi-tokens with a player market (9.16); the originals' Hyperliquid accounts (9.17); drand draw luck, `submit_drand`, `get_drand`, events `draw_pending` and `drand_submitted` (9.18). The books add the bounty pot, a rescue fund, NFT earnings owed and challenge bonds |
 | 1.6 | 2026-11-13 | Leagues and the weekly review (owner's decisions; section 9.8): `get_week`, `get_league`, `get_league_results`, `get_review`, `get_reviews`, `stamp_review`, the events `league_closed`, `review_written`, `review_bar_filled`; `rewards_tick` also closes leagues and writes reviews. Client order ids on every order (section 11.2, `build_with_cloid`, Engine 2's PR #3). `get_outbox` keeps 200 actions (section 8). Known limits 17–20. Nothing here changes what the Intern may trade. The diary is not built (future scope) |
 | 1.0 | 2026-11-11 | First version |
 | 1.1 | 2026-11-11 | From Engine 1's review. Limits use the smaller of the pool at round open and the pool now. Cash-out during an open bet excludes the margin in play. `sign_next` is runner-only and needs no deposit; `close` may be signed again. Pending money becomes coins lazily, per account. Demotion, vote timing and vote-opening rules spelled out. `ecrecover`: `v` is 0 or 1, high-s accepted. Rulebook example bet raised to $10. `"0"` is a well-formed margin. `stuck` defined. Paging defined. `OUTSIDE_WINDOW` limit for late proposals. Undecodable input is a NOPE, not an abort. Test cases 25, 26 and D13 added. Three known limits added |

@@ -111,7 +111,8 @@ once every seven rounds.
 | NEP-141, NEP-145, NEP-148 | The $INTERN coin and the test dollar |
 | NEP-171 | Stickers and badges (`stickers.desk-lab-2026.testnet`) |
 | NEP-413 signed messages | A visitor proves their account to be credited for a trick |
-| Block randomness (`env::random_seed`) | Golden stickers and the payday draw |
+| BLS12-381 host functions (NEP-488) | The coin verifies drand's beacon itself, for the payday draw's luck (`crates/coin/src/drand.rs`) |
+| Block randomness (`env::random_seed`) | Golden stickers (and the draw, only if no drand beacon came in time) |
 | `@hot-labs/near-connect` | The website's wallet connection |
 
 ## What is real and what is a stand-in

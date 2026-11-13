@@ -58,6 +58,13 @@ export interface Chain {
    * it; the runner does once each round, after rebalance (relayer).
    */
   rewardsTick(): Promise<Sent<unknown>>;
+  /**
+   * 01 1.7: the drand round a payday draw is waiting for (`get_drand` in state WAITING with no randomness yet), or
+   * null. Optional: a chain without it (or an older contract) skips drand.
+   */
+  drandWaiting?(): Promise<number | null>;
+  /** 01 1.7: hands drand quicknet's beacon for `round` to `submit_drand` (relayer); the program verifies it. */
+  submitDrand?(round: number, signature: string): Promise<Sent<string>>;
   /** The signed action, or null when NEAR's signing network failed this time: call again (Engine 1's note, 1.2). */
   signNext(positionId: number, pxE8: bigint): Promise<Sent<SignedAction | null>>;
   close(positionId: number, pxE8: bigint): Promise<Sent<SignedAction | null>>;
@@ -99,6 +106,8 @@ export const TERA_GAS = {
   rebalance: 300,
   /** 01 1.4: a due draw walks the entrants (at most 200). */
   rewards_tick: 150,
+  /** 01 1.7: one BLS pairing check (NEAR's host functions); burnt 12.1 in the sandbox. */
+  submit_drand: 30,
 } as const;
 
 /**
@@ -219,6 +228,24 @@ export class NearChain implements Chain {
       { teraGas: TERA_GAS.rewards_tick },
     );
     return { txHash: r.txHash, value: r.value, tgas: r.tgas };
+  }
+  async drandWaiting(): Promise<number | null> {
+    const v = await this.#view("get_drand", {});
+    if (!isRecord(v)) throw new Error("get_drand: not an object");
+    return v.state === "WAITING" && v.randomness === null && typeof v.drand_round === "number"
+      ? v.drand_round
+      : null;
+  }
+  /** Sent by the relayer, like rewards_tick: anyone may submit a beacon. */
+  async submitDrand(round: number, signature: string): Promise<Sent<string>> {
+    const r = await call(
+      this.#as("relayer"),
+      this.contractId,
+      "submit_drand",
+      { round, signature },
+      { teraGas: TERA_GAS.submit_drand },
+    );
+    return { txHash: r.txHash, value: typeof r.value === "string" ? r.value : String(r.value), tgas: r.tgas };
   }
   /** Sent by the relayer: anyone may call `rebalance`, and the runner's key stays limited to its three calls. */
   async rebalance(): Promise<Sent<string>> {

@@ -685,6 +685,25 @@
       "mascot": null,
       "intern": null,
       "system": "STICKER ACCOUNT — the {code} original's Hyperliquid account: {kind} signed for its holder {account}."
+    },
+    "draw_pending": {
+      "speak": true,
+      "priority": 4,
+      "intern_pose": "waiting",
+      "mascot": "tin:rattling",
+      "intern": [
+        "Payday draw: the tickets are counted. The winner comes from drand round {drand_round}, a minute from now. Nobody knows it yet. Not even me.",
+        "The draw's tickets are fixed. Now we wait for drand round {drand_round}: public luck, checked by the program."
+      ],
+      "system": "DRAW WAITING — period {period}: tickets fixed; luck from drand round {drand_round}."
+    },
+    "drand_submitted": {
+      "speak": false,
+      "priority": 5,
+      "intern_pose": "idle",
+      "mascot": null,
+      "intern": null,
+      "system": "DRAND — round {round} verified on chain; randomness {randomness}."
     }
   },
   "refusals": {

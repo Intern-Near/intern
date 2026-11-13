@@ -383,6 +383,34 @@ fn the_draw_pays_the_periods_interest_to_one_winner_and_shares_the_rest() {
     goto(&mut c, 8, 1_000);
     ctx(at(8, 2_000), "anyone.test", 0);
     c.rewards_tick();
+    // 1.7 (item 22): the tickets are fixed and a drand round a minute ahead is chosen; nothing is drawn yet.
+    let pending = &events(&c, EventName::DrawPending)[0];
+    let round = pending["drand_round"].as_u64().unwrap();
+    assert_eq!(round, crate::drand::drand_round_at(at(8, 2_000) + 60_000));
+    assert_eq!(c.get_rewards().draw_period, 0);
+    assert_eq!(c.get_drand(None)["state"], "WAITING");
+    ctx(at(8, 3_000), "anyone.test", 0);
+    c.rewards_tick();
+    assert_eq!(
+        c.get_rewards().draw_period,
+        0,
+        "still waiting for the beacon"
+    );
+    // The beacon arrives (submit_drand verifies it; see drand.rs): the draw uses it.
+    crate::drand::put_randomness(round, [7u8; 32]);
+    ctx(at(8, 4_000), "anyone.test", 0);
+    c.rewards_tick();
+    let held = &events(&c, EventName::DrawHeld)[0];
+    assert_eq!(
+        (held["randomness"].as_str(), held["drand_round"].as_u64()),
+        (Some("drand"), Some(round))
+    );
+    let v = c.get_drand(Some(0));
+    assert_eq!(
+        (v["state"].as_str(), v["source"].as_str()),
+        (Some("HELD"), Some("drand"))
+    );
+    assert_eq!(v["randomness"], crate::sign::hex(&[7u8; 32]));
     let d = &c.get_draw_results(None, None)[0];
     assert_eq!(d.period, 0);
     assert_eq!(d.prize, U128(7_000_000));
@@ -421,6 +449,53 @@ fn alone_in_the_draw_takes_it_all_and_an_empty_draw_rolls_over() {
     c.leave_draw();
     assert!(player(&c, "alice.test").draw.is_none());
     assert_eq!(c.get_rewards().entrants, 0);
+}
+
+#[test]
+fn a_draw_without_its_beacon_falls_back_to_the_block_seed_after_two_rounds() {
+    let mut c = alice_in();
+    bob_pays(&mut c, 2, 500_000_000);
+    ctx(at(2, 3_000), "alice.test", 0);
+    c.enter_draw();
+    goto(&mut c, 3, 1_000);
+    ctx(at(3, 2_000), "bob.test", 0);
+    c.enter_draw();
+    interest(&mut c, at(3, 5_000), 7_000_000);
+    goto(&mut c, 8, 1_000);
+    ctx(at(8, 2_000), "anyone.test", 0);
+    c.rewards_tick();
+    assert_eq!(events(&c, EventName::DrawPending).len(), 1);
+    goto(&mut c, 9, 1_000);
+    ctx(at(9, 2_000), "anyone.test", 0);
+    c.rewards_tick();
+    assert_eq!(
+        c.get_rewards().draw_period,
+        0,
+        "one round without a beacon: still waiting"
+    );
+    goto(&mut c, 10, 1_000);
+    ctx(at(10, 2_000), "anyone.test", 0);
+    c.rewards_tick();
+    let held = &events(&c, EventName::DrawHeld)[0];
+    assert_eq!(held["randomness"], "block");
+    assert_eq!(c.get_rewards().draw_period, 1);
+    assert_eq!(c.get_drand(Some(0))["source"], "block");
+    let paid = player(&c, "alice.test").prize_owed.0 + player(&c, "bob.test").prize_owed.0;
+    assert_eq!(paid, 7_000_000);
+}
+
+#[test]
+fn a_wrong_drand_signature_is_refused() {
+    let mut c = alice_in();
+    ctx(at(2, 2_000), "anyone.test", 0);
+    let sig = "b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39";
+    assert!(catch_unwind(AssertUnwindSafe(|| drop(c.submit_drand(1001, sig.into())))).is_err());
+    let r = c.submit_drand(1000, sig.into());
+    assert_eq!(
+        r,
+        "fe290beca10872ef2fb164d2aa4442de4566183ec51c56ff3cd603d930e54fdd"
+    );
+    assert_eq!(events(&c, EventName::DrandSubmitted)[0]["round"], 1000);
 }
 
 #[test]

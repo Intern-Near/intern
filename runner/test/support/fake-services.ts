@@ -96,6 +96,10 @@ export function fillAtLimit(body: Record<string, unknown>, s: Services, now: num
   });
 }
 
+/** drand quicknet's beacon for round 1000 (https://api.drand.sh/52db…e971/public/1000). */
+export const DRAND_SIG_1000 =
+  "b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39";
+
 export function fakeServices(opts: ServiceOptions): Services {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
   const x = publicKey.export({ format: "jwk" }).x;
@@ -118,6 +122,12 @@ export function fakeServices(opts: ServiceOptions): Services {
         throw new Error("unexpected body type");
       };
 
+      // 01 1.7: drand quicknet's real round-1000 beacon; any other round is not out.
+      if (url.hostname.endsWith("drand.sh") || url.hostname === "drand.cloudflare.com") {
+        const round = Number(/\/public\/(\d+)$/.exec(url.pathname)?.[1]);
+        if (round !== 1000) return new Response("not found", { status: 404 });
+        return Response.json({ round, signature: DRAND_SIG_1000, randomness: "fe290bec" });
+      }
       if (url.href === "https://cloud-api.near.ai/v1/chat/completions") {
         const request = Buffer.from(init?.body as Uint8Array);
         const req = JSON.parse(request.toString("utf8"));

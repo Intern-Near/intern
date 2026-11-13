@@ -16,7 +16,14 @@ import {
 import { Secret } from "../src/secret.ts";
 import { TrickDesk } from "../src/trick-desk.ts";
 import { DEMO_ROUND, FakeChain, fakeConstants, T0 } from "./support/fake-chain.ts";
-import { betLine, fakeServices, fillAtLimit, type Services, skipLine } from "./support/fake-services.ts";
+import {
+  betLine,
+  DRAND_SIG_1000,
+  fakeServices,
+  fillAtLimit,
+  type Services,
+  skipLine,
+} from "./support/fake-services.ts";
 
 // The round loop end to end, against the test doubles in test/support/ (an in-memory contract, NEAR AI and
 // Hyperliquid testnet answering in their documented shapes). The clock is simulated: `sleep` moves it.
@@ -410,6 +417,47 @@ describe("a full round", () => {
     const r = find(t.log.lines, "rebalanced");
     assert.equal(r?.moved, "-1250000");
     assert.equal(r?.brave_total, "1000000000");
+  });
+
+  /** The contract says `version` from the next read on (the runner reads it again each round). */
+  async function sayVersion(t: Setup, version: string): Promise<void> {
+    const c = { ...(await t.chain.constants()), interface_version: version };
+    t.chain.constants = async () => c;
+  }
+
+  it("01 1.7: a draw waiting for its drand round gets the beacon before the rewards tick", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    await sayVersion(t, "1.7");
+    t.chain.drandRound = 1000;
+    assert.equal(await t.runner.runRound("full"), "settled");
+    assert.deepEqual(t.chain.drandSubmitted, [{ round: 1000, signature: DRAND_SIG_1000 }]);
+    assert.equal(find(t.log.lines, "drand submitted")?.drand_round, 1000);
+    assert.equal(t.chain.rewardTicks.length, 1);
+  });
+
+  it("01 1.7: a drand round not out yet, or a relay that fails, only delays the draw", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    await sayVersion(t, "1.7");
+    t.chain.drandRound = 1001;
+    assert.equal(await t.runner.runRound("full"), "settled");
+    assert.equal(t.chain.drandSubmitted.length, 0);
+    assert.match(String(find(t.log.lines, "drand submit failed")?.reason), /no drand relay gave round 1001/);
+    assert.equal(t.chain.rewardTicks.length, 1, "the tick still runs");
+    const u = setup((round, nonce) => skipLine(round, nonce));
+    await sayVersion(u, "1.7");
+    u.chain.drandRound = 9_000_000_000;
+    assert.equal(await u.runner.runRound("full"), "settled");
+    assert.ok(find(u.log.lines, "drand: beacon not out yet"));
+  });
+
+  it("01 1.7: a 1.6 contract (no get_drand) is not asked about drand", async () => {
+    const t = setup((round, nonce) => skipLine(round, nonce));
+    await sayVersion(t, "1.6");
+    t.chain.drandRound = 1000;
+    assert.equal(await t.runner.runRound("full"), "settled");
+    assert.equal(t.chain.drandSubmitted.length, 0);
+    assert.equal(find(t.log.lines, "drand submit failed"), undefined);
+    assert.equal(t.chain.rewardTicks.length, 1);
   });
 
   it("a rebalance that fails is logged, and the round goes on", async () => {

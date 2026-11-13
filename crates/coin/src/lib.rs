@@ -30,6 +30,7 @@ mod safe;
 pub mod sign;
 pub mod auto;
 pub mod challenge;
+pub mod drand;
 pub mod earn;
 pub mod rescue;
 pub mod stake;

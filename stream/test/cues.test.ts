@@ -119,6 +119,8 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   result_challenged: { vote_id: 12, position_id: 40, challenger: "boss2.desk-lab-2026.testnet", reported: "12000000", claimed: "11500000", bond: "5000000" },
   result_corrected: { vote_id: 12, position_id: 40, from: "12000000", to: "11500000", delta: "-500000", brave_after: "1572380690" },
   sticker_hl_signed: { code: "FIRED", kind: "APPROVE_AGENT", account_id: "boss2.desk-lab-2026.testnet", signer: "0x1111111111111111111111111111111111111111" },
+  draw_pending: { period: 9, drand_round: 27_000_000 },
+  drand_submitted: { round: 27_000_000, randomness: "fe290beca10872ef2fb164d2aa4442de4566183ec51c56ff3cd603d930e54fdd" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

@@ -16,6 +16,7 @@ pub const PLAYBOOK_MAX_BYTES: usize = 2_000;
 /// - `rank` is the current rank (after a demotion, the lower one).
 /// - `bets_left` and `max_margin_e6` stop at 0.
 /// - `playbook` must already be clean (see [`clean_playbook`]); `None` prints "none".
+#[allow(clippy::too_many_arguments)]
 pub fn rulebook(
     round_id: u64,
     nonce: &str,
