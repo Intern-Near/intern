@@ -57,7 +57,7 @@ Base URL: see `testnet.tailfade_faucet` in `interface/deployments.json`.
 
 It derives the address itself from the account name (a caller cannot redirect the money), sends from the owner's
 Hyperliquid testnet account (`FAUCET_HL_PRIVATE_KEY`, set only in Railway's private variables), once per NEAR
-account, at most `FAUCET_MAX` (30) accounts in all, and never stores the caller's IP address (a salted hash only).
+account, at most `FAUCET_MAX` accounts in all (9 while it holds $300), and never stores the caller's IP address (a salted hash only).
 
 ## What the page must say (spec 12b)
 
