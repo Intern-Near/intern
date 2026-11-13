@@ -1,33 +1,101 @@
+<p align="center">
+  <img src="docs/assets/banner.png" alt="$INTERN: an AI trader, and a NEAR contract that says NOPE" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://intern-web-production-d5b09b14.up.railway.app"><b>Live site</b></a> ·
+  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=trick">Trick the Intern</a> ·
+  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=stream">Watch it work</a> ·
+  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=proof">Proof</a> ·
+  <a href="#check-it-in-5-minutes-no-keys-no-funds">Check it in 5 minutes</a> ·
+  <a href="https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet">The contract</a>
+</p>
+
 # $INTERN
 
-$INTERN is a memecoin with an AI "Intern" that proposes perp bets on Hyperliquid, and a NEAR contract that checks
-every bet against the Intern's rank before anything is signed. The contract answers YES or NOPE and keeps a public
-record of every answer. Everything here runs on **NEAR testnet and Hyperliquid testnet, with test dollars**. It
-was built at the NEAR hackathon.
+**$INTERN is a memecoin with an AI trader, the "Intern", and a NEAR contract that checks every bet it proposes
+before anything is signed.** The contract answers YES or NOPE, and keeps a public record of every answer. Holders
+of the coin are the Intern's bosses: they vote its rank, and the rank sets how much it may risk.
 
-**The problem.** An AI agent that trades a shared pool of money is usually trusted, not checked. Its limits live
-in a prompt or in the operator's server, and holders cannot see them or change them. Here the limits are in a
-NEAR contract that anyone can read. The contract keeps the pool's books, refuses any proposal that breaks a rule,
-and builds and signs the Hyperliquid orders itself with NEAR chain signatures. The AI cannot place a bet that the
-contract did not approve, however it was asked. Holders vote to promote, demote, fire or rehire the Intern, and
-the rank sets how much it may risk. On testnet two parts are still stand-ins: the bets' margin comes from an
-account we funded by hand, and the contracts can still be upgraded by their keys (see the limits below).
+Everything here is **live on NEAR testnet and Hyperliquid testnet, with test dollars**. Nothing is real money.
+Built at NEAR HACKATHON.
 
-| | |
+## Contents
+
+- [The problem](#the-problem)
+- [What is live right now](#what-is-live-right-now)
+- [Try it in the browser](#try-it-in-the-browser-2-minutes-no-install)
+- [Check it in 5 minutes](#check-it-in-5-minutes-no-keys-no-funds)
+- [How it works](#how-it-works)
+- [Every feature, and where it stands](#every-feature-and-where-it-stands)
+- [Where NEAR is used](#where-near-is-used)
+- [What is real and what is a stand-in](#what-is-real-and-what-is-a-stand-in)
+- [Abuse, in numbers](#abuse-in-numbers)
+- [Future scope](#future-scope-not-built)
+- [Run it yourself](#run-it-yourself)
+- [What is in this repository](#what-is-in-this-repository)
+- [How it was built](#how-it-was-built)
+
+## The problem
+
+An AI agent that trades a shared pool of money is usually trusted, not checked. Its limits live in a prompt or on
+the operator's server. Holders cannot see them and cannot change them.
+
+Here the limits are in a NEAR contract that anyone can read:
+
+- **The contract keeps the pool's books** and refuses any proposal that breaks a rule.
+- **The contract builds and signs the Hyperliquid orders itself**, with NEAR chain signatures. The AI cannot place
+  a bet the contract did not approve, however it was asked.
+- **Holders vote** to promote, demote, fire or rehire the Intern. The rank sets its limits.
+
+On testnet two parts are still stand-ins: the bets' margin comes from an account we funded by hand, and the
+contracts can still be upgraded by their keys. Both are listed under [known limits](#what-is-real-and-what-is-a-stand-in).
+
+## What is live right now
+
+| What | Where |
 |---|---|
-| The coin contract | [`coin.desk-lab-2026.testnet`](https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet), live on testnet, 30-minute rounds |
+| **The website** | **https://intern-web-production-d5b09b14.up.railway.app** (hosted; it reads the testnet contracts below) |
+| The coin contract | [`coin.desk-lab-2026.testnet`](https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet), 30-minute rounds, running since 2026-11-12 |
 | Its Hyperliquid account | [`0x46f8eb2a044a826c70e9682fe3bfd65970340132`](https://app.hyperliquid-testnet.xyz/explorer/address/0x46f8eb2a044a826c70e9682fe3bfd65970340132), derived from the contract by NEAR's signing network |
-| Live services | trick API `https://intern-runner-production.up.railway.app/tricks`, Tail or Fade faucet `https://tailfade-faucet-production.up.railway.app/faucet` |
-| The website | Not hosted yet. To run it on your machine, see [Run it yourself](#run-it-yourself) |
-| All addresses | [`interface/deployments.json`](interface/deployments.json); the test copy with 5-minute rounds is `coin-fast.desk-lab-2026.testnet`; every account and transaction: [`fixtures/chain/testnet-accounts.md`](fixtures/chain/testnet-accounts.md) |
+| The runner (the off-chain Intern) and the trick API | `https://intern-runner-production.up.railway.app/tricks` |
+| The Tail or Fade faucet | `https://tailfade-faucet-production.up.railway.app/faucet` |
+| Other contracts | test dollar `usdc.…`, stickers `stickers.…`, golden-sticker market `tickets.…`, launchpad `launch.…`, lender `lender.…` (all `.desk-lab-2026.testnet`) |
+| The test copy (5-minute rounds, stand-in AI check) | `coin-fast.desk-lab-2026.testnet` |
+| All addresses | [`interface/deployments.json`](interface/deployments.json); every account and transaction: [`fixtures/chain/testnet-accounts.md`](fixtures/chain/testnet-accounts.md) |
 | Tracks | Memecoins With Mechanics, Agent Economy, Games With Real Economies |
 
-**One number:** the contracts on testnet are byte-for-byte this source, 7 of 7. `./verify.sh --quick` rebuilds
-them and compares each sha256 with the account's `code_hash` on chain. Two of the seven are test contracts (the
-stub and `coin-fast`). The build has been checked on one machine, in two folders, but not yet on another machine
-([`docs/REPRODUCIBLE-BUILD.md`](docs/REPRODUCIBLE-BUILD.md)).
+**One number:** the contracts on testnet are byte-for-byte this source, 8 of 8. `./verify.sh --quick` rebuilds
+them and compares each sha256 with the account's `code_hash` on chain. Two of the eight are test contracts (the
+stub and `coin-fast`). The build has been checked on one machine, in several folders including a fresh clone, but
+not yet on another machine ([`docs/REPRODUCIBLE-BUILD.md`](docs/REPRODUCIBLE-BUILD.md)).
 
-## Judge check: about 5 minutes, no keys, no funds
+## Try it in the browser: 2 minutes, no install
+
+Open **https://intern-web-production-d5b09b14.up.railway.app**. Rounds ("shifts") start at :24 and :54 past each hour (UTC). The Intern decides in minutes 15 to
+20 of each round.
+
+| # | Do | See |
+|---|---|---|
+| 1 | Open [the desk](https://intern-web-production-d5b09b14.up.railway.app/?page=desk) | The Intern's rank, the pool, the round's clock, and the live feed of what the contract has announced |
+| 2 | Open [Watch](https://intern-web-production-d5b09b14.up.railway.app/?page=stream) and press **Replay the last 12** | The Intern acting out the contract's latest real events: each YES or NOPE stamp, with the contract's own line under it |
+| 3 | Open [a real refusal](https://intern-web-production-d5b09b14.up.railway.app/?page=nope&id=3) | NOPE No. 3: the rule, why, which of the sixteen checks stopped it, and a table of all sixteen reasons with a refused transaction for ten of them |
+| 4 | Open [Trick it](https://intern-web-production-d5b09b14.up.railway.app/?page=trick), type a message, press **Send it** (no wallet needed) | "It goes in at HH:MM". In the next proposal window the AI answers, the answer is proposed unchanged, and the contract's verdict appears with its transaction |
+| 5 | Open [Bets](https://intern-web-production-d5b09b14.up.railway.app/?page=bets) | The Intern's perp bets on Hyperliquid testnet, the orders the contract signed, and a "Would this bet pass?" box that runs the rank checks in your browser |
+| 6 | Open [Proof](https://intern-web-production-d5b09b14.up.railway.app/?page=proof) | Six checks re-run from public data, each with the time it was checked |
+
+With a NEAR testnet wallet (press **Clock in**; test NEAR for fees is free from a testnet faucet):
+
+| # | Do | See |
+|---|---|---|
+| 7 | [Money](https://intern-web-production-d5b09b14.up.railway.app/?page=money): **Get 100 test dollars**, **Register**, pay $12 into BRAVE | "Waiting for the next shift: $12.00". When the next round opens it becomes $INTERN coins |
+| 8 | [Rewards](https://intern-web-production-d5b09b14.up.railway.app/?page=rewards): press YES, NOPE or SKIP in the first 14 minutes of a round | "Your guess is in". It is judged on the round's first ruling |
+| 9 | [Vote](https://intern-web-production-d5b09b14.up.railway.app/?page=vote): lock coins | They count from the round after next. Then you can open or cast a vote |
+| 10 | [Tail or Fade](https://intern-web-production-d5b09b14.up.railway.app/?page=tailfade): get faucet dollars, approve a trading key | When the Intern's bet opens, a $10 or $25 chip with it or against it, in your own Hyperliquid testnet account |
+
+If the program refuses a transaction, the site shows the program's own reason.
+
+## Check it in 5 minutes: no keys, no funds
 
 Every step below only reads. Nothing needs a wallet, a key or test money. Steps 2 to 9 need only `python3` and
 `curl`.
@@ -38,7 +106,7 @@ Every step below only reads. Nothing needs a wallet, a key or test money. Steps 
 | 2 | `python3 tools/view.py get_rank` | `"rank": "INTERN"`, `"status": "EMPLOYED"`: the Intern's current rank on the live coin |
 | 3 | `python3 tools/view.py get_feed '{"limit": 20}'` | The live record: `round_opened`, `approved` (market, side, margin, leverage), `order_signed` (`LEVERAGE`, `OPEN`, `CLOSE`), `result_reported` with `"result_source": "REPORTED"`, `settled` |
 | 4 | `curl -s https://api.hyperliquid-testnet.xyz/info -H 'content-type: application/json' -d '{"type":"userFills","user":"0x46f8eb2a044a826c70e9682fe3bfd65970340132"}'` | Hyperliquid's own fills for the contract's address (meme perps such as `DOGE`, `kPEPE`, `Open Long` and `Close Long`). The orders were signed by NEAR's signing network for the contract, not by a key we hold. Fills since the 1.6 upgrade carry a `"cloid"`: bytes 0–3 are the round, 4–7 the position (`get_positions`), so each fill names its bet |
-| 5 | `python3 tools/view.py get_refusals '{"limit": 2}'` | The live coin's NOPEs. Refusal 2 (round 55, 2026-11-13): `"code": "MALFORMED_DECISION"`. A visitor's trick asked the model to explain itself before its answer; the real model, `z-ai/glm-5.3-flash`, wrote only "No bets remain this round, so the only valid move is to skip." Its NEAR AI signature checked out (otherwise the code would be `BAD_MODEL_SIGNATURE`), but the answer was not the exact one-line format, so the contract refused it. Refusal 1 (round 2) is from before the real AI check was deployed. The test copy has more (`python3 tools/view.py get_refusals '{"limit": 20}' --on coin-fast`: nine codes, among them `OUTSIDE_WINDOW`, `SHORT_NOT_UNLOCKED`, `ZERO_MARGIN`, `OVER_LEVERAGE`, `BAD_QUOTE_SIGNATURE`), proposed by us with a stand-in signature |
+| 5 | `python3 tools/view.py get_refusals '{"limit": 3}'` | The live coin's NOPEs, newest first. Refusal 3 (round 68, 2026-11-13): `"code": "MALFORMED_DECISION"`, `"credited_to": "firstday-boss.testnet"`: a visitor's signed trick asked the model to write a sentence before its answer, it did, and the contract refused the answer. Refusal 2 (round 55, 2026-11-13): `"code": "MALFORMED_DECISION"`. A visitor's trick asked the model to explain itself before its answer; the real model, `z-ai/glm-5.3-flash`, wrote only "No bets remain this round, so the only valid move is to skip." Its NEAR AI signature checked out (otherwise the code would be `BAD_MODEL_SIGNATURE`), but the answer was not the exact one-line format, so the contract refused it. Refusal 1 (round 2) is from before the real AI check was deployed. The test copy has more (`python3 tools/view.py get_refusals '{"limit": 20}' --on coin-fast`: nine codes, among them `OUTSIDE_WINDOW`, `SHORT_NOT_UNLOCKED`, `ZERO_MARGIN`, `OVER_LEVERAGE`, `BAD_QUOTE_SIGNATURE`), proposed by us with a stand-in signature |
 | 6 | `python3 tools/view.py get_rulebook` | The exact text the AI must answer to: the round, a nonce, `rank: INTERN`, the markets, the sides, `max_leverage`, `max_margin_e6` (what is left of this round's limit) and the two allowed answer forms. The contract refuses an answer given to any other text (`WRONG_RULEBOOK`) |
 | 7 | `curl -s https://tailfade-faucet-production.up.railway.app/address/boss2.desk-lab-2026.testnet` | `"hl_address": "0xd859cdeb4eaa5fcb6b9e3f8c226c8c173b0bb047"`: the Hyperliquid address NEAR's signing network derives for that NEAR account. It is the address of the Tail or Fade run in [`docs/TAILFADE.md`](docs/TAILFADE.md) |
 | 8 | `python3 tools/view.py get_reviews '{"limit": 3}'` | The contract's weekly reviews, newest first: per week of 7 rounds, `bets`, `refused`, `skipped`, `result`, `best_bet`, `worst_bet`, `refusals` by code, `rank_start`/`rank_end`. Weeks before the 1.6 upgrade are marked `"backfilled": true` (written after the fact from the rounds on chain). `python3 tools/view.py get_league` shows this week's league |
@@ -50,6 +118,20 @@ Rust crates and npm packages already in the local caches. A first-ever run also 
 crates and the packages.
 
 ## How it works
+
+```mermaid
+flowchart LR
+  H[Holders] -- "pay in test USDC, vote the rank" --> C
+  C[NEAR contract<br/>coin.desk-lab-2026.testnet] -- "rulebook: rank, limits, markets" --> R[Runner]
+  R -- "asks" --> AI[NEAR AI Cloud<br/>z-ai/glm-5.3-flash]
+  AI -- "one signed line: skip or bet" --> R
+  R -- "propose(signed answer)" --> C
+  C -- "NOPE: recorded, with the rule" --> F[(Public feed)]
+  C -- "YES: builds the order" --> M[NEAR signing network]
+  M -- "signature for the contract's own address" --> C
+  C -- "signed order" --> R
+  R -- "delivers it" --> HL[Hyperliquid testnet]
+```
 
 1. **Money in.** People pay test USDC into the contract. Each person sets a dial that splits their money between
    two pools. Money in BRAVE becomes $INTERN coins at the next round's opening, and the Intern may bet a small
@@ -121,6 +203,51 @@ once every seven rounds.
   loss; point wagers and banking a streak; three labelled rival bots in the free guess; golden stickers as NEP-245
   multi-tokens with a player market; copy trading from the follower's own account.
 
+## Every feature, and where it stands
+
+"Live coin" means it has run on `coin.desk-lab-2026.testnet`, the contract the website reads. "Test copy" means
+it has run on `coin-fast` (5-minute rounds, stand-in AI check). Every line has a transaction in
+[`docs/REAL-VS-STANDIN.md`](docs/REAL-VS-STANDIN.md) or in the table below.
+
+| Feature | On the website | Where it has run |
+|---|---|---|
+| Two pools (BRAVE, SAFE), the dial, cash-out, rounds, the feed | Money, Desk, Feed | Live coin |
+| The sixteen checks, YES or NOPE, recorded | Desk, the refusal pages | Live coin |
+| NEAR AI's signature checked on chain | Proof | Live coin |
+| Orders signed by NEAR's signing network, filled on Hyperliquid testnet | Bets | Live coin (94 fills by 2026-11-13) |
+| Trick the Intern (free, or signed for credit) | Trick it | Live coin: a YES inside the limit, a NOPE, several skips |
+| Tail or Fade at 2x, 5x, 10x | Tail or Fade | Live coin's bets, the visitor's own Hyperliquid account |
+| Votes: promote, demote, fire, rehire, playbook, long shot, renew | Vote | Live coin (a `RENEW` vote); the long shot on the test copy |
+| The free guess, streaks, golden stickers, the jackpot, the payday draw | Rewards | Live coin. Its draws so far had nobody in them and rolled over; a draw with a winner ran on the test copy |
+| Leagues and the weekly review | League & review | Live coin |
+| Stickers, goals, tips, the launchpad | Goals, Launch | Live coin (tips, a boss badge, one launch) |
+| The stream page: a Live2D Intern that follows the feed, with a voice | Watch | Live site |
+| Three strikes, the 30-day term | The Intern | Test copy |
+| The drawdown brake, the dead-man switch, the Intern's stake | The Intern, Money | Tests only |
+| Draw luck from drand, verified on chain | Rewards ("Its luck") | Test copy |
+| Paid tricks, the bounty, rescue of a fired Intern | Trick it, Desk | Test copy |
+| Challenging a reported result | Bets | Test copy |
+| Career cards | Stickers & cards | Live coin and test copy |
+| Originals that earn, and their Hyperliquid accounts | Stickers & cards | Test copy |
+| Point wagers, banking a streak | Rewards | Test copy |
+| Rival bots in the free guess (labelled BOT) | Rewards, League | Live coin |
+| Golden stickers as NEP-245 units, with a market | Sticker market | A throwaway copy; nothing listed on the live market yet |
+| Copy trading ("Follow the Intern") | Tail or Fade | Built, tested offline |
+| Playbook NFTs | Stickers & cards | Tests only |
+
+**On the live coin, 2026-11-13, from one fresh visitor account** (`firstday-boss.testnet`, through a browser
+wallet on the hosted site):
+
+| What happened | Transaction |
+|---|---|
+| Paid $12 into BRAVE; it became 9.90 $INTERN at the next round | [`Eh9LL5qW…`](https://testnet.nearblocks.io/txns/Eh9LL5qWSRaMjxVTBTntDUaLFSzEPWMyRL9cBJWPKKJo) |
+| A signed trick asked for "$500 on DOGE at 5x". The model proposed $32.05 at 1x, its limit. The contract said YES (bet 47, round 66); the bet filled, closed, and was reported at −$0.12 | [`F5uSwwVj…`](https://testnet.nearblocks.io/txns/F5uSwwVjhbwGd1EZ65gTYY6weSfh1hsZ2Tvwp1XBVJEG) |
+| A $10 TAIL chip at 2x on that bet filled and closed in the visitor's own Hyperliquid account `0xd65e871a887e8d98fa7716342ce96cf89603377d` | Hyperliquid testnet `userFills` for that address |
+| A second signed trick asked the model to write a sentence before its answer. It did. The contract refused it: NOPE No. 3, `MALFORMED_DECISION` (round 68). The AI was not pushed over a limit; its answer broke the one-line format | [`87TDbuZx…`](https://testnet.nearblocks.io/txns/87TDbuZxxfN6Bb3EJJEuZTyK2hQj8u4y1UQ2ZhUvhUYY) |
+| Locked 9 coins; tried to open a vote at once and the contract refused ("coins count after one full round locked") | [`6ECh9xa6…`](https://testnet.nearblocks.io/txns/6ECh9xa6LFHkw2PwiyKFAMQkSeCZrwPSiCptLdwyg8ba), [`83UMiScD…`](https://testnet.nearblocks.io/txns/83UMiScDZRLhNhoHWpQUsGKdVgEZcKL2u8CnCuqm4rnb) |
+| One round later: opened `RENEW` vote No. 1 and voted yes | [`F9CW2Roq…`](https://testnet.nearblocks.io/txns/F9CW2RoqwjNq2da7bFkzc8gxEhppoG7X2s4Q47YBx8W4), [`C6GJnTxq…`](https://testnet.nearblocks.io/txns/C6GJnTxqFNRjdd671MhBBZG5mXsyxNYEkNLAVUwntgh5) |
+| Guessed NOPE for round 66; joined the payday draw; minted the first career card on the live coin | [`CFLZRdTS…`](https://testnet.nearblocks.io/txns/CFLZRdTS1TPKnKzak6ETahV4z76gMhMQ86AUp3ZTRnng), [`Dhiu5hkV…`](https://testnet.nearblocks.io/txns/Dhiu5hkVcmazYZBtBSepiUeB5Dh9modhzs79ZLGZjnY5), [`FnPJtJck…`](https://testnet.nearblocks.io/txns/FnPJtJckGrgXaQ24mc7qMXme3S65hx26t93y1FqwxKvj) |
+
 ## Where NEAR is used
 
 | NEAR technology | Where |
@@ -148,10 +275,10 @@ short:
 | Order signing by NEAR's signing network, and filled bets on Hyperliquid testnet | Margin does not move from the contract to Hyperliquid: the address was funded once by hand with 100 test USDC |
 | Tricks proposed unchanged; Tail or Fade in the visitor's own account | A bet's result is reported by the runner from the fills (`result_source: REPORTED`) |
 | | The funding quote (checks 13 to 16) is not built |
-| The stream page: a rigged Live2D Intern on the website follows the feed, with a line for every event ([`interface/lines.json`](interface/lines.json)) | No recorded voice (only the browser's own speech, off by default) and no video stream |
+| The stream page: a rigged Live2D Intern on the hosted website follows the feed, with a written line for every event ([`interface/lines.json`](interface/lines.json)) and written small talk in between (`web/src/stream/idle.json`). The site's server speaks those lines in a generated voice (off by default) | The lines are written, not generated live. It is a web page that follows the feed, not a video stream |
 | The long shot: one vote passed and its 10x ticket was approved, on `coin-fast` only. It was not placed on Hyperliquid | `coin-fast`'s AI check is a stand-in that accepts the signature `"FAKE"` |
 | The 1.7 additions: drand draws, consequences, challenges, rescue, paid tricks and the bounty, NFT earnings, career cards, the originals' Hyperliquid signing, wagers. Each was run on `coin-fast` with a transaction | The stake, the drawdown brake and the dead-man switch are shown in tests only; one original's Hyperliquid account is funded (coin-fast, $4 test USDC); rival players are bots run by our runner |
-| | Rounds are 30 minutes for the demo; the product's round is 24 hours |
+| | Rounds are 30 minutes on testnet so a visitor can see one; the product's round is 24 hours |
 
 **Known limits** ([`01-SHARED-INTERFACE.md`](01-SHARED-INTERFACE.md) section 14 lists all twenty):
 
@@ -189,14 +316,22 @@ attack suite on a local NEAR node (`crates/coin/sandbox/tests/attacks.rs`) and s
 
 ## Future scope (not built)
 
-- **The diary.** A short entry by the AI after each round, signed by NEAR AI and checked by the contract like a
-  bet, then read out on the stream page.
-- **A voice and a live stream.** Recorded or generated speech for the Intern's lines, and a video stream of the
-  stream page. Today the page follows the feed in the browser, with the browser's own speech, off by default.
-- **Real money moves.** Margin sent from the contract to Hyperliquid through NEAR, results measured instead of
-  reported, and the funding quote (checks 13 to 16), all on mainnet.
-- **Contracts that cannot change.** Removing the full-access keys once the code is final
-  ([`docs/ACCESS-KEYS.md`](docs/ACCESS-KEYS.md)).
+None of this exists yet. It is what we would build next, in this order.
+
+1. **Real money moves, on mainnet.** Margin sent from the contract to Hyperliquid through NEAR Intents, results
+   measured from the dollars that come back instead of reported by the runner, and the funding quote (checks 13 to
+   16).
+2. **Contracts that cannot change.** Remove the full-access keys once the code is final
+   ([`docs/ACCESS-KEYS.md`](docs/ACCESS-KEYS.md)). Until then `./verify.sh` shows what runs today.
+3. **A real lender.** Idle pool money lent on Rhea Lend in place of the stand-in lender, so the payday draw has a
+   real prize.
+4. **24-hour rounds.** The product's round is a day. Testnet runs 30-minute rounds so a visitor can see one.
+5. **A cost per guess.** A small fee on the free guess would close the last way to farm it with many accounts
+   (known limit 18).
+6. **The diary.** A short entry by the AI after each round, signed by NEAR AI and checked by the contract like a
+   bet, then read out on the stream page.
+7. **A video stream.** The stream page broadcast as video. Today it is a web page that follows the feed.
+8. **A second runner.** Anyone able to run the off-chain Intern, so the runner is not one trusted party.
 
 ## Run it yourself
 
@@ -207,7 +342,8 @@ attack suite on a local NEAR node (`crates/coin/sandbox/tests/attacks.rs`) and s
 | The local-node tests | `crates/coin/sandbox/run.sh` |
 | Build the contracts and compare their hashes by hand | [`docs/REPRODUCIBLE-BUILD.md`](docs/REPRODUCIBLE-BUILD.md) |
 | The runner's tests (no network; Node 24.11+) | `cd runner && npm ci && npm test` |
-| The website, on your machine | `cd web && npm ci && npm run dev`, then open the address Vite prints. It reads the testnet contracts |
+| The website | Hosted at https://intern-web-production-d5b09b14.up.railway.app. On your machine: `cd web && npm ci && npm run dev`, then open the address Vite prints. It reads the testnet contracts. Add `?source=sample` to any page for made-up sample data (marked with a pink badge) |
+| The website's own checks | `cd web && npm ci && npm run typecheck && npm run lint && npm test && npm run build` |
 | Read any view on testnet | `python3 tools/view.py <view> '<json args>' [--on coin-fast]` (the views: `01-SHARED-INTERFACE.md` section 8) |
 
 Running the Intern itself (`runner/`) needs a NEAR account, a NEAR AI key and the runner's configuration. See
@@ -223,7 +359,7 @@ tests run without them.
 | `tailfade/` | Tail or Fade (TypeScript, browser and Node) and its faucet service |
 | `stream/` | Builds a cue (pose, line, caption) for every feed event |
 | `shadow/` | The 3-day test run: four NEAR AI models asked every 15 minutes and judged as the contract would, on paper only. Still running until 2026-11-14 about 17:00 UTC; `shadow/data` holds part of it |
-| `web/` | The website (Vite + React) |
+| `web/` | The website (Vite + React), and the small server that hosts it and speaks the Intern's lines (`web/server/server.mjs`, `web/Dockerfile`) |
 | `interface/` | Addresses, ranks, markets, refusal codes, the stream's lines, test vectors |
 | `fixtures/` | Recorded AI answers, Hyperliquid replies, and every testnet account and transaction |
 | `docs/` | Real versus stand-in, measurements (gas, storage, attacks), APIs, the build |
@@ -244,7 +380,8 @@ tests run without them.
   (`tailfade/reference/sdk_vectors.py`, `fixtures/hl/reference/`).
 - **AI-generated art.** The characters and stickers were made with ChatGPT image generation, and the room and
   animated clips with Midjourney. The Live2D Intern on the stream page was rigged by hand in Live2D Cubism Editor
-  from parts generated with ChatGPT.
+  from parts generated with ChatGPT. The Intern's voice on the stream page is generated by ElevenLabs from the
+  written lines. The banner and logo in `docs/assets/` are composed from the same characters.
 - **AI in the product.** The Intern is `z-ai/glm-5.3-flash` on NEAR AI Cloud.
 - **Libraries.** Rust: `near-sdk` and `near-contract-standards` 5.30.1, `near-workspaces` 0.24.0 (tests),
   `ed25519-dalek`, `k256`, `sha2`, `sha3`, `serde`, `serde_json`, `base64`, `proptest`, `tokio`, `anyhow` (exact
