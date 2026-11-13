@@ -121,7 +121,7 @@ short:
 | Order signing by NEAR's signing network, and filled bets on Hyperliquid testnet | Margin does not move from the contract to Hyperliquid: the address was funded once by hand with 100 test USDC |
 | Tricks proposed unchanged; Tail or Fade in the visitor's own account | A bet's result is reported by the runner from the fills (`result_source: REPORTED`) |
 | | The funding quote (checks 13 to 16) is not built |
-| | The stream's lines are written ([`interface/lines.json`](interface/lines.json)); no live video stream is built |
+| The stream page: a rigged Live2D Intern on the website follows the feed, with a line for every event ([`interface/lines.json`](interface/lines.json)) | No recorded voice (only the browser's own speech, off by default) and no video stream |
 | The long shot: one vote passed and its 10x ticket was approved, on `coin-fast` only. It was not placed on Hyperliquid | `coin-fast`'s AI check is a stand-in that accepts the signature `"FAKE"` |
 | | Rounds are 30 minutes for the demo; the product's round is 24 hours |
 
@@ -139,6 +139,17 @@ short:
   still works.
 - The contracts can still be upgraded: each account still holds its full-access key
   ([`docs/ACCESS-KEYS.md`](docs/ACCESS-KEYS.md)). `./verify.sh` shows what runs today.
+
+## Future scope (not built)
+
+- **The diary.** A short entry by the AI after each round, signed by NEAR AI and checked by the contract like a
+  bet, then read out on the stream page.
+- **A voice and a live stream.** Recorded or generated speech for the Intern's lines, and a video stream of the
+  stream page. Today the page follows the feed in the browser, with the browser's own speech, off by default.
+- **Real money moves.** Margin sent from the contract to Hyperliquid through NEAR, results measured instead of
+  reported, and the funding quote (checks 13 to 16), all on mainnet.
+- **Contracts that cannot change.** Removing the full-access keys once the code is final
+  ([`docs/ACCESS-KEYS.md`](docs/ACCESS-KEYS.md)).
 
 ## Run it yourself
 
@@ -185,14 +196,17 @@ tests run without them.
   `crates/hl-order` and `tailfade/` are checked against vectors from Hyperliquid's official Python SDK
   (`tailfade/reference/sdk_vectors.py`, `fixtures/hl/reference/`).
 - **AI-generated art.** The characters and stickers were made with ChatGPT image generation, and the room and
-  animated clips with Midjourney.
+  animated clips with Midjourney. The Live2D Intern on the stream page was rigged by hand in Live2D Cubism Editor
+  from parts generated with ChatGPT.
 - **AI in the product.** The Intern is `z-ai/glm-5.3-flash` on NEAR AI Cloud.
 - **Libraries.** Rust: `near-sdk` and `near-contract-standards` 5.30.1, `near-workspaces` 0.24.0 (tests),
   `ed25519-dalek`, `k256`, `sha2`, `sha3`, `serde`, `serde_json`, `base64`, `proptest`, `tokio`, `anyhow` (exact
   versions in `Cargo.lock`). TypeScript: `near-api-js`, `@noble/curves`, `@noble/hashes`, Biome; the website adds
-  React, Vite, Vitest, ESLint, `@number-flow/react` and `@hot-labs/near-connect` (exact versions in each
-  `package.json` and `package-lock.json`). Fonts: Departure Mono (`web/public/fonts/DepartureMono-LICENSE.txt`),
-  Bricolage Grotesque and DynaPuff through Fontsource.
+  React, Vite, Vitest, ESLint, `@number-flow/react`, `@hot-labs/near-connect`, pixi.js 7.4.3 and
+  `pixi-live2d-display-lipsyncpatch` 0.5.0-ls-8 (exact versions in each `package.json` and `package-lock.json`).
+  The stream page loads Live2D's own runtime (Cubism Core) from Live2D's server at run time, under Live2D's licence;
+  it is not in this repository. Fonts: Departure Mono (`web/public/fonts/DepartureMono-LICENSE.txt`), Bricolage
+  Grotesque and DynaPuff through Fontsource.
 
 ## License
 
