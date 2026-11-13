@@ -21,6 +21,7 @@ import {
   iocOrder,
   isBuy,
   leverageAction,
+  liquidationMovePct,
   newAgent,
   openWindow,
   placeChip,
@@ -156,6 +157,22 @@ describe("prices, sizes, sides", () => {
   });
 });
 
+describe("bigger chips (reward ladder R5)", () => {
+  it("5x and 10x where the market allows; the size grows with the leverage", () => {
+    assert.deepEqual(leverageAction(DOGE, 10), {
+      type: "updateLeverage",
+      asset: 173,
+      isCross: false,
+      leverage: 10,
+    });
+    assert.throws(() => leverageAction({ ...DOGE, name: "WIF", maxLeverage: 5 }, 10), /at most 5x/);
+    assert.equal(sizeFor(10 * 5, 0.0666, 0), 751);
+    assert.equal(sizeFor(10 * 10, 0.0666, 0), 1502);
+    assert.equal(liquidationMovePct(2), 45);
+    assert.equal(liquidationMovePct(10), 9);
+  });
+});
+
 describe("the window", () => {
   const T = 1_794_507_000_000;
   const feed: FeedItem[] = [
@@ -233,6 +250,36 @@ describe("placing a chip", () => {
       for (const p of posted)
         assert.equal(recoverAddress(l1Digest(p.action, p.nonce, true), p.signature), agent.address);
       assert.ok((posted[1]?.nonce ?? 0) > (posted[0]?.nonce ?? 0));
+      // 10x: the leverage action says 10, the order is five times the 2x size.
+      posted.length = 0;
+      const ten = await placeChip({
+        agent,
+        market: "DOGE",
+        choice: "TAIL",
+        internSide: "LONG",
+        chipUsd: 10,
+        leverage: 10,
+        now: () => t++,
+      });
+      assert.deepEqual(posted[0]?.action, {
+        type: "updateLeverage",
+        asset: 173,
+        isCross: false,
+        leverage: 10,
+      });
+      assert.equal(ten.sz, "1502");
+      await assert.rejects(
+        placeChip({
+          agent,
+          market: "DOGE",
+          choice: "TAIL",
+          internSide: "LONG",
+          chipUsd: 10,
+          leverage: 3 as 2,
+          now: () => t++,
+        }),
+        /leverage must be one of 2, 5, 10/,
+      );
     } finally {
       globalThis.fetch = realFetch;
     }

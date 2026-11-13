@@ -1,0 +1,29 @@
+{
+  "market": "DOGE",
+  "buy": true,
+  "px": "0.064829",
+  "sz": "1558",
+  "leverage": {
+    "status": "ok",
+    "response": {
+      "type": "default"
+    }
+  },
+  "order": {
+    "status": "ok",
+    "response": {
+      "type": "order",
+      "data": {
+        "statuses": [
+          {
+            "filled": {
+              "totalSz": "1558.0",
+              "avgPx": "0.064213",
+              "oid": 65213187693
+            }
+          }
+        ]
+      }
+    }
+  }
+}

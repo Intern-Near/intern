@@ -23,17 +23,23 @@ import {
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { faucet: { type: "string" }, market: { type: "string" }, choice: { type: "string" } },
+  options: {
+    faucet: { type: "string" },
+    market: { type: "string" },
+    choice: { type: "string" },
+    leverage: { type: "string" },
+  },
 });
 const nearAccount = positionals[0];
 if (!nearAccount) throw new Error("usage: node scripts/e2e-testnet.ts <near-account>");
 const faucetUrl = values.faucet ?? "https://tailfade-faucet-production.up.railway.app";
 const market = values.market ?? "DOGE";
 const choice = values.choice === "FADE" ? "FADE" : "TAIL";
+const leverage = Number(values.leverage ?? 2) as 2 | 5 | 10;
 const stamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, "");
 const out = join(
   new URL("../../fixtures/hl/tailfade-e2e/", import.meta.url).pathname,
-  `${stamp}-${nearAccount}`,
+  `${stamp}-${nearAccount}${values.leverage ? `-${values.leverage}x` : ""}`,
 );
 mkdirSync(out, { recursive: true });
 const save = (name: string, v: unknown) => writeFileSync(join(out, name), `${JSON.stringify(v, null, 2)}\n`);
@@ -124,10 +130,10 @@ await sleep(2_000);
 say(`trading key approved: ${await isApproved(user, agent)}`);
 
 // 4. The chip: $10 at 2x isolated, the Intern's way (TAIL) or the other (FADE), as if it had gone long.
-const chip = await placeChip({ agent, market, choice, internSide: "LONG", chipUsd: 10 });
+const chip = await placeChip({ agent, market, choice, internSide: "LONG", chipUsd: 10, leverage });
 save("3-chip.json", chip);
 say(
-  `chip ${choice} ${market}: px ${chip.px} sz ${chip.sz}; leverage ${JSON.stringify(chip.leverage)}; order ${JSON.stringify(chip.order)}`,
+  `chip ${choice} ${market} at ${leverage}x: px ${chip.px} sz ${chip.sz}; leverage ${JSON.stringify(chip.leverage)}; order ${JSON.stringify(chip.order)}`,
 );
 await sleep(3_000);
 acct = await account(user);

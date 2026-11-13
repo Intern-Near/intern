@@ -20,7 +20,10 @@ import { account, agentsOf, exchange, HL_TESTNET, type Market, markets, mids, ty
 
 export const TAIL_OR_FADE = {
   chipsUsd: [10, 25] as const,
+  /** The default leverage. */
   leverage: 2,
+  /** 1.4 (reward ladder R5): the leverages a visitor may pick, where the market allows (PENGU and WIF stop at 5x). */
+  leverages: [2, 5, 10] as const,
   windowMs: 10 * 60_000,
   /** IOC orders cross the mid by this much (1%), so they fill now or not at all. */
   slippageBps: 100,
@@ -42,6 +45,16 @@ const hlName = (market: string): string => HL_NAME[market] ?? market;
 
 export type Choice = "TAIL" | "FADE";
 export type Chip = (typeof TAIL_OR_FADE.chipsUsd)[number];
+export type Leverage = (typeof TAIL_OR_FADE.leverages)[number];
+
+/**
+ * Roughly how far the price may move against a position, in percent, before it is liquidated: about 1/leverage
+ * of the entry, less the maintenance margin. For the page's risk line ("a 9% move against you ends this chip").
+ * An estimate, not Hyperliquid's own liquidation price (read that from `account()` once the position is open).
+ */
+export function liquidationMovePct(leverage: number): number {
+  return Math.floor((100 / leverage) * 0.9);
+}
 
 // ---------------------------------------------------------------- the trading key the browser keeps
 
@@ -167,6 +180,8 @@ export async function placeChip(args: {
   choice: Choice;
   internSide: "LONG" | "SHORT";
   chipUsd: Chip;
+  /** 2 by default; 5 or 10 where the market allows. */
+  leverage?: Leverage;
   url?: string;
   now?: () => number;
 }): Promise<ChipResult> {
@@ -180,8 +195,11 @@ export async function placeChip(args: {
   const buy = isBuy(args.choice, args.internSide);
   const slip = TAIL_OR_FADE.slippageBps / 10_000;
   const px = roundPx(mid * (buy ? 1 + slip : 1 - slip), m.szDecimals);
-  const sz = sizeFor(args.chipUsd * TAIL_OR_FADE.leverage, mid, m.szDecimals);
-  const lev = await sendL1(args.agent, leverageAction(m), now(), url);
+  const leverage = args.leverage ?? TAIL_OR_FADE.leverage;
+  if (!TAIL_OR_FADE.leverages.includes(leverage))
+    throw new Error(`leverage must be one of ${TAIL_OR_FADE.leverages.join(", ")}`);
+  const sz = sizeFor(args.chipUsd * leverage, mid, m.szDecimals);
+  const lev = await sendL1(args.agent, leverageAction(m, leverage), now(), url);
   const order = await sendL1(args.agent, iocOrder(m, buy, px, sz, false), now() + 1, url);
   return { market: m.name, buy, px: wire(px), sz: wire(sz), leverage: lev, order };
 }

@@ -1,7 +1,7 @@
 # Tail or Fade (spec 12b, first version, testnet)
 
-When the Intern's bet opens, a visitor has **10 minutes** to put a **$10 or $25** chip on the same market at **2x
-isolated**: **TAIL** (the same way as the Intern) or **FADE** (the other way). The bet is a real Hyperliquid testnet
+When the Intern's bet opens, a visitor has **10 minutes** to put a **$10 or $25** chip on the same market at **2x,
+5x or 10x isolated** (*reward ladder R5*: 5x and 10x where the market allows; PENGU and WIF stop at 5x): **TAIL** (the same way as the Intern) or **FADE** (the other way). The bet is a real Hyperliquid testnet
 position in the visitor's **own** Hyperliquid account, derived from their NEAR account by NEAR's signing network.
 Nothing of ours holds their money. There is no platform fee on testnet (owner's decision, 2026-11-12); the 5 bps
 builder fee is a mainnet feature.
@@ -44,6 +44,7 @@ visitor's wallet. Evidence: `fixtures/hl/tailfade-e2e/20261113T060414-boss2.desk
 | TAIL $10 on DOGE, 2x isolated | leverage `ok`; IOC buy **filled 314 DOGE at 0.063806**, margin $10.02 |
 | Close | reduce-only IOC sell **filled 314 DOGE at 0.063784** |
 | After | $28.975065, no position (−$0.025: the price move and fees) |
+| *(R5)* TAIL $10 on DOGE, **10x** isolated (`--leverage 10`) | approval NEAR tx `13QemSYsGwyhrR9X7d8FQVyneUDMS6pJCgzWmRBd5u6G`; **filled 1,558 DOGE at 0.064213** (about $100 of position on $9.96 of margin); closed at 0.06414; the account went from $28.975065 to $28.771345 (−$0.20: the same small move, ten times over, and fees). Evidence: `fixtures/hl/tailfade-e2e/20261113T064247-boss2.desk-lab-2026.testnet-10x/` |
 
 ## The faucet
 
@@ -60,6 +61,9 @@ Hyperliquid testnet account (`FAUCET_HL_PRIVATE_KEY`, set only in Railway's priv
 account, at most `FAUCET_MAX` accounts in all (9 while it holds $300), and never stores the caller's IP address (a salted hash only).
 
 ## What the page must say (spec 12b)
+
+- **The leverage choice (R5)** sits next to its risk, from `liquidationMovePct(leverage)`: "At 10x, a move of about
+  9% against you ends this chip." Default 2x.
 
 - **Not an edge.** Fading the Intern is a bet with real stakes on testnet, not a strategy. Leverage can wipe out the
   chip quickly.

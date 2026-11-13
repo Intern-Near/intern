@@ -1,0 +1,59 @@
+{
+  "big_r": {
+    "affine_point": "03c1e9ceb65efa240b3adced3fa933da2a868947d399a03bf699e2b92ca8e1241b"
+  },
+  "recovery_id": 0,
+  "s": {
+    "scalar": "3d11a9547b8c96159e929d14c7e978b1376bd52c6db7c3205804671f231db23d"
+  },
+  "scheme": "Secp256k1"
+}
+
+├  Unsigned transaction:
+│    signer_id:    boss2.desk-lab-2026.testnet
+│    receiver_id:  v1.signer-prod.testnet
+│    actions:
+│       -- function call:      
+│                       method name:  sign
+│                       args:         {
+│                                       "request": {
+│                                         "domain_id": 0,
+│                                         "path": "tailfade-1",
+│                                         "payload_v2": {
+│                                           "Ecdsa": "b0a6d42ab783d0b92e4671b7b94437764a6e17a0d00922bb6f5a1392e29eea80"
+│                                         }
+│                                       }
+│                                     }
+│                       gas:          300.0 Tgas
+│                       deposit:      1 yoctoNEAR
+│     [0m
+├  Your transaction was signed successfully.
+│    Public key: ed25519:VhkrELfvnrXTPQHS3HSfUKegXkbmsrJ9UKTt4V87DW8
+│    Signature:  [key hidden]
+│     [0m
+├  Transaction Execution Info:
+│    Gas used: 9.3 Tgas
+│    Transaction fee: 0.0008786910484623 NEAR
+│    Transaction ID: 13QemSYsGwyhrR9X7d8FQVyneUDMS6pJCgzWmRBd5u6G
+│    To see the transaction in the transaction explorer, please open this url in your browser:
+│    https://explorer.testnet.near.org/transactions/13QemSYsGwyhrR9X7d8FQVyneUDMS6pJCgzWmRBd5u6G
+│     [0m
+├  Function execution logs:
+│    [36mLogs [v1.signer-prod.testnet]:[39m
+│      sign: predecessor=AccountId("boss2.desk-lab-2026.testnet"), request=SignRequestArgs { path: "tailfade-1", payload: Ecdsa(BoundedVec { inner: [176, 166, 212, 42, 183, 131, 208, 185, 46, 70, 113, 183, 185, 68, 55, 118, 74, 110, 23, 160, 208, 9, 34, 187, 111, 90, 19, 146, 226, 158, 234, 128], witness: NonEmpty(()) }), domain_id: DomainId(0) }
+│    [36mLogs [v1.signer-prod.testnet]:[39m   [2mNo logs[0m
+│    [36mLogs [boss2.desk-lab-2026.testnet]:[39m   [2mNo logs[0m
+│    [36mLogs [boss2.desk-lab-2026.testnet]:[39m   [2mNo logs[0m
+│     [0m
+
+Function execution return value (printed to stdout):
+
+
+The "sign" call to <v1.signer-prod.testnet> on behalf of <boss2.desk-lab-2026.testnet> succeeded.
+
+
+
+
+Here is your console command if you need to script it or re-run:
+    [33mnear contract call-function as-transaction v1.signer-prod.testnet sign json-args '{"request":{"path":"tailfade-1","domain_id":0,"payload_v2":{"Ecdsa":"b0a6d42ab783d0b92e4671b7b94437764a6e17a0d00922bb6f5a1392e29eea80"}}}' prepaid-gas '300.0 Tgas' attached-deposit '1 yoctoNEAR' sign-as boss2.desk-lab-2026.testnet network-config testnet sign-with-legacy-keychain send[39m
+
