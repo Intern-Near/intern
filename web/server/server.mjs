@@ -2,6 +2,7 @@
 //
 //   GET  /say/status   { enabled, chars_left }
 //   POST /say          { "text": "..." }  ->  audio/mpeg, the Intern saying that line
+//   POST /watch        { "id": "..." }    ->  { watching }, how many streams are open right now
 //
 // The voice comes from ElevenLabs. Its key stays here, in the host's private variables
 // (ELEVENLABS_API_KEY or ELEVENLABS_SECRET_KEY, and ELEVENLABS_VOICE_ID); it is never sent to a browser.
@@ -17,6 +18,7 @@ import { fileURLToPath } from "node:url";
 const here = fileURLToPath(new URL(".", import.meta.url));
 const DIST = resolve(process.env.SITE_DIR ?? join(here, "..", "dist"));
 const LINES = process.env.LINES_FILE ?? [join(here, "..", "lines.json"), join(here, "..", "..", "interface", "lines.json")].find(existsSync);
+const IDLE = process.env.IDLE_FILE ?? [join(here, "..", "idle.json"), join(here, "..", "src", "stream", "idle.json")].find(existsSync);
 const CACHE = resolve(process.env.VOICE_CACHE_DIR ?? "/tmp/intern-voice");
 const PORT = Number(process.env.PORT ?? 8787);
 const KEY = process.env.ELEVENLABS_API_KEY ?? process.env.ELEVENLABS_SECRET_KEY ?? "";
@@ -47,6 +49,8 @@ function allowedLines() {
     if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) lift(x, inside || k === "intern" || k === "first_note" || k === "by_kind" || k === "by_cleared");
   };
   lift({ events: json.events, refusals: json.refusals }, false);
+  // The small talk of the stream page (web/src/stream/idle.json)
+  if (IDLE) for (const l of JSON.parse(readFileSync(IDLE, "utf8")).lines) found.push(l.text);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return [...new Set(found)].map((t) => {
     const body = t.split(/\{[a-z_]+\}/).map(esc).join("[^\\n]{1,48}");
@@ -138,6 +142,29 @@ async function say(req, res) {
   }
 }
 
+// ---------------------------------------------------------------- who is watching
+
+/** One made-up id per open stream; an id that stays silent for 45 seconds is forgotten. Nothing else is kept. */
+const watchers = new Map();
+async function watch(req, res) {
+  let raw = "";
+  for await (const chunk of req) {
+    raw += chunk;
+    if (raw.length > 300) return json(res, 413, { error: "Too long." });
+  }
+  let id = "";
+  try {
+    id = String(JSON.parse(raw).id ?? "");
+  } catch {
+    return json(res, 400, { error: "Send JSON with an id." });
+  }
+  if (!/^[0-9a-f-]{16,40}$/i.test(id)) return json(res, 400, { error: "Bad id." });
+  const now = Date.now();
+  if (watchers.size < 20000 || watchers.has(id)) watchers.set(id, now);
+  for (const [k, t] of watchers) if (now - t > 45_000) watchers.delete(k);
+  json(res, 200, { watching: watchers.size });
+}
+
 // ---------------------------------------------------------------- the site
 
 function sendFile(res, file, status = 200) {
@@ -156,6 +183,7 @@ createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://site");
   if (url.pathname === "/say/status") return json(res, 200, { enabled: !!KEY && !!VOICE, chars_left: KEY && VOICE ? charsLeft() : 0 });
   if (url.pathname === "/say") return req.method === "POST" ? void say(req, res) : json(res, 405, { error: "POST a line." });
+  if (url.pathname === "/watch") return req.method === "POST" ? void watch(req, res) : json(res, 405, { error: "POST an id." });
   if (url.pathname === "/healthz") return json(res, 200, { ok: true });
   if (req.method !== "GET" && req.method !== "HEAD") return json(res, 405, { error: "Read only." });
   let path;

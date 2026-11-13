@@ -66,3 +66,17 @@ describe("stream cues", () => {
     }
   });
 });
+
+describe("small talk", () => {
+  it("every line has a pose the Intern has and only placeholders the page can fill", async () => {
+    const idle = (await import("../stream/idle.json")).default;
+    const { INTERN_MOODS } = await import("../cast/Intern");
+    const known = ["rank", "per_bet", "shift", "jackpot", "viewers", "players"];
+    for (const l of idle.lines as { text: string; pose: string; when?: string }[]) {
+      expect(INTERN_MOODS as readonly string[], l.text).toContain(l.pose);
+      for (const m of l.text.matchAll(/\{([a-z_]+)\}/g)) expect(known, l.text).toContain(m[1]);
+      if (l.when) expect(["OPEN", "PROPOSE", "HOLD", "CLOSE", "SETTLED", "FIRED"]).toContain(l.when);
+      expect(l.text.length).toBeLessThanOrEqual(200);
+    }
+  });
+});

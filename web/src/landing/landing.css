@@ -1829,3 +1829,136 @@
   color: inherit;
   text-underline-offset: 3px;
 }
+
+/* --- LIVE badge, shared by the stream page and the small stream --- */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: var(--ink);
+  border-radius: var(--radius-pill);
+}
+.live-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--tomato);
+  border-radius: 50%;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+.live-badge.is-off .live-dot {
+  background: var(--dim);
+  border-radius: 2px;
+  animation: none;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* --- The small stream on the landing page --- */
+.mini {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: var(--s-6);
+  max-width: var(--page-max);
+  margin: var(--s-8) auto;
+  padding: 0 var(--page-gutter);
+}
+.mini-stage {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  min-height: 340px;
+  background: var(--sky);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+.mini-puppet {
+  width: 100%;
+  height: 0;
+}
+.mini-puppet.is-on,
+.mini-puppet.is-on .puppet {
+  height: 340px;
+}
+.mini-puppet .puppet canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.mini-mark {
+  position: absolute;
+  top: var(--s-4);
+  right: var(--s-4);
+  font-size: var(--display-s) !important;
+}
+.mini-words {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+.mini-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.mini-count {
+  font-weight: 700;
+  font-size: var(--text-s);
+}
+.mini-count .mono {
+  font-size: var(--mono-m);
+  font-weight: 400;
+}
+.mini h2 {
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  line-height: 1.05;
+}
+.mini-bubble {
+  min-height: 3.4em;
+  max-width: 34ch;
+  padding: var(--s-3) var(--s-4);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-l);
+  line-height: 1.2;
+  background: var(--sticky);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: 20px;
+  border-bottom-left-radius: 4px;
+  animation: row-in var(--t-enter) var(--ease) both;
+}
+.mini-caption {
+  font-size: var(--mono-s);
+  line-height: 1.8;
+  color: var(--pencil);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .mini {
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    margin: var(--s-7) auto;
+  }
+  .mini-stage,
+  .mini-puppet.is-on,
+  .mini-puppet.is-on .puppet {
+    min-height: 0;
+    height: 280px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
