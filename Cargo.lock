@@ -4120,6 +4120,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tickets"
+version = "1.7.0"
+dependencies = [
+ "near-contract-standards",
+ "near-sdk",
+]
+
+[[package]]
 name = "time"
 version = "0.3.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"

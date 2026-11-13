@@ -471,6 +471,18 @@ impl Coin {
             .then(|| (rules::limits::long_shot_margin(r.brave_at_open), rules::limits::LONG_SHOT_LEVERAGE))
     }
 
+    /// Takes a won golden sticker out of the player's record (to be minted somewhere); panics if they have none.
+    pub(crate) fn take_golden(&mut self, who: &AccountId, code: Refusal, serial: u16) {
+        let mut p = self.rw.players.get(who).cloned().unwrap_or_default();
+        let at = p
+            .goldens
+            .iter()
+            .position(|&(c, s)| c == code as u8 && s == serial)
+            .unwrap_or_else(|| env::panic_str("you have no such golden sticker to claim"));
+        p.goldens.remove(at);
+        self.rw.players.insert(who.clone(), p);
+    }
+
     pub(crate) fn rw_golden_restore(&mut self, who: &AccountId, code: u8, serial: u16) {
         let mut p = self.rw.players.get(who).cloned().unwrap_or_default();
         p.goldens.push((code, serial));
@@ -635,14 +647,7 @@ impl Coin {
     pub fn claim_golden(&mut self, code: Refusal, serial: u16) -> Promise {
         let who = env::predecessor_account_id();
         self.tick();
-        let mut p = self.rw.players.get(&who).cloned().unwrap_or_default();
-        let at = p
-            .goldens
-            .iter()
-            .position(|&(c, s)| c == code as u8 && s == serial)
-            .unwrap_or_else(|| env::panic_str("you have no such golden sticker to claim"));
-        p.goldens.remove(at);
-        self.rw.players.insert(who.clone(), p);
+        self.take_golden(&who, code, serial);
         self.start_claim(
             who.clone(),
             format!("golden:{}:{serial}", code.as_str()),

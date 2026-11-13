@@ -30,7 +30,7 @@ build() { # crate dir, extra args, log suffix
   (cd "crates/$1" && cargo near build non-reproducible-wasm --no-abi ${2:-} >"$l" 2>&1) \
     && note "built $1 ${2:-}" || { note "BUILD FAILED: $1 (see $l)"; fail=1; }
 }
-build mock-usdc; build lender; build stickers; build launchpad; build coin/stub
+build mock-usdc; build lender; build stickers; build launchpad; build coin/stub; build tickets
 build coin "--out-dir $here/target/near/coin"
 build coin "--features fake-ai-check --out-dir $here/target/near/coin-fake" -fake   # the test copy coin-fast
 
@@ -73,7 +73,7 @@ def code_hash(account):
 rows = [("coin", "target/near/coin/coin.wasm"), ("usdc", "target/near/mock_usdc/mock_usdc.wasm"),
         ("lender", "target/near/lender/lender.wasm"), ("stickers", "target/near/stickers/stickers.wasm"),
         ("launchpad", "target/near/launchpad/launchpad.wasm"), ("stub", "target/near/stub/stub.wasm"),
-        ("coin-fast", "target/near/coin-fake/coin.wasm")]
+        ("coin-fast", "target/near/coin-fake/coin.wasm"), ("tickets", "target/near/tickets/tickets.wasm")]
 dep.setdefault("coin-fast", "coin-fast.desk-lab-2026.testnet")  # the test copy (stand-in AI check, 5-minute rounds)
 bad = 0
 for key, path in rows:

@@ -335,3 +335,56 @@ impl Coin {
         self.career_view()
     }
 }
+
+// ----- 1.7 (item 23): golden stickers as NEP-245 multi-tokens on the tickets contract ------------------------
+
+pub(crate) const KIND_GOLDEN_MT: u8 = 6;
+
+/// The tickets contract (`crates/tickets`), set by the contract's own key (`set_tickets`).
+pub(crate) fn tickets_account() -> Option<AccountId> {
+    env::storage_read(b"m7t").and_then(|b| String::from_utf8(b).ok()).and_then(|s| s.parse().ok())
+}
+
+#[ext_contract(ext_tickets)]
+#[allow(dead_code)]
+trait TicketsContract {
+    fn mint(&mut self, token_id: String, receiver_id: AccountId, amount: U128, title: String, description: String);
+}
+
+#[near]
+impl Coin {
+    /// 1.7. The contract's own key only: the multi-token contract golden stickers can be claimed on.
+    #[private]
+    pub fn set_tickets(&mut self, tickets: AccountId) {
+        env::storage_write(b"m7t", tickets.as_bytes());
+    }
+
+    /// 1.7. Claims a golden sticker won by guessing as one unit of `golden:<CODE>` on the tickets contract (NEP-245),
+    /// tradable on its market, instead of as a one-off NFT. 0.02 NEAR, at least 60 TGas; a failed mint puts it back.
+    #[payable]
+    pub fn claim_golden_mt(&mut self, code: Refusal, serial: u16) -> Promise {
+        require!(env::prepaid_gas() >= crate::claims::GAS_CLAIM_MIN, "attach at least 60 TGas");
+        require!(env::attached_deposit() >= crate::claims::CLAIM_DEPOSIT, "attach 0.02 NEAR for the token's storage");
+        let tickets = tickets_account().unwrap_or_else(|| env::panic_str("no tickets contract is set"));
+        let who = env::predecessor_account_id();
+        self.tick();
+        self.take_golden(&who, code, serial);
+        let token_id = format!("golden:{}", code.as_str());
+        ext_tickets::ext(tickets)
+            .with_attached_deposit(crate::claims::CLAIM_DEPOSIT)
+            .with_static_gas(Gas::from_tgas(20))
+            .mint(
+                token_id.clone(),
+                who.clone(),
+                U128(1),
+                format!("Golden {}", code.as_str()),
+                format!("A golden {} sticker of $INTERN, one of at most 100, won by a free guess.", code.as_str()),
+            )
+            .then(Self::ext(Self::me()).with_static_gas(Gas::from_tgas(15)).on_claimed(
+                who,
+                token_id,
+                KIND_GOLDEN_MT,
+                (code as u64) << 16 | serial as u64,
+            ))
+    }
+}

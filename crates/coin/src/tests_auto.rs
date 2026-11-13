@@ -519,3 +519,26 @@ fn a_challenge_that_fails_gives_its_bond_to_the_pool_and_the_window_closes() {
     goto(&mut c, 6, 1_000);
     assert_eq!(transfer_in(&mut c, at(6, 2_000), "carol.test", 5_000_000, &msg.replace("11000000", "10000000")), 5_000_000);
 }
+
+// ----- golden stickers on the tickets contract (item 23) -------------------------------------------------------
+
+#[test]
+fn a_golden_sticker_can_be_claimed_as_a_multi_token_and_comes_back_if_the_mint_fails() {
+    let mut c = three();
+    env::storage_write(b"m7t", b"tickets.test");
+    c.rw.golden_odds = 1; // every guess drops one
+    guess(&mut c, 2, "bob.test", Verdict3::Skip);
+    ctx(at(2, 3_000), "bob.test", 0);
+    let won = c.get_player(acct("bob.test")).goldens;
+    assert_eq!(won.len(), 1);
+    let (code, serial) = (won[0].code, won[0].serial);
+    ctx_full(at(2, 3_100), "bob.test", 20_000_000_000_000_000_000_000, vec![]);
+    let _ = c.claim_golden_mt(code, serial);
+    ctx(at(2, 3_200), "bob.test", 0);
+    assert!(c.get_player(acct("bob.test")).goldens.is_empty());
+    // The tickets contract refused the mint: the golden sticker is bob's to claim again.
+    ctx_full(at(2, 3_300), ME, 0, vec![PromiseResult::Failed]);
+    assert!(!c.on_claimed(acct("bob.test"), format!("golden:{}", code.as_str()), crate::earn::KIND_GOLDEN_MT, (code as u64) << 16 | serial as u64));
+    ctx(at(2, 3_400), "bob.test", 0);
+    assert_eq!(c.get_player(acct("bob.test")).goldens.len(), 1);
+}

@@ -1,0 +1,17 @@
+[package]
+name = "tickets"
+version = "1.7.0"
+description = "Interface 1.7: $INTERN's multi-token contract (NEP-245): golden stickers as tokens of one type per refusal code, with a player market in the pinned USDC."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+near-contract-standards = { workspace = true }
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

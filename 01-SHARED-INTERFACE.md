@@ -817,6 +817,12 @@ Owner's decision on Engine 2's list (item 12). The runner reports results (known
 
 Owner's decision on Engine 2's list (item 18), built on Tail or Fade: a visitor sets one rule (TAIL or FADE, a $10 or $25 chip, 2x/5x/10x, at most N chips a day) and uses the Tail or Fade trading key they already approved. Each time the Intern's bet opens a window, their own key places the chip on their own Hyperliquid account (`tailfade/src/follow.ts`; on the website while the page is open, or `tailfade/scripts/follow.ts` from a terminal). Nothing of ours holds the money or the key; the contract does not place these orders. Not a contract change.
 
+### 9.16 Golden stickers as multi-tokens, and a player market *(1.7)*
+
+Owner's decision on Engine 2's list (item 23). A separate contract, `tickets` (`crates/tickets`, NEP-245 "multi token"), holds one token type per id; the coin is its only minter. Today: golden stickers, `golden:<CODE>`. A player who won a golden sticker may claim it with `claim_golden_mt({ code, serial })` on the coin (0.02 NEAR, at least 60 TGas; a failed mint puts it back) as one unit of its code's type, instead of `claim_golden`'s one-off NFT. The coin learns the tickets address from `set_tickets` (its own key only).
+
+On `tickets`: `mt_transfer`, `mt_batch_transfer` (1 yocto), `mt_balance_of`, `mt_batch_balance_of`, `mt_supply`, `mt_batch_supply`, `mt_token`; NEP-297 events `mt_mint`, `mt_transfer` (standard `nep245`). Not built: `mt_transfer_call`, approvals. **The market:** `list({ token_id, amount, price_each })` (1 yocto; the units are held by the contract), `unlist({ listing_id })` (the seller), `get_listings({ from?, limit? })`; a buyer pays on the USDC token with `ft_transfer_call({ receiver_id: <tickets>, amount, msg: '{"buy":{"listing_id":N,"amount":"…"}}' })`: the units go to the buyer, the USDC to the seller (who must be registered on the USDC token), the change back; anything wrong is refunded in full. No fee.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
