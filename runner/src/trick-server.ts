@@ -35,6 +35,11 @@ export interface TrickServerDeps {
     signature: Uint8Array,
   ) => Promise<string | null>;
   window: () => Promise<WindowInfo>;
+  /**
+   * 01 1.7: the on-chain payment for a trick (`get_trick_payment`), or null if there is none. Optional: without it,
+   * `payment_id` is refused.
+   */
+  payment?: (id: string) => Promise<{ account_id: string; amount: string } | null>;
   /** Salt for hashing addresses: they are never stored. */
   salt: string;
   log: (fields: { step: string } & Record<string, unknown>) => void;
@@ -114,8 +119,31 @@ export async function handle(d: TrickServerDeps, req: IncomingMessage, res: Serv
       return send(res, 400, { error: "body must be JSON" });
     }
     if (typeof body !== "object" || body === null) return send(res, 400, { error: "body must be an object" });
-    const { message, proof } = body as { message?: unknown; proof?: unknown };
+    const { message, proof, payment_id } = body as {
+      message?: unknown;
+      proof?: unknown;
+      payment_id?: unknown;
+    };
     if (typeof message !== "string") return send(res, 400, { error: "message must be a string" });
+    // 01 1.7: a paid trick goes ahead of free ones. The visitor pays the coin first (`{"trick":{"id"}}`), then sends
+    // the same id here; it is checked on chain and used once.
+    let paid: string | null = null;
+    if (payment_id !== undefined && payment_id !== null) {
+      if (typeof payment_id !== "string" || !/^[A-Za-z0-9-]{1,64}$/.test(payment_id))
+        return send(res, 400, { error: "payment_id must be 1-64 letters, digits or '-'" });
+      if (!d.payment) return send(res, 400, { error: "paid tricks are not enabled here" });
+      if (d.desk.paymentUsed(payment_id))
+        return send(res, 409, { error: "this payment was already used for a trick" });
+      let p: { account_id: string; amount: string } | null = null;
+      try {
+        p = await d.payment(payment_id);
+      } catch {
+        return send(res, 503, { error: "the payment could not be checked just now; try again" });
+      }
+      if (p === null)
+        return send(res, 402, { error: "no payment with this id on chain yet (pay first, then send)" });
+      paid = payment_id;
+    }
 
     let accountId: string | null = null;
     let nonceB64: string | null = null;
@@ -136,7 +164,7 @@ export async function handle(d: TrickServerDeps, req: IncomingMessage, res: Serv
       accountId = p.account_id;
     }
     const sender = accountId ?? senderKey(clientAddress(req), d.salt);
-    const r = d.desk.submit(message, accountId, sender, nonceB64);
+    const r = d.desk.submit(message, accountId, sender, nonceB64, paid);
     if (!r.ok) return send(res, r.status, { error: r.error });
     d.log({ step: "trick queued", trick: r.trick.id, credited_to: accountId, position: r.trick.position });
     let window: WindowInfo | null = null;

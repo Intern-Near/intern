@@ -193,6 +193,8 @@ impl World {
         let pot = self.pot().await?;
         // 1.4: the reward ladder holds its money apart from both pools.
         let rw = self.view(&self.coin, "get_rewards", json!({})).await?;
+        // 1.7: the trick bounty is held apart too.
+        let bounty = self.view(&self.coin, "get_bounty", json!({})).await?;
         let held = self.usdc_of(self.coin.id()).await?;
         assert_eq!(
             held,
@@ -203,6 +205,7 @@ impl World {
                 + u(&rw["jackpot"])
                 + u(&rw["draw_pot"])
                 + u(&rw["prizes_owed"])
+                + u(&bounty["pot"])
                 + ignored,
             "USDC held vs books: {pot} {rw}"
         );

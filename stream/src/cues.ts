@@ -163,12 +163,14 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
     "each",
     "jackpot",
     "rolled_over",
+    "pot",
   ])
     if (k in d) out[k] = usd(d[k]);
   if ("result" in d) out.result = signedUsd(d.result);
   if ("coins" in d) out.coins = coins(d.coins);
   if ("weight" in d) out.weight = coins(d.weight);
   if ("account_id" in d) out.account = account(d.account_id);
+  else if ("by" in d) out.account = account(d.by); // 1.7: bounty_grew names the giver `by`
   out.amount_coins = coins(d.amount);
   out.rank = ctx.rank ?? s("rank");
   out.side_word = word("side", d.side);

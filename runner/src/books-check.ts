@@ -9,7 +9,7 @@ import { field, flag, record, six, text, u128, u128Value, whole } from "./view-f
  * the contract's sandbox tests assert after every move (crates/coin/sandbox/tests/common/mod.rs `books_match`):
  *
  *   USDC held = brave.total - brave.lent + brave.pending + safe.total + brave.income_waiting
- *               + jackpot + draw_pot + prizes_owed
+ *               + jackpot + draw_pot + prizes_owed + bounty (1.7)
  *
  * and the part lent (`brave.lent`) is at the lender. Every bucket below is a field of those views; none is added
  * here. The text form is src/books-text.ts.
@@ -42,6 +42,8 @@ export interface BooksSnapshot {
   jackpot: bigint;
   draw_pot: bigint;
   prizes_owed: bigint;
+  /** 01 1.7: the trick bounty pot (`get_bounty().pot`), 0 on an older contract. */
+  bounty: bigint;
   usdc_of_coin: bigint;
   /** Null when no lender was read (nothing lent, or none named). */
   lender: {
@@ -94,6 +96,10 @@ export async function readBooks(at: AtBlock, coin: string, lender: string | null
     jackpot: u128(rw, "jackpot", "get_rewards"),
     draw_pot: u128(rw, "draw_pot", "get_rewards"),
     prizes_owed: u128(rw, "prizes_owed", "get_rewards"),
+    bounty: await at
+      .view(coin, "get_bounty")
+      .then((v) => u128(record(v, "get_bounty"), "pot", "get_bounty"))
+      .catch(() => 0n),
     usdc_of_coin: u128Value(
       await at.view(usdc, "ft_balance_of", { account_id: coin }),
       "ft_balance_of(coin)",
@@ -189,7 +195,7 @@ export interface BooksReport {
 
 export const RULE =
   "USDC held by the coin = brave.total - brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + " +
-  "draw_pot + prizes_owed, and brave.lent is at the lender (01 §9.7, §9.6)";
+  "draw_pot + prizes_owed + the trick bounty, and brave.lent is at the lender (01 §9.7, §9.6)";
 
 const HL_EXPLORER = "https://app.hyperliquid-testnet.xyz/explorer/address/";
 
@@ -277,6 +283,14 @@ export function checkBooks(s: BooksSnapshot): BooksReport {
       part: false,
       note: "won, not yet claimed",
     },
+    {
+      name: "trick bounty",
+      source: "get_bounty.pot",
+      amount_e6: s.bounty.toString(),
+      held_at: coin,
+      part: false,
+      note: "half of each paid trick, and direct additions (01 1.7)",
+    },
   ];
   const atCoin =
     brave.total -
@@ -286,7 +300,8 @@ export function checkBooks(s: BooksSnapshot): BooksReport {
     brave.income_waiting +
     s.jackpot +
     s.draw_pot +
-    s.prizes_owed;
+    s.prizes_owed +
+    s.bounty;
   const owedTotal = atCoin + brave.lent;
 
   const lenderNeeded = brave.lent > 0n || s.lender !== null;
@@ -310,7 +325,7 @@ export function checkBooks(s: BooksSnapshot): BooksReport {
   const places: PlaceCheck[] = [
     {
       place: COIN_PLACE,
-      rule: "brave.total - brave.lent + pending + income waiting + SAFE + jackpot + draw pot + prizes owed (01 §9.7)",
+      rule: "brave.total - brave.lent + pending + income waiting + SAFE + jackpot + draw pot + prizes owed + trick bounty (01 §9.7)",
       should_hold_e6: atCoin.toString(),
       holds_e6: s.usdc_of_coin.toString(),
       holds_source: `${s.usdc_token} ft_balance_of(${s.coin})`,

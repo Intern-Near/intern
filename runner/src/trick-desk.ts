@@ -45,6 +45,11 @@ export interface Trick {
   sender: string;
   /** The NEP-413 nonce (base64), so one signature cannot be used twice. */
   nonce: string | null;
+  /**
+   * 01 1.7: the id of a payment the visitor made on chain for this trick (`get_trick_payment`): a paid trick goes
+   * ahead of free ones. One payment, one trick.
+   */
+  paid?: string;
   status: TrickStatus;
   attempts: number;
   round_id?: number;
@@ -96,6 +101,7 @@ export class TrickDesk {
   readonly #now: () => number;
   readonly #tricks = new Map<string, Trick>();
   readonly #nonces = new Set<string>();
+  readonly #payments = new Set<string>();
 
   constructor(file: string, now: () => number) {
     this.#file = file;
@@ -124,6 +130,7 @@ export class TrickDesk {
     if (e.type === "queued") {
       this.#tricks.set(e.trick.id, { ...e.trick });
       if (e.trick.nonce !== null) this.#nonces.add(e.trick.nonce);
+      if (e.trick.paid !== undefined) this.#payments.add(e.trick.paid);
       return;
     }
     const t = this.#tricks.get(e.id);
@@ -149,8 +156,16 @@ export class TrickDesk {
     this.#apply(e);
   }
 
+  /** Waiting tricks in the order they will be asked: paid ones first (01 1.7), then by time. */
   #queued(): Trick[] {
-    return [...this.#tricks.values()].filter((t) => t.status === "queued").sort((a, b) => a.at - b.at);
+    return [...this.#tricks.values()]
+      .filter((t) => t.status === "queued")
+      .sort((a, b) => Number(b.paid !== undefined) - Number(a.paid !== undefined) || a.at - b.at);
+  }
+
+  /** Whether a payment id was already used for a trick. */
+  paymentUsed(id: string): boolean {
+    return this.#payments.has(id);
   }
 
   #public(t: Trick): PublicTrick {
@@ -167,9 +182,17 @@ export class TrickDesk {
    * Queues a visitor's message. `accountId` must already be proven (a NEP-413 signature checked by the caller);
    * `sender` is that account, or a salted hash of the address the request came from.
    */
-  submit(message: unknown, accountId: string | null, sender: string, nonce: string | null = null): Submitted {
+  submit(
+    message: unknown,
+    accountId: string | null,
+    sender: string,
+    nonce: string | null = null,
+    paid: string | null = null,
+  ): Submitted {
     const m = cleanMessage(message);
     if (!m.ok) return { ok: false, status: 400, error: m.error };
+    if (paid !== null && this.#payments.has(paid))
+      return { ok: false, status: 409, error: "this payment was already used for a trick" };
     if (nonce !== null && this.#nonces.has(nonce))
       return { ok: false, status: 409, error: "this signature was already used" };
     const mine = [...this.#tricks.values()].filter((t) => t.sender === sender);
@@ -187,6 +210,7 @@ export class TrickDesk {
       account_id: accountId,
       sender,
       nonce,
+      ...(paid === null ? {} : { paid }),
       status: "queued",
       attempts: 0,
     };

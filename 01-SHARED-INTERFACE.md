@@ -309,6 +309,8 @@ Read-only and free. The site and the runner use only these.
 | `get_claimable` *(1.3)* | `{ account_id: AccountId }` | `Claimable` |
 | `get_week` *(1.6)* | — | `WeekView` (section 9.8) |
 | `get_auto` *(1.7)* | — | `AutoView` (section 9.9) |
+| `get_bounty` *(1.7)* | — | `{ pot, paid_total, added_total, from_tricks_total: Usdc; tricks_paid: number; trick_price: Usdc; bounty_bps: number }` (section 9.10) |
+| `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
 | `get_rebalance` *(1.7)* | — | `{ action: "LEND" \| "RECALL" \| "NONE" \| "BUSY" \| "NO_LENDER", amount: Usdc }`: what `rebalance` would move now, without moving it |
 | `get_league` *(1.6)* | `{ week?: number, group?: number, account_id?: AccountId }` | `LeagueView` (section 9.8) |
 | `get_league_results` *(1.6)* | `{ week: number }` | `GroupResult[]` (section 9.8) |
@@ -685,7 +687,7 @@ The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid
 - **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest in `draw_runners` (10) equal shares; with nobody in it, it rolls over. *(1.7, Engine 2's "f3")* **Each of the eleven prizes is drawn by tickets with replacement**, so an account's expected prize is its share of the tickets however its money is split across accounts (one account may win several). A boss's tickets are **the smaller of the BRAVE dollars held when the period began (or when joining) and at the draw** *(1.7: BRAVE coins at today's value only; SAFE risks nothing and is not lent)*, times the rounds of the period they were in. `enter_draw` needs some BRAVE. **When the draw is full (200), a newcomer holding more BRAVE takes the place of the entrant holding least**; otherwise it is refused. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
 - **Point wagers** *(1.7)*. `guess({ verdict, wager? })`: `wager` points (at most the points held) are taken when guessing; when the round's first ruling comes, the right guessers share all the round's wagered points in proportion to their own wagers (a guesser's share is `wager × all wagered ÷ wagered on the right answer`, rounded down), on top of the usual point. A round with no ruling gives the wager back. `get_rewards().wagers_this_round` is `[YES, NOPE, SKIP]` (U64 strings); `PlayerView.guess.wager`. Points have no cash value.
 - **Banking a streak** *(1.7)*. `bank_streak()`: the current streak becomes `streak × streak` points and starts again (`streak_banked { account_id, streak, points }`): sure points instead of chasing the jackpot's seven. Not while a guess waits for its ruling.
-- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed`.
+- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed + get_bounty().pot` *(1.7: the trick bounty)*.
 - **The long shot (R6, 1.5).** Bosses may vote `LONG_SHOT` (section 9.2). In the round it allows, the Intern may place **one extra bet**: margin **exactly 0.5% of the pool at round open**, leverage up to 10 (5 on PENGU and WIF), on a coin and side its rank allows, inside the round's limit (section 7). The rulebook says so that round only (section 6.1). The result is shared by all BRAVE holders, like any bet. **It usually loses: that is what a long shot is.** At most once every seven rounds. `get_rewards().long_shot` shows it.
 
 ```ts
@@ -776,6 +778,14 @@ type AutoView = {
 };
 ```
 
+### 9.10 Paid tricks and the trick bounty *(1.7)*
+
+Owner's decisions on Engine 2's list (items 9 and 16). Test USDC on testnet; a payment on NEAR, not the x402 HTTP protocol.
+
+- **Paid tricks.** On the USDC token: `ft_transfer_call({ receiver_id: <coin>, amount, msg: '{"trick":{"id":"<id>"}}' })`, 1 yocto, `amount` at least `trick_price` ($1). `id` is 1–64 letters, digits or `-`, chosen by the trick page; each id is paid once (a second payment, too little, or a bad id is refunded in full). Half goes to the bounty pot and half to the BRAVE pool as outside income (all of it to the bounty while the Intern is fired). Event `trick_paid`. The trick page (`POST /tricks` with `payment_id`) checks `get_trick_payment(id)`, uses each payment once, and asks paid tricks before free ones.
+- **The bounty.** `ft_transfer_call(.., msg: '{"bounty":{}}')`, at least $1, from anyone (`bounty_grew`). When a trick **credited to a visitor** (`propose(.., credited_to)`) gets the AI's answer refused for checks 3 to 12, the visitor wins `bounty_bps` (10%) of the pot as a prize, claimed with `claim_prizes` (`bounty_paid`). A trick that is not credited wins nothing.
+- **What the rulebook does not do.** Engine 2 suggested adding caught tricks to the rulebook. The rulebook is the AI's system prompt, so a visitor's text there would let a visitor write the AI's instructions: it is not done. The rulebook never changes for tricks.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -832,6 +842,9 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `term_renewed` *(1.7)* | `{ term_ends_at }` |
 | `abandoned` *(1.7)* | `{ round_id, bets_booked_lost }` |
 | `streak_banked` *(1.7)* | `{ account_id, streak, points }` |
+| `trick_paid` *(1.7)* | `{ id, account_id, amount, to_bounty }` |
+| `bounty_grew` *(1.7)* | `{ amount, by, pot }` |
+| `bounty_paid` *(1.7)* | `{ account_id, amount, refusal_id, code }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 

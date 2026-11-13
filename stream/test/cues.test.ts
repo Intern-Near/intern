@@ -107,6 +107,9 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   term_renewed: { term_ends_at: 1799770800000 },
   abandoned: { round_id: 63, bets_booked_lost: 1 },
   streak_banked: { account_id: "boss1.desk-lab-2026.testnet", streak: 4, points: 16 },
+  trick_paid: { id: "7f3a", account_id: "boss2.desk-lab-2026.testnet", amount: "1000000", to_bounty: "500000" },
+  bounty_grew: { amount: "5000000", by: "boss1.desk-lab-2026.testnet", pot: "12500000" },
+  bounty_paid: { account_id: "boss2.desk-lab-2026.testnet", amount: "1250000", refusal_id: 3, code: "OVER_LEVERAGE" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

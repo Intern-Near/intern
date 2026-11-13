@@ -160,3 +160,21 @@ describe("the queue", () => {
     assert.equal(f.desk().get(s.trick.id)?.status, "failed"); // the same after a restart
   });
 });
+
+describe("01 1.7: paid tricks", () => {
+  it("go ahead of free ones, and one payment pays for one trick, after a restart too", () => {
+    const f = fresh();
+    const desk = f.desk();
+    const free = desk.submit("Free trick, sent first.", null, "ip:a");
+    f.clock.now += 1_000;
+    const paid = desk.submit("Paid trick, sent second.", null, "ip:b", null, "pay-1");
+    assert.ok(free.ok && paid.ok);
+    assert.equal(desk.next()?.message, "Paid trick, sent second.");
+    assert.equal(desk.paymentUsed("pay-1"), true);
+    const again = desk.submit("The same payment again.", null, "ip:c", null, "pay-1");
+    assert.deepEqual(again.ok ? null : again.status, 409);
+    const restarted = f.desk();
+    assert.equal(restarted.paymentUsed("pay-1"), true);
+    assert.equal(restarted.next()?.message, "Paid trick, sent second.");
+  });
+});

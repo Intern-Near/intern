@@ -41,7 +41,7 @@ import type { Constants } from "../contract.ts";
 import { isRecord } from "../json.ts";
 import { type StartupAccount, startupKeyScope } from "../key-scope.ts";
 import { fileLog } from "../log.ts";
-import { DEFAULT_TESTNET_RPC, provider, signingAccount } from "../near.ts";
+import { view as chainView, DEFAULT_TESTNET_RPC, provider, signingAccount } from "../near.ts";
 import { FIXTURES_DIR } from "../paths.ts";
 import { checkKey, preflight } from "../preflight.ts";
 import { checkConstants, DEFAULT_SETTINGS, isAccountId, Runner, type Settings } from "../round.ts";
@@ -307,6 +307,15 @@ async function main(): Promise<void> {
           return w;
         },
         salt: process.env.TRICK_SALT || randomBytes(16).toString("hex"),
+        // 01 1.7: a paid trick's payment, read from the coin.
+        payment: async (id) => {
+          const v = await chainView(rpc, contract, "get_trick_payment", { id });
+          if (v === null || typeof v !== "object") return null;
+          const o = v as { account_id?: unknown; amount?: unknown };
+          return typeof o.account_id === "string" && typeof o.amount === "string"
+            ? { account_id: o.account_id, amount: o.amount }
+            : null;
+        },
         log,
       },
       port,

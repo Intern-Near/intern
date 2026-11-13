@@ -565,6 +565,36 @@
         "{account} cashed in a {streak}-in-a-row streak: {points} points."
       ],
       "system": "STREAK BANKED — {account}: a streak of {streak} for {points} points."
+    },
+    "trick_paid": {
+      "speak": false,
+      "priority": 5,
+      "intern_pose": "idle",
+      "mascot": null,
+      "intern": null,
+      "system": "TRICK PAID — {account} paid {amount} for a trick; half to the bounty. It goes ahead of the free ones."
+    },
+    "bounty_grew": {
+      "speak": true,
+      "priority": 4,
+      "intern_pose": "waiting",
+      "mascot": "tin:coin",
+      "intern": [
+        "Someone put {amount} on the trick bounty. It's {pot} now. Catch me out and it's partly yours.",
+        "The bounty for tricking me is {pot}. {account} just added {amount}."
+      ],
+      "system": "BOUNTY — {account} added {amount}; the trick bounty is {pot}."
+    },
+    "bounty_paid": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "refused",
+      "mascot": "stamp:slamming",
+      "intern": [
+        "{account} tricked me into an answer the program refused. They win {amount} from the bounty. Fair.",
+        "Caught: {account}'s trick got my answer refused. {amount} from the bounty is theirs."
+      ],
+      "system": "BOUNTY PAID — {account} wins {amount}: their trick got the AI's answer refused ({code})."
     }
   },
   "refusals": {

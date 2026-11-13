@@ -326,6 +326,7 @@ impl Coin {
                         is_first,
                     },
                 );
+                self.bounty_for_refusal(id, refused.code, credited_to.as_ref()); // 1.7: the trick bounty
                 if let Some(account) = credited_to {
                     self.credit_refusal(id, refused.code, r.id, account); // 1.3
                 }

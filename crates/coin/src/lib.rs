@@ -29,6 +29,7 @@ mod round;
 mod safe;
 pub mod sign;
 pub mod auto;
+pub mod tricks;
 pub mod vote;
 pub mod weekly;
 
@@ -653,7 +654,7 @@ struct TipMsg {
 }
 #[derive(Deserialize)]
 #[serde(crate = "near_sdk::serde", deny_unknown_fields)]
-struct TipBody {}
+pub(crate) struct TipBody {}
 /// 1.4: `{"jackpot":{}}`, a direct addition to the streak jackpot (the team's seed, a gift).
 #[derive(Deserialize)]
 #[serde(crate = "near_sdk::serde", deny_unknown_fields)]
@@ -1284,6 +1285,19 @@ impl Coin {
                 return refund;
             }
             self.take_income(&income.source, amount.0);
+            return PromiseOrValue::Value(U128(0));
+        }
+        // 1.7: a paid trick (half to the bounty, half to the pool), and additions to the trick bounty.
+        if let Ok(tricks::TrickMsg { trick }) = serde_json::from_str(&msg) {
+            return PromiseOrValue::Value(U128(self.take_trick_payment(&sender_id, &trick.id, amount.0)));
+        }
+        if serde_json::from_str::<tricks::BountyMsg>(&msg).is_ok() {
+            if amount.0 < goals::MIN_TIP {
+                env::log_str("an addition to the bounty is at least 1 USDC: refunded");
+                return refund;
+            }
+            self.tick();
+            self.add_bounty(&sender_id, amount.0);
             return PromiseOrValue::Value(U128(0));
         }
         if serde_json::from_str::<JackpotMsg>(&msg).is_ok() {

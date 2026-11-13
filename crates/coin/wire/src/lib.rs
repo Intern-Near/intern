@@ -165,6 +165,9 @@ wire_enum!(
         TermRenewed,
         Abandoned,
         StreakBanked,
+        TrickPaid,
+        BountyGrew,
+        BountyPaid,
     }
 );
 

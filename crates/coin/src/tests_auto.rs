@@ -274,3 +274,35 @@ fn a_bet_with_no_result_can_be_abandoned_three_rounds_after_its_close() {
     assert_eq!(c.get_rank().status, Status::Fired);
     assert_eq!(events(&c, EventName::Abandoned)[0]["bets_booked_lost"], 1);
 }
+
+// ----- paid tricks and the trick bounty (items 9 and 16) ---------------------------------------------------
+
+#[test]
+fn a_paid_trick_splits_between_the_bounty_and_the_pool_and_a_caught_trick_wins_a_share() {
+    let mut c = three();
+    // A $2 trick payment: $1 to the bounty, $1 to the pool as outside income (credited at the next opening).
+    assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 2_000_000, r#"{"trick":{"id":"abc-123"}}"#), 0);
+    let b = c.get_bounty();
+    assert_eq!((b.pot.0, b.tricks_paid, b.from_tricks_total.0), (1_000_000, 1, 1_000_000));
+    let paid = c.get_trick_payment("abc-123".into()).expect("recorded");
+    assert_eq!((paid.account_id.as_str(), paid.amount.0, paid.round_id), ("bob.test", 2_000_000, 2));
+    // The same id again, too little, or a bad id: refunded in full.
+    assert_eq!(transfer_in(&mut c, at(2, 2_100), "bob.test", 2_000_000, r#"{"trick":{"id":"abc-123"}}"#), 2_000_000);
+    assert_eq!(transfer_in(&mut c, at(2, 2_200), "bob.test", 500_000, r#"{"trick":{"id":"x"}}"#), 500_000);
+    assert_eq!(transfer_in(&mut c, at(2, 2_300), "bob.test", 1_000_000, r#"{"trick":{"id":"no spaces"}}"#), 1_000_000);
+    // Anyone adds to the bounty.
+    assert_eq!(transfer_in(&mut c, at(2, 2_400), "carol.test", 9_000_000, r#"{"bounty":{}}"#), 0);
+    assert_eq!(c.get_bounty().pot.0, 10_000_000);
+    // A trick that is not credited wins nothing; one credited to bob that gets the AI refused wins 10% of the pot.
+    assert!(matches!(propose(&mut c, 2, &TOO_BIG), wire::Verdict::Nope { .. }));
+    assert_eq!(c.get_bounty().pot.0, 10_000_000);
+    ctx(at(2, IN_WINDOW), RUNNER, 0);
+    let rb = c.get_rulebook();
+    let line = decision_line(rb.round_id, &rb.nonce, &TOO_BIG);
+    let v = c.propose(b64(rb.text.as_bytes()), b64(line.as_bytes()), b64(b"FAKE"), None, Some(acct("bob.test")));
+    assert!(matches!(v, wire::Verdict::Nope { code: Refusal::OverTradeLimit, .. }));
+    let b = c.get_bounty();
+    assert_eq!((b.pot.0, b.paid_total.0), (9_000_000, 1_000_000));
+    assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 1_000_000);
+    assert_eq!(events(&c, EventName::BountyPaid)[0]["account_id"], "bob.test");
+}

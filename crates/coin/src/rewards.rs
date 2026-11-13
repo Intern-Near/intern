@@ -303,7 +303,7 @@ impl Coin {
         p
     }
 
-    fn rw_credit_prize(&mut self, who: &AccountId, amount: u128) {
+    pub(crate) fn rw_credit_prize(&mut self, who: &AccountId, amount: u128) {
         if amount == 0 {
             return;
         }
