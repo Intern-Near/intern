@@ -2,7 +2,10 @@
  * Reads the program's views over NEAR's JSON-RPC. Used for the stub and the real contract.
  * Checked against Engine 1's stub on testnet.
  */
-import type { Chain, Constants, RankName } from "./types";
+import deployments from "../../../interface/deployments.json";
+import { REFUSAL_CODES, type Chain, type Constants, type RankName } from "./types";
+
+const tickets: string | undefined = (deployments.testnet as { tickets?: string }).tickets;
 
 type RpcResult = { result?: { result?: number[]; error?: string }; error?: { message?: string; data?: unknown } };
 
@@ -18,12 +21,26 @@ export async function accessKeyCount(rpcUrl: string, accountId: string): Promise
   return body.result.keys.length;
 }
 
+/** A second public door to the same test network, used when the first one says "too many requests" or cannot be reached. */
+const FALLBACK_RPC = "https://rpc.testnet.near.org";
+
+async function post(rpcUrl: string, body: string): Promise<Response> {
+  const ask = (url: string) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+  if (!rpcUrl.includes("testnet") || rpcUrl === FALLBACK_RPC) return ask(rpcUrl);
+  try {
+    const res = await ask(rpcUrl);
+    // A busy public RPC answers 429 (and a browser may see that as a failed request); the other door has the same data
+    return res.status === 429 || res.status >= 500 ? await ask(FALLBACK_RPC) : res;
+  } catch {
+    return ask(FALLBACK_RPC);
+  }
+}
+
 /** One read-only question to any contract. */
 export async function view<T>(rpcUrl: string, contractId: string, method: string, args: object = {}): Promise<T> {
-  const res = await fetch(rpcUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const res = await post(
+    rpcUrl,
+    JSON.stringify({
       jsonrpc: "2.0",
       id: "intern-web",
       method: "query",
@@ -35,7 +52,7 @@ export async function view<T>(rpcUrl: string, contractId: string, method: string
         args_base64: btoa(JSON.stringify(args)),
       },
     }),
-  });
+  );
   if (!res.ok) throw new Error(`The NEAR network answered ${res.status} for ${method}`);
   const body = (await res.json()) as RpcResult;
   const bytes = body.result?.result;
@@ -85,5 +102,22 @@ export function nearChain(rpcUrl: string, contractId: string): Chain {
     getLeague: (a = {}) => ask("get_league", { week: a.week, group: a.group, account_id: a.accountId }),
     getLeagueResults: (week) => ask("get_league_results", { week }),
     getReviews: (from, limit) => ask("get_reviews", { from, limit }),
+    // (1.7)
+    getAuto: () => ask("get_auto"),
+    getBounty: () => ask("get_bounty"),
+    getNftEarnings: () => ask("get_nft_earnings"),
+    getCareer: () => ask("get_career"),
+    getChallenges: () => ask("get_challenges"),
+    getStickerHl: (code) => ask("get_sticker_hl", { code }),
+    getDrand: (period) => ask("get_drand", period === undefined ? {} : { period }),
+    getStake: () => ask("get_stake"),
+    getRescue: () => ask("get_rescue"),
+    // The tickets contract is named in deployments.json; the test copy (coin-fast) has none.
+    getListings: async () => (tickets && contractId === deployments.testnet.coin ? view(rpcUrl, tickets, "get_listings", {}) : []),
+    getGoldenUnits: async (account_id) =>
+      tickets && contractId === deployments.testnet.coin
+        ? view(rpcUrl, tickets, "mt_batch_balance_of", { account_id, token_ids: REFUSAL_CODES.map((c) => `golden:${c}`) })
+        : REFUSAL_CODES.map(() => "0"),
+    getTokenOwner: async (token_id) => (await view<{ owner_id: string } | null>(rpcUrl, (await consts()).stickers, "nft_token", { token_id }))?.owner_id ?? null,
   };
 }

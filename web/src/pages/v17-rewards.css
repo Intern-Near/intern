@@ -1,0 +1,236 @@
+/* Interface 1.7 on the rewards, league and market pages: bot tags, point wagers, banked streaks, drand luck, the sticker market */
+
+.bot-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--sky);
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  line-height: 1.4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.lw-who {
+  display: inline-block;
+  margin-right: 14px;
+}
+
+.wager {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.wager input {
+  max-width: 160px;
+}
+.guess .guess-pot {
+  opacity: 0.75;
+}
+.bank {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 6px;
+}
+.claim-two {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.luck-box {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--ink);
+  display: grid;
+  gap: 10px;
+}
+.luck-box h3 {
+  margin: 0;
+  font-size: var(--text-m);
+}
+.luck {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.luck p {
+  margin: 0;
+}
+.luck-hex {
+  display: grid;
+  gap: 4px;
+}
+.luck-hex code,
+.luck-verdict code {
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+.luck-tickets summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.luck-tickets ol {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 260px;
+  overflow: auto;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-s);
+  background: var(--card);
+}
+.luck-tickets li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+  overflow-wrap: anywhere;
+}
+.luck-tickets li:first-child {
+  border-top: 0;
+}
+.luck-check {
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-m);
+  background: var(--cream);
+}
+.luck-check h4 {
+  margin: 0 0 6px;
+  font-size: var(--text-s);
+}
+.luck-check ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  font-size: var(--text-s);
+}
+.luck-verdict {
+  display: block;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.luck-verdict.is-ok {
+  color: #0b7a4c;
+}
+.luck-verdict.is-bad {
+  color: #b3261a;
+}
+.luck-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+}
+.luck-picks > span {
+  white-space: nowrap;
+}
+.luck-picks .is-first {
+  font-weight: 700;
+}
+/* The sticker market */
+.market-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.market-list > li {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 14px;
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-m);
+  background: var(--card);
+  min-width: 0;
+}
+.market-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+.market-top > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.market-top .mono {
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+.market-price {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  margin: 0;
+}
+.market-price span {
+  font-family: var(--font-text);
+  font-size: var(--text-s);
+  color: var(--pencil);
+}
+.market-buy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.market-buy input {
+  width: 72px;
+}
+.market-mine {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.market-mine > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 2px dashed color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.market-mine > li:first-child {
+  border-top: 0;
+}
+.market-mine .market-what {
+  flex: 1 1 200px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.market-mine label {
+  font-size: var(--text-xs);
+  color: var(--pencil);
+  display: grid;
+  gap: 2px;
+}
+.market-mine input {
+  width: 96px;
+}
+.plain-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.plain-list code {
+  overflow-wrap: anywhere;
+}
+.luck-open {
+  grid-column: 2 / -1;
+  justify-self: start;
+  white-space: nowrap;
+}

@@ -9,7 +9,9 @@ import { pct, signedUsd, titleCase, usd } from "../lib/format";
 import { day, href } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 import { useAsync } from "../lib/useAsync";
+import { useNow } from "../lib/useNow";
 import { useRewards } from "../lib/useRewards";
+import { AutoPanel, RescuePanel } from "../ui/Auto17";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
@@ -209,6 +211,7 @@ export function InternPage() {
   const snap = useDesk();
   const { desk } = snap;
   const fired = desk?.rank.status === "FIRED";
+  const now = useNow();
   return (
     <div className="home">
       <TopBar source={snap.source} scene={snap.scene} />
@@ -228,7 +231,7 @@ export function InternPage() {
                 RANK {["INTERN", "ANALYST", "TRADER"].indexOf(desk.rank.rank) + 1} OF 3{fired ? " · FIRED" : ""} · SINCE SHIFT {desk.rank.since_round}
               </p>
               <h1>{titleCase(desk.rank.rank)}</h1>
-              <p className="profile-line">{fired ? "Fired by the bosses. No new bets until they vote to rehire." : rankLine(limitsOf(desk))}</p>
+              <p className="profile-line">{fired ? "Fired. No new bets until the bosses vote to rehire it, or a rescue fund fills." : rankLine(limitsOf(desk))}</p>
               <RankLadder current={desk.rank.rank} pending={desk.rank.pending?.rank ?? null} />
               {desk.rank.pending && (
                 <p className="pending">
@@ -241,6 +244,8 @@ export function InternPage() {
               </p>
             </div>
           </section>
+          <RescuePanel desk={desk} />
+          <AutoPanel desk={desk} now={now} />
           <LimitsTable desk={desk} />
           <div className="two-col">
             <Record desk={desk} />

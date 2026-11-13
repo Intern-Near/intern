@@ -90,6 +90,20 @@ export function walletActions(accountId: string, contractId: string, constants: 
   /** The launchpad wants a one-time registration, with 0.05 NEAR. */
   const padRegistration = async (): Promise<Call[]> =>
     (await view<object | null>(rpc, pad, "storage_balance_of", { account_id: accountId })) ? [] : [{ method: "storage_deposit", args: { account_id: accountId }, deposit: NEAR_0_05 }];
+  /** Dollars sent to the coin with a note saying what they are for (ft_transfer_call, 1 yocto). */
+  const toCoin = (amount: string, msg: object) =>
+    send(usdc, [{ method: "ft_transfer_call", args: { receiver_id: contractId, amount, msg: JSON.stringify(msg) }, gas: GAS_TRANSFER_CALL, deposit: ONE_YOCTO }]);
+  /** The coin's one-time registration, if this account still needs it. */
+  const registration = async (): Promise<Call[]> => {
+    if (await view<object | null>(rpc, contractId, "storage_balance_of", { account_id: accountId })) return [];
+    const bounds = await view<{ min: string }>(rpc, contractId, "storage_balance_bounds", {});
+    return [{ method: "storage_deposit", args: { account_id: accountId }, deposit: bounds.min }];
+  };
+  const needTickets = (): string => {
+    const t = (deployments.testnet as { tickets?: string }).tickets;
+    if (!t || contractId !== deployments.testnet.coin) throw new Error("This copy of the program has no sticker market.");
+    return t;
+  };
   return {
     getDollars: () => view<string>(rpc, usdc, "ft_balance_of", { account_id: accountId }),
     async getTestDollars(amount) {
@@ -157,6 +171,30 @@ export function walletActions(accountId: string, contractId: string, constants: 
       calls.push({ method: "stamp_review", args: { week }, gas: GAS_TRANSFER_CALL });
       await send(contractId, calls);
     },
+    // Interface 1.7. Gas and deposits as Engine 1's hand-over note gives them.
+    async guessWager(verdict, wager) {
+      const calls = await registration();
+      calls.push({ method: "guess", args: wager > 0 ? { verdict, wager } : { verdict } });
+      await send(contractId, calls);
+    },
+    bankStreak: () => coin("bank_streak", {}),
+    abandon: (round_id) => coin("abandon", { round_id }, "0", `150${TGAS}`),
+    payTrick: (id, amount) => toCoin(amount, { trick: { id } }),
+    addToBounty: (amount) => toCoin(amount, { bounty: {} }),
+    chipInRescue: (amount) => toCoin(amount, { rescue: {} }),
+    challenge: (position_id, returned, reason, bond) => toCoin(bond, { challenge: { position_id, returned, reason } }),
+    applyCorrection: (vote_id) => coin("apply_correction", { vote_id }, "0", `60${TGAS}`),
+    claimNftEarnings: (token_id) => coin("claim_nft_earnings", { token_id }, "0", `50${TGAS}`),
+    claimPlaybookNft: (playbook_id) => coin("claim_playbook_nft", { playbook_id }, NEAR_0_02, `60${TGAS}`),
+    mintCareerCard: () => coin("mint_career_card", {}, NEAR_0_02, `60${TGAS}`),
+    refreshCareerCard: (n) => coin("refresh_career_card", { n }),
+    stickerHlApprove: (code, agent) => coin("sticker_hl_approve", { code, agent }, ONE_YOCTO, GAS_MAX),
+    stickerHlWithdraw: (code, destination, amount) => coin("sticker_hl_withdraw", { code, destination, amount }, ONE_YOCTO, GAS_MAX),
+    claimGoldenMt: (code, serial) => coin("claim_golden_mt", { code, serial }, NEAR_0_02, `60${TGAS}`),
+    listGolden: (token_id, amount, price_each) => send(needTickets(), [{ method: "list", args: { token_id, amount, price_each }, deposit: ONE_YOCTO }]),
+    unlistGolden: (listing_id) => send(needTickets(), [{ method: "unlist", args: { listing_id }, deposit: ONE_YOCTO }]),
+    buyGolden: (listing_id, amount, total) =>
+      send(usdc, [{ method: "ft_transfer_call", args: { receiver_id: needTickets(), amount: total, msg: JSON.stringify({ buy: { listing_id, amount } }) }, gas: GAS_TRANSFER_CALL, deposit: ONE_YOCTO }]),
     sellLaunch: (token_id, amount, min_out) => send(pad, [{ method: "sell", args: { token_id, amount, min_out }, deposit: ONE_YOCTO, gas: GAS_TRANSFER_CALL }]),
   };
 }

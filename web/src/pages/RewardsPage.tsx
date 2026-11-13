@@ -2,17 +2,20 @@ import { useState } from "react";
 import "./pages.css";
 import "./people.css";
 import "./live.css";
+import "./v17-rewards.css";
 import { Tin } from "../cast/Tin";
 import { signIn, toE6, useDoing, useMe, useSession } from "../chain/session";
 import { getChain, useDesk } from "../chain/store";
 import { REFUSAL_CODES, type Verdict3 } from "../chain/types";
-import { clock, shortAccount, usd } from "../lib/format";
+import { clock, usd } from "../lib/format";
 import { day, href } from "../lib/nav";
 import { useAsync } from "../lib/useAsync";
 import { useNow } from "../lib/useNow";
 import { TopBar } from "../ui/TopBar";
 import { Usd } from "../ui/Usd";
+import { BOT_LINE, Who } from "../ui/BotTag";
 import { Waiting } from "../ui/Waiting";
+import { DrawLuck, RealDrawExample } from "./DrawLuck";
 
 const GUESSES: { verdict: Verdict3; say: string; means: string }[] = [
   { verdict: "YES", say: "YES", means: "the bet is allowed" },
@@ -34,6 +37,8 @@ export function RewardsPage() {
     reload();
   });
   const [gift, setGift] = useState("5");
+  const [wagerText, setWagerText] = useState("0");
+  const [openDraw, setOpenDraw] = useState<number | null>(null);
   const data = useAsync(async () => {
     const chain = getChain();
     const [rewards, draws, wins] = await Promise.all([chain.getRewards(), chain.getDrawResults(undefined, 5), chain.getJackpotWins(10)]);
@@ -58,6 +63,11 @@ export function RewardsPage() {
   const guessed = p?.guess && p.guess.round_id === desk.round.id ? p.guess.verdict : null;
   const waitingGuess = p?.guess && p.guess.round_id !== desk.round.id ? p.guess : null;
   const nextDraw = r ? (r.draw_from_round > r.round_id ? r.draw_from_round : r.draw_from_round + r.constants.draw_rounds) : null;
+  // (1.7) Point wagers: a whole number of points, at most the points held
+  const pots = r?.wagers_this_round ?? null;
+  const wager = /^\d{1,9}$/.test(wagerText.trim()) ? Number(wagerText.trim()) : null;
+  const wagerBad = wager === null || (p ? wager > p.points : wager > 0);
+  const myWager = p?.guess?.wager ?? 0;
   const v = toE6(gift);
   const tooMuch = v !== null && me !== null && BigInt(v) > BigInt(me.dollars);
   const standin = desk.constants.lending.mode !== "RHEA";
@@ -125,18 +135,37 @@ export function RewardsPage() {
               <section className="card money-form" aria-labelledby="guess-h">
                 <h2 id="guess-h">What will the stamp say this shift?</h2>
                 <p>Free, once a shift. It is judged on the first thing the program rules this shift.</p>
+                {pots && actions && p && !guessed && open && (
+                  <div className="wager">
+                    <label htmlFor="wager-n">Points to wager (optional)</label>
+                    <input id="wager-n" inputMode="numeric" value={wagerText} onChange={(e) => setWagerText(e.target.value)} aria-describedby="wager-note" />
+                    <p id="wager-note" className="fine">
+                      {wagerBad
+                        ? `A whole number from 0 to ${p.points}: you can wager at most the points you hold.`
+                        : `You hold ${p.points} points. Wagered points are taken now. If you are right, you share every point wagered this shift with the others who were right, by the size of your wager. If you are wrong, yours are gone. No ruling: you get them back.`}
+                    </p>
+                  </div>
+                )}
                 <div className="guess-row" role="group" aria-label="Your guess">
                   {GUESSES.map((g, i) => (
                     <button
                       key={g.verdict}
                       className={`guess guess-${g.verdict.toLowerCase()}`}
                       aria-pressed={guessed === g.verdict}
-                      disabled={!actions || !open || !!guessed || !!doing.busy}
-                      onClick={() => actions && doing.run(`guess-${g.verdict}`, () => actions.guess(g.verdict), `Your guess is in: ${g.say}.`)}
+                      disabled={!actions || !open || !!guessed || !!doing.busy || (!!pots && !!p && wagerBad)}
+                      onClick={() =>
+                        actions &&
+                        doing.run(
+                          `guess-${g.verdict}`,
+                          () => (pots && wager ? actions.guessWager(g.verdict, wager) : actions.guess(g.verdict)),
+                          `Your guess is in: ${g.say}${pots && wager ? `, with ${wager} ${wager === 1 ? "point" : "points"} on it` : ""}.`,
+                        )
+                      }
                     >
                       <strong>{doing.busy === `guess-${g.verdict}` ? "…" : g.say}</strong>
                       <span>{g.means}</span>
                       <span className="mono">{r.guesses_this_round[i]} so far</span>
+                      {pots && <span className="mono guess-pot">{pots[i]} pts wagered</span>}
                     </button>
                   ))}
                 </div>
@@ -144,12 +173,13 @@ export function RewardsPage() {
                   {desk.rank.status === "FIRED"
                     ? "The Intern is fired, so there is nothing to guess until it is rehired."
                     : guessed
-                      ? `You guessed ${guessed} for shift ${desk.round.id}. The answer comes when the Intern proposes.`
+                      ? `You guessed ${guessed} for shift ${desk.round.id}${myWager > 0 ? `, with ${myWager} ${myWager === 1 ? "point" : "points"} wagered` : ""}. The answer comes when the Intern proposes.`
                       : open
                         ? `Guessing closes in ${clock(r.guess_closes_at - now)}.`
                         : "Guessing is closed for this shift. It opens again when the next shift starts."}
                   {waitingGuess && ` Your guess for shift ${waitingGuess.round_id} (${waitingGuess.verdict}) is still waiting for its answer.`}
                 </p>
+                {pots && <p className="fine">Points wagered are only points. They have no cash value and cannot be bought or sold. {BOT_LINE}</p>}
                 {!actions && clockIn("to guess")}
                 {actions && !session.pretend && <p className="fine">Your first guess also registers your account with the program, which attaches a small refundable amount of test NEAR.</p>}
               </section>
@@ -186,8 +216,24 @@ export function RewardsPage() {
                     <p className={p.jackpot_eligible ? "tf-ready" : "warn"}>
                       {p.jackpot_eligible
                         ? "You can win the jackpot."
-                        : `You are playing for points. The jackpot is for bosses who hold at least ${usd(k.min_boss_usd)} and became a boss at least ${k.min_boss_rounds} shifts ago.`}
+                        : `You are playing for points. The jackpot is for bosses who hold at least ${usd(k.min_boss_usd)} in BRAVE and became a boss at least ${k.min_boss_rounds} shifts ago.`}
                     </p>
+                    {pots && (
+                      <div className="bank">
+                        <button
+                          className="btn btn-quiet"
+                          disabled={!actions || !!doing.busy || p.streak === 0 || p.guess !== null}
+                          onClick={() => actions && doing.run("bank", () => actions.bankStreak(), `Banked: ${p.streak * p.streak} points. Your streak starts again from zero.`)}
+                        >
+                          {doing.busy === "bank" ? "Banking…" : p.streak > 0 ? `Bank my streak for ${p.streak * p.streak} points` : "Bank my streak"}
+                        </button>
+                        <p className="fine">
+                          Banking turns a streak into streak × streak points ({p.streak} × {p.streak} = {p.streak * p.streak}) and sets it back to zero: sure points instead of
+                          chasing {k.jackpot_streak} in a row.
+                          {p.guess !== null ? " Not while a guess of yours is waiting for its ruling." : p.streak === 0 ? " You have no streak right now." : ""}
+                        </p>
+                      </div>
+                    )}
                     <p className="fine">
                       {p.right} right, {p.wrong} wrong so far. A wrong guess sets the streak back to zero; a shift you don't guess pauses it. Points have no cash value.
                     </p>
@@ -218,13 +264,33 @@ export function RewardsPage() {
                         </strong>{" "}
                         One of at most {k.golden_cap}. Yours to keep or give away.
                       </span>
-                      <button className="btn" disabled={!!doing.busy} onClick={() => doing.run(`gold-${g.code}`, () => actions.claimGolden(g.code, g.serial), `Golden ${g.code} is yours.`)}>
-                        {doing.busy === `gold-${g.code}` ? "Claiming…" : "Claim"}
-                      </button>
+                      <span className="claim-two">
+                        <button className="btn" disabled={!!doing.busy} onClick={() => doing.run(`gold-${g.code}-${g.serial}`, () => actions.claimGolden(g.code, g.serial), `Golden ${g.code} is yours, as a one-off sticker.`)}>
+                          {doing.busy === `gold-${g.code}-${g.serial}` ? "Claiming…" : "Claim as a one-off"}
+                        </button>
+                        {pots && (
+                          <button
+                            className="btn btn-quiet"
+                            disabled={!!doing.busy}
+                            onClick={() => doing.run(`goldmt-${g.code}-${g.serial}`, () => actions.claimGoldenMt(g.code, g.serial), `Golden ${g.code} is yours, as a unit you can sell on the sticker market.`)}
+                          >
+                            {doing.busy === `goldmt-${g.code}-${g.serial}` ? "Claiming…" : "Claim as a tradable unit"}
+                          </button>
+                        )}
+                      </span>
                     </li>
                   ))}
                 </ul>
-                <p className="fine">Claiming a sticker attaches about 0.02 test NEAR for storage; what isn't used comes back.</p>
+                <p className="fine">
+                  Claiming a sticker attaches about 0.02 test NEAR for storage; what isn't used comes back.
+                  {pots && p.goldens.length > 0 && (
+                    <>
+                      {" "}
+                      A golden sticker can be claimed one way or the other, not both. A one-off keeps its number. A tradable unit is one of its code's kind, and can be listed
+                      on the <a href={href("market")}>sticker market</a>.
+                    </>
+                  )}
+                </p>
               </section>
             )}
 
@@ -237,6 +303,7 @@ export function RewardsPage() {
                 <p>
                   Every {k.draw_rounds} shifts, the interest the lender paid in those shifts is drawn: {k.draw_top_bps / 100}% to one winner, the rest shared by up to{" "}
                   {k.draw_runners} runners-up. <strong>Nobody's deposit is touched.</strong>
+                  {pots && " Each of the eleven prizes is drawn by tickets, so one account can win more than one."}
                 </p>
                 {standin && <p className="warn">On the test network the interest is a stand-in 5% test rate, so the prizes are cents.</p>}
                 <dl className="tf-facts">
@@ -267,9 +334,16 @@ export function RewardsPage() {
                   </button>
                 )}
                 <p className="fine">
-                  Only bosses can join. Tickets grow with the dollars you keep in for the whole period, times the shifts you were in it. Money added part-way counts from
-                  the next period.
+                  Only bosses can join. Tickets grow with the dollars you keep in BRAVE for the whole period, times the shifts you were in it. Money added part-way counts
+                  from the next period.
                 </p>
+                {pots && (
+                  <div className="luck-box">
+                    <h3>Where the luck comes from</h3>
+                    <DrawLuck sample={snap.source === "sample"} changeKey={`${seq}`} />
+                    <RealDrawExample />
+                  </div>
+                )}
               </section>
 
               <section className="card money-form" aria-labelledby="gift-h">
@@ -354,7 +428,14 @@ export function RewardsPage() {
                     {data.data!.wins.map((w) => (
                       <li key={w.round_id}>
                         <span className="mono pencil">shift {w.round_id}</span>
-                        <span>{w.winners.map((a) => shortAccount(a, 20)).join(", ")}</span>
+                        <span>
+                          {w.winners.map((a, i) => (
+                            <span key={a}>
+                              {i > 0 && ", "}
+                              <Who account={a} max={20} />
+                            </span>
+                          ))}
+                        </span>
                         <span className="mono">{usd(w.each)}{w.winners.length > 1 ? " each" : ""}</span>
                       </li>
                     ))}
@@ -372,14 +453,35 @@ export function RewardsPage() {
                         <span className="mono pencil">
                           {day(d.held_at)}, shift {d.held_in_round}
                         </span>
-                        <span>{d.winner ? `${shortAccount(d.winner, 20)} won ${usd(d.winner_prize)}` : "Nobody was in it. Rolled over."}</span>
+                        <span>
+                          {d.winner ? (
+                            <>
+                              <Who account={d.winner} max={20} /> won {usd(d.winner_prize)}
+                            </>
+                          ) : (
+                            "Nobody was in it. Rolled over."
+                          )}
+                        </span>
                         <span className="pencil">{d.runners_up.length > 0 ? `${d.runners_up.length} runner${d.runners_up.length === 1 ? "" : "s"}-up` : ""}</span>
+                        {pots && (
+                          <button className="pill pill-in luck-open" aria-expanded={openDraw === d.period} onClick={() => setOpenDraw(openDraw === d.period ? null : d.period)}>
+                            {openDraw === d.period ? "Hide the luck" : "Its luck"}
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>
                 )}
               </section>
             </div>
+
+            {openDraw !== null && data.data!.draws.some((d) => d.period === openDraw) && (
+              <section className="card money-form" aria-labelledby="luck-h">
+                <h2 id="luck-h">The luck of draw period {openDraw}</h2>
+                <DrawLuck period={openDraw} result={data.data!.draws.find((d) => d.period === openDraw)} sample={snap.source === "sample"} changeKey="held" />
+                <RealDrawExample />
+              </section>
+            )}
 
             <section aria-labelledby="src-h">
               <h2 id="src-h">Where each prize's money comes from</h2>
@@ -416,7 +518,7 @@ export function RewardsPage() {
                     </tr>
                     <tr>
                       <th scope="row">The payday draw</th>
-                      <td>The interest the lender pays on the pool. Never the deposits.</td>
+                      <td>The interest the lender pays on the pool. Never the deposits.{pots && " Winners are picked with a public random number from drand."}</td>
                       <td>
                         <span className={`state ${standin ? "state-standin" : "state-real"}`}>{standin ? "Stand-in money" : "Real"}</span>
                         {standin && " The draw is real; the interest is a fixed test rate."}
@@ -442,8 +544,9 @@ export function RewardsPage() {
                 </table>
               </div>
               <p className="fine">
-                The draw and the golden stickers use NEAR's per-block random number. Nobody calling the program can choose it, but a block producer could in principle
-                lean on a single draw. That is acceptable for test-dollar prizes; real money would need a stronger method.
+                {pots
+                  ? "The payday draw takes its luck from drand, a public random beacon: the tickets are fixed first, and the beacon used is one that does not exist yet at that moment, so nobody, the team included, can know it. The program checks drand's signature itself. If no beacon is handed in within two shifts, it falls back to NEAR's per-block random number and says so. Golden stickers still use NEAR's per-block number: nobody calling the program can choose it, but a block producer could in principle lean on a single drop. That is acceptable for stickers; a public beacon there would let a guesser know in advance whether a guess wins one."
+                  : "The draw and the golden stickers use NEAR's per-block random number. Nobody calling the program can choose it, but a block producer could in principle lean on a single draw. That is acceptable for test-dollar prizes; real money would need a stronger method."}
               </p>
             </section>
           </>

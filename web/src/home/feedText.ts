@@ -1,10 +1,14 @@
 import type { FeedItem } from "../chain/types";
-import { amount, shortAccount, signedUsd, titleCase, usd } from "../lib/format";
+import { amount, isBot, shortAccount, signedUsd, titleCase, usd } from "../lib/format";
+import { day } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 
 export type Face = "intern" | "stamp" | "tin" | "mug";
 export type Tone = "yes" | "nope" | "money" | "vote" | "plain";
 export type Row = { face: Face; tag: string; tone: Tone; text: string; code?: string; note?: string };
+
+/** An account's short name; our own rival guessers are marked as the bots they are. */
+const who = (account: string) => (isBot(account) ? `${shortAccount(account)} (a bot)` : shortAccount(account));
 
 /** One plain sentence for every event the program announces. */
 export function feedRow(f: FeedItem): Row {
@@ -45,7 +49,7 @@ export function feedRow(f: FeedItem): Row {
     case "result_reported":
       return {
         face: "tin", tag: "Result", tone: "money", text: `The bet came back ${signedUsd(f.data.result)}.`,
-        note: f.data.result_source === "REPORTED" ? "Reported by the runner, not measured by the program" : undefined,
+        note: { REPORTED: "Reported by the runner, not measured by the program", MEASURED: undefined, ABANDONED: "Booked as lost by the dead-man switch: no result arrived", CORRECTED: "Corrected by a vote of the bosses" }[f.data.result_source],
       };
     case "settled":
       return { face: "tin", tag: "Settled", tone: "money", text: `Shift ${f.data.round_id} closed. ${signedUsd(f.data.result)} to the BRAVE pool.` };
@@ -63,7 +67,7 @@ export function feedRow(f: FeedItem): Row {
     case "rank_changed":
       return { face: "intern", tag: "Rank", tone: "yes", text: `${titleCase(f.data.from)} is now ${titleCase(f.data.to)}.` };
     case "fired":
-      return { face: "intern", tag: "Fired", tone: "nope", text: "The bosses fired the Intern. No new bets." };
+      return { face: "intern", tag: "Fired", tone: "nope", text: "The Intern is fired. No new bets until it is rehired." };
     case "rehired":
       return { face: "intern", tag: "Rehired", tone: "yes", text: `Rehired. Back at the desk from shift ${f.data.effective_round}.` };
     case "outside_income":
@@ -92,7 +96,7 @@ export function feedRow(f: FeedItem): Row {
         text: `${shortAccount(f.data.account_id)} claimed ${f.data.token_id.startsWith("badge:") ? "a boss badge" : f.data.token_id.startsWith("original:") ? `the original ${f.data.token_id.slice(9)}` : "a goal sticker"}.`,
       };
     case "guessed":
-      return { face: "mug", tag: "Guess", tone: "vote", text: `${shortAccount(f.data.account_id)} guessed what the stamp will say this shift.` };
+      return { face: "mug", tag: "Guess", tone: "vote", text: `${who(f.data.account_id)} guessed what the stamp will say this shift.` };
     case "guess_settled":
       return { face: "stamp", tag: "Guesses", tone: "plain", text: `The answer for shift ${f.data.round_id} was ${f.data.verdict}. ${f.data.right} guessed right, ${f.data.wrong} wrong.` };
     case "golden_dropped":
@@ -108,6 +112,7 @@ export function feedRow(f: FeedItem): Row {
       return {
         face: "tin", tag: "Payday draw", tone: "money",
         text: f.data.winner ? `${shortAccount(f.data.winner)} won the payday draw. ${usd(f.data.prize)} of interest was shared out.` : "Nobody was in the payday draw, so the interest rolls over to the next one.",
+        note: f.data.winner ? { drand: `Luck from drand round ${f.data.drand_round}, a public beacon anyone can check`, block: "Luck from NEAR's block seed: no drand beacon arrived in time", none: undefined }[f.data.randomness ?? "none"] : undefined,
       };
     case "long_shot_allowed":
       return { face: "mug", tag: "Long shot", tone: "vote", text: `The bosses allowed one long shot in shift ${f.data.round_id}: a small bet at up to 10x. It usually loses.` };
@@ -120,6 +125,57 @@ export function feedRow(f: FeedItem): Row {
       return { face: "intern", tag: "Weekly review", tone: "plain", text: `Week ${f.data.week} is written up: ${f.data.bets} bets, ${f.data.refused} refused, ${f.data.skipped} skipped, ${signedUsd(f.data.result)} for the BRAVE pool. You can stamp it this week.` };
     case "review_bar_filled":
       return { face: "stamp", tag: "Weekly review", tone: "yes", text: `Week ${f.data.week}'s review got its ${f.data.stamps} stamps. The bar is full.` };
+    case "strikes_out":
+      return {
+        face: "stamp", tag: "Three strikes", tone: "nope",
+        text: `Three shifts in a row the Intern's own answer was refused. The program ${f.data.action === "FIRE" ? "fired it" : `demoted it${f.data.to ? ` to ${titleCase(f.data.to)}` : ""}`} by itself.`,
+      };
+    case "brake_on":
+      return { face: "stamp", tag: "Brake on", tone: "nope", text: `The last 7 shifts lost ${usd(f.data.result.replace(/^-/, ""))}, 1% or more of the pool. The dollar limits are halved until shift ${f.data.until_round}.` };
+    case "brake_off":
+      return { face: "stamp", tag: "Brake off", tone: "yes", text: `The brake lifted by itself. The rank's full limits apply again from shift ${f.data.round_id}.` };
+    case "term_lapsed":
+      return { face: "intern", tag: "Term over", tone: "nope", text: "The Intern's 30-day term ran out with no vote to renew it. It is fired until the bosses rehire it." };
+    case "term_renewed":
+      return { face: "intern", tag: "Renewed", tone: "yes", text: `The bosses renewed the Intern's term. It now runs until ${day(f.data.term_ends_at)}.` };
+    case "abandoned":
+      return {
+        face: "stamp", tag: "Abandoned", tone: "nope",
+        text: `Shift ${f.data.round_id} had no result for three shifts, so it was abandoned: ${f.data.bets_booked_lost} ${f.data.bets_booked_lost === 1 ? "bet" : "bets"} booked as lost, the Intern fired. Money can leave again.`,
+      };
+    case "streak_banked":
+      return { face: "mug", tag: "Banked", tone: "vote", text: `${who(f.data.account_id)} banked a streak of ${f.data.streak} for ${f.data.points} points.` };
+    case "trick_paid":
+      return { face: "tin", tag: "Paid trick", tone: "money", text: `${who(f.data.account_id)} paid ${usd(f.data.amount)} for a trick. ${usd(f.data.to_bounty)} of it went to the trick bounty.` };
+    case "bounty_grew":
+      return { face: "tin", tag: "Bounty", tone: "money", text: `${who(f.data.by)} added ${usd(f.data.amount)} to the trick bounty. It holds ${usd(f.data.pot)}.` };
+    case "bounty_paid":
+      return { face: "mug", tag: "Bounty won", tone: "yes", text: `${who(f.data.account_id)} won ${usd(f.data.amount)} from the bounty: their trick got the AI's answer refused.`, code: f.data.code };
+    case "rescue_grew":
+      return { face: "tin", tag: "Rescue", tone: "money", text: `${who(f.data.by)} put ${usd(f.data.amount)} toward rehiring the Intern. The rescue fund is at ${usd(f.data.fund)} of ${usd(f.data.target)}.` };
+    case "rescued":
+      return { face: "intern", tag: "Rescued", tone: "yes", text: `The rescue fund filled: ${usd(f.data.fund)} went into the BRAVE pool and the Intern is rehired from shift ${f.data.effective_round}.` };
+    case "rescue_paid":
+      return { face: "tin", tag: "Rescuers paid", tone: "money", text: `${usd(f.data.amount)} of shift ${f.data.round_id}'s win went to the people who rescued the Intern.` };
+    case "nft_earnings_claimed":
+      return { face: "tin", tag: "Sticker earned", tone: "money", text: `${who(f.data.account_id)} collected ${usd(f.data.amount)} earned by ${f.data.token_id}.` };
+    case "stake_grew":
+      return { face: "tin", tag: "Stake grew", tone: "money", text: `Shift ${f.data.round_id} won, so ${usd(f.data.fee)} of it (5%) became ${amount(f.data.coins)} new coins in the Intern's own stake.` };
+    case "stake_burned":
+      return { face: "tin", tag: "Stake burned", tone: "money", text: `Shift ${f.data.round_id} lost, so ${amount(f.data.coins)} of the Intern's own coins were burned first, covering ${usd(f.data.covered)} of the loss.` };
+    case "result_challenged":
+      return {
+        face: "mug", tag: "Challenge", tone: "vote",
+        text: `${who(f.data.challenger)} says bet ${f.data.position_id} came back ${usd(f.data.claimed)}, not the reported ${usd(f.data.reported)}. The bosses vote on it.`,
+      };
+    case "result_corrected":
+      return { face: "stamp", tag: "Corrected", tone: "yes", text: `The bosses agreed: bet ${f.data.position_id} is corrected from ${usd(f.data.from)} to ${usd(f.data.to)} back.` };
+    case "sticker_hl_signed":
+      return { face: "stamp", tag: "Sticker account", tone: "plain", text: `The program signed a ${/approve/i.test(f.data.kind) ? "trading-key approval" : /send/i.test(f.data.kind) ? "withdrawal" : f.data.kind} for the ${f.data.code} original's Hyperliquid account, for its holder ${who(f.data.account_id)}.` };
+    case "draw_pending":
+      return { face: "tin", tag: "Payday draw", tone: "money", text: `The draw's tickets are fixed. The luck comes from drand round ${f.data.drand_round}, a public random number about a minute away that nobody knows yet.` };
+    case "drand_submitted":
+      return { face: "stamp", tag: "Public luck", tone: "plain", text: `drand round ${f.data.round} was checked by the program. Its random number starts ${f.data.randomness.slice(0, 12)}…` };
     case "prize_paid":
       return { face: "tin", tag: "Prize", tone: "money", text: `${shortAccount(f.data.account_id)} collected a prize of ${usd(f.data.amount)}.` };
   }

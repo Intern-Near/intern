@@ -70,3 +70,8 @@ export function shortAccount(id: string, max = 22): string {
 export function titleCase(word: string): string {
   return word.charAt(0) + word.slice(1).toLowerCase();
 }
+
+/** (1.7) Rival guessers are bots run by our own runner: ordinary accounts whose name starts with "rival-". Always labelled. */
+export function isBot(account: string): boolean {
+  return account.startsWith("rival-");
+}

@@ -11,6 +11,7 @@ import { liveDriver, pretendDriver, type Account, type Chip, type Choice, type D
 import { HL_NAME, liquidationMovePct, openWindow, TAIL_OR_FADE, type FeedItem as LibFeedItem, type Window as BetWindow } from "../tailfade/tailfade.ts";
 import { clock, usd } from "../lib/format";
 import { href } from "../lib/nav";
+import { FollowCard } from "./FollowCard";
 import { useNow } from "../lib/useNow";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
@@ -331,6 +332,8 @@ export function TailFadePage() {
             )}
           </section>
         </div>
+
+        {me && <FollowCard accountId={me} agent={agent} driver={d} feed={desk.feed} now={now} ready={ready} />}
 
         {acct && acct.positions.filter((p) => p.szi !== 0).length > 0 && (
           <section aria-labelledby="tf-pos">

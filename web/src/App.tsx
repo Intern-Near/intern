@@ -22,6 +22,8 @@ const RewardsPage = lazy(() => import("./pages/RewardsPage").then((m) => ({ defa
 const WeekPage = lazy(() => import("./pages/WeekPage").then((m) => ({ default: m.WeekPage })));
 const ProofPage = lazy(() => import("./pages/ProofPage").then((m) => ({ default: m.ProofPage })));
 const TrickPage = lazy(() => import("./pages/TrickPage").then((m) => ({ default: m.TrickPage })));
+const MarketPage = lazy(() => import("./pages/MarketPage").then((m) => ({ default: m.MarketPage })));
+const StickersPage = lazy(() => import("./pages/StickersPage").then((m) => ({ default: m.StickersPage })));
 const later = (page: ReactNode) => <Suspense fallback={null}>{page}</Suspense>;
 
 /** Page switch while the site is being built up: no page = the landing page; ?page=desk | intern | nope | judge | cast | foundations | debug */
@@ -43,6 +45,8 @@ export function App() {
   if (page === "rewards") return later(<RewardsPage />);
   if (page === "week") return later(<WeekPage />);
   if (page === "proof") return later(<ProofPage />);
+  if (page === "market") return later(<MarketPage />);
+  if (page === "stickers") return later(<StickersPage />);
   if (page === "trick") return later(<TrickPage />);
   if (page === "tailfade") return later(<TailFadePage />);
   if (page === "stream") return later(<StreamPage />);

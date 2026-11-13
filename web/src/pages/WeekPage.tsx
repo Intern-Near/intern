@@ -2,14 +2,16 @@ import { useState } from "react";
 import "./pages.css";
 import "./people.css";
 import "./live.css";
+import "./v17-rewards.css";
 import { BossMug } from "../cast/BossMug";
 import { Stamp } from "../cast/Stamp";
 import { signIn, useDoing, useSession } from "../chain/session";
 import { getChain, useDesk } from "../chain/store";
 import type { ReviewView } from "../chain/types";
-import { shortAccount, signedUsd, titleCase, usd } from "../lib/format";
+import { isBot, signedUsd, titleCase, usd } from "../lib/format";
 import { day, href } from "../lib/nav";
 import { useAsync } from "../lib/useAsync";
+import { BOT_LINE, Who } from "../ui/BotTag";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
@@ -215,7 +217,9 @@ export function WeekPage() {
                           <td>
                             <span className="league-who">
                               <BossMug accountId={s.account_id} size={28} />
-                              <span title={s.account_id}>{shortAccount(s.account_id, 26)}</span>
+                              <span title={s.account_id}>
+                                <Who account={s.account_id} max={26} />
+                              </span>
                               {s.account_id === me && <span className="now-tag">you</span>}
                             </span>
                           </td>
@@ -232,6 +236,7 @@ export function WeekPage() {
               <p className="fine">
                 "Waiting" is a guess whose shift has no ruling yet. A shift that ends with no ruling counts for nothing. A league holds {d.league.max_groups} groups of{" "}
                 {d.league.group_size}; guessers after that still earn points but have no group.
+                {d.league.standings.some((s) => isBot(s.account_id)) && ` ${BOT_LINE}`}
               </p>
               {me ? (
                 <a className="btn" href={href("rewards")}>
@@ -253,11 +258,18 @@ export function WeekPage() {
                   {d.last.map((g) => (
                     <li key={g.group}>
                       <span className="mono pencil">group {g.group + 1}</span>
-                      <span>{g.top.map((s) => `${s.place}. ${shortAccount(s.account_id, 20)} (${s.points})`).join("   ")}</span>
+                      <span>
+                        {g.top.map((s) => (
+                          <span key={s.account_id} className="lw-who">
+                            {s.place}. <Who account={s.account_id} max={20} /> ({s.points})
+                          </span>
+                        ))}
+                      </span>
                       <span className="pencil">points only</span>
                     </li>
                   ))}
                 </ul>
+                {d.last.some((g) => g.top.some((s) => isBot(s.account_id))) && <p className="fine">{BOT_LINE}</p>}
               </section>
             )}
 

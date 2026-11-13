@@ -9,7 +9,7 @@ import { readFill } from "./tailfadeDriver";
 
 describe("Tail or Fade library", () => {
   it("is a byte-for-byte copy of Engine 1's files", () => {
-    for (const f of ["hash.ts", "hl.ts", "mpc.ts", "tailfade.ts"]) {
+    for (const f of ["hash.ts", "hl.ts", "mpc.ts", "tailfade.ts", "follow.ts"]) {
       expect(readFileSync(`src/tailfade/${f}`, "utf8"), f).toBe(readFileSync(`../tailfade/src/${f}`, "utf8"));
     }
   });

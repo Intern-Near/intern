@@ -17,6 +17,7 @@ import { Usd } from "../ui/Usd";
 import { Waiting } from "../ui/Waiting";
 import { href } from "../lib/nav";
 import { useRewards } from "../lib/useRewards";
+import { AutoLine, RescuePanel } from "../ui/Auto17";
 
 const RANK_ORDER: RankName[] = ["INTERN", "ANALYST", "TRADER"];
 const FRESH_MS = 9_000;
@@ -542,6 +543,8 @@ export function Home() {
         <main id="main">
           <DeskScene desk={desk} fresh={snap.fresh} now={now} moment={moment} />
           <ShiftStrip desk={desk} now={now} />
+          <AutoLine desk={desk} now={now} />
+          <RescuePanel desk={desk} />
           <JackpotStrip now={now} />
           <div className="panels">
             <FeedPanel desk={desk} fresh={snap.fresh} now={now} />

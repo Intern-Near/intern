@@ -8,6 +8,7 @@ import { day, href } from "../lib/nav";
 import { LIGHTS, lightFor, refusalParts, refusalSentence } from "../lib/refusals";
 import { useAsync } from "../lib/useAsync";
 import { TopBar } from "../ui/TopBar";
+import { BreakIt } from "../ui/BreakIt";
 import { WhyNope } from "../ui/WhyNope";
 import { saveCard } from "./shareCard";
 
@@ -172,6 +173,7 @@ export function NopePage() {
             </p>
           </>
         )}
+        {!found.loading && <BreakIt />}
       </main>
     </div>
   );

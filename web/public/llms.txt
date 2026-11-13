@@ -13,6 +13,8 @@ nothing here is real money, depositors can lose what they put in the BRAVE pool,
 - Stickers (NEP-171): stickers.desk-lab-2026.testnet
 - Launchpad: launch.desk-lab-2026.testnet
 - Lender (a stand-in paying a fixed test rate): lender.desk-lab-2026.testnet
+- Tradable golden stickers and their market (NEP-245): tickets.desk-lab-2026.testnet
+- A test copy of the coin with 5-minute shifts and a stand-in AI check: coin-fast.desk-lab-2026.testnet
 - The Intern's Hyperliquid testnet address: 0x46f8eb2a044a826c70e9682fe3bfd65970340132
 - Source code: https://github.com/Intern-Near/intern
 
@@ -33,9 +35,18 @@ Main views:
 - get_account({ account_id }): one holder's balances
 - get_refusals({ from?, limit? }): every refused proposal with its code and numbers, newest first
 - get_feed({ after_seq?, limit? }): every event, oldest first
-- get_votes({ from?, limit? }): votes to promote, demote, fire, rehire, set a playbook or allow a long shot
+- get_votes({ from?, limit? }): votes to promote, demote, fire, rehire, renew the term, set a playbook, allow a long shot or correct a challenged result
 - get_rewards, get_player({ account_id }): the free guess, the streak jackpot, the payday draw, the long shot
 - get_week, get_league({ week?, group?, account_id? }), get_reviews({ from?, limit? }): the week, its league, its review
+- Interface 1.7 (live since 2026-11-13):
+  - get_auto: strikes (3 refused shifts in a row demote or fire the Intern), the drawdown brake, the 30-day term, the dead-man switch
+  - get_bounty, get_trick_payment({ id }): the trick bounty and paid tricks ($1 in test dollars)
+  - get_rescue: the fund that rehires a fired Intern at $50
+  - get_challenges: challenges to a reported result ($5 bond, decided by a vote)
+  - get_drand({ period? }): the payday draw's public luck (drand quicknet), its random number and the frozen tickets
+  - get_stake: the Intern's own stake of coins
+  - get_nft_earnings, get_career, get_sticker_hl({ code }): what stickers earned, the career card, an original's Hyperliquid account
+  - on tickets.desk-lab-2026.testnet: get_listings, mt_balance_of({ account_id, token_id: "golden:<CODE>" })
 - ft_balance_of, ft_total_supply, ft_metadata: standard NEP-141
 
 The sixteen refusal codes, in the order the checks run:
@@ -57,6 +68,11 @@ The full interface, with every shape, is 01-SHARED-INTERFACE.md in the repositor
 
 ## What not to assume
 
+- Accounts whose names start with "rival-" are bots run by the project's own runner. They guess each shift; their points have no value.
+- Several 1.7 features were run on the test copy only, and the Intern's stake, the drawdown brake and the dead-man switch in tests only.
+  The repository's docs/REAL-VS-STANDIN.md says which, with a transaction for each. The interface lists twenty known limits (section 14).
+- No original has been claimed on the live coin yet, so none of its Hyperliquid accounts is in use. On the test copy (coin-fast), original:NOT_ON_LIST has the account 0x8b63deeb42c2a81beb09386c64273aff3847b032, funded with $4 of test USDC, with an approved trading key.
+- Nothing has been listed on the sticker market yet.
 - The program cannot read Hyperliquid. A bet's result is reported by the runner and can be compared with
   Hyperliquid's public fills (/proof/fills.json).
 - Each contract still has one full-access key, so its holder can change it.

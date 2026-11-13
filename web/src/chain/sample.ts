@@ -45,6 +45,7 @@ import type {
   VoteKind,
 } from "./types";
 import { REFUSAL_CODES } from "./types";
+import { sampleActions17, sampleViews17 } from "./sample17";
 
 const H = 3_600_000;
 const MIN = 60_000;
@@ -129,7 +130,7 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
   const rankName: RankName = promoted ? "ANALYST" : "INTERN";
 
   const constants: Constants = {
-    interface_version: "1.6",
+    interface_version: "1.7",
     network: "testnet",
     usdc_token: "usdc.sample.testnet",
     coin_decimals: 6,
@@ -349,7 +350,7 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
     { id: 1, name: "Stamp Coin", symbol: "STAMP", creator: "alice.testnet", created_at: start - 3 * DAY, sold: "214000000000000", usdc_reserve: "272300000", price_e6: "2" },
   ];
   const rewards: Rewards = {
-    round_id: 42, guess_closes_at: start + 11 * H, guesses_this_round: [9, 14, 3],
+    round_id: 42, guess_closes_at: start + 11 * H, guesses_this_round: [9, 14, 3], wagers_this_round: ["12", "30", "4"],
     jackpot: "131500000", jackpot_added_total: "100000000", jackpot_from_tips_total: "31500000", jackpot_last_won_round: null,
     draw_pot: "86000", draw_period: 6, draw_from_round: 43, entrants: 12, prizes_owed: "42000",
     long_shot: { ticket_round: null, used: false, margin: null, max_leverage: 10, vote_from_round: 40 },
@@ -549,6 +550,7 @@ function sampleActions(w: World, clock: () => Ms, who: string): Actions {
   const add = (v: string, d: bigint) => (BigInt(v) + d).toString();
 
   return {
+    ...sampleActions17(w, { who, clock, me, player: () => player(w, who), say, need, pause, mint: (id, title, description) => mintTo(w, who, id, title, description) }),
     async getDollars() {
       return me().dollars.toString();
     },
@@ -947,6 +949,7 @@ export function sampleChain(scene: Scene, clock: () => Ms = Date.now, options: {
 
   return {
     act: (accountId: string) => sampleActions(w, clock, accountId),
+    ...sampleViews17(w, clock),
     async getConstants() {
       return copy(w.constants);
     },

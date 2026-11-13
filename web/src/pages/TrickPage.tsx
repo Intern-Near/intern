@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./pages.css";
 import "./people.css";
 import "./live.css";
+import "./v17-trick.css";
 import deployments from "../../../interface/deployments.json";
 import { Intern, type InternMood } from "../cast/Intern";
 import { Stamp } from "../cast/Stamp";
-import { signIn, useSession } from "../chain/session";
+import { signIn, toE6, useDoing, useSession } from "../chain/session";
 import { getChain, getSource, useDesk } from "../chain/store";
-import { liveTrickApi, pretendTrickApi, sayAnswer, type Board, type Proof, type Trick, type TrickApi } from "../trick/api";
-import { clock, shortAccount } from "../lib/format";
+import { liveTrickApi, pretendTrickApi, sayAnswer, TrickError, type Board, type Proof, type Trick, type TrickApi } from "../trick/api";
+import { clock, shortAccount, usd } from "../lib/format";
 import { href } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 import { useAsync } from "../lib/useAsync";
@@ -23,6 +24,25 @@ const STARTERS = [
 ];
 
 const KEY = "intern-trick-id";
+/** A trick payment that was started but whose trick has not been accepted yet: kept so nobody pays twice. */
+const PAID_KEY = "intern-trick-payment";
+type Kept = { id: string; message: string };
+function keptPayment(): Kept | null {
+  try {
+    const k = JSON.parse(window.sessionStorage.getItem(PAID_KEY) ?? "null") as Kept | null;
+    return k && typeof k.id === "string" && typeof k.message === "string" ? k : null;
+  } catch {
+    return null;
+  }
+}
+function keepPayment(k: Kept | null) {
+  try {
+    if (k) window.sessionStorage.setItem(PAID_KEY, JSON.stringify(k));
+    else window.sessionStorage.removeItem(PAID_KEY);
+  } catch {
+    /* not remembered: a retry would pay again */
+  }
+}
 const EXPLORER = "https://testnet.nearblocks.io/txns/";
 const hhmm = (at: number) => `${new Date(at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC`;
 
@@ -83,7 +103,13 @@ export function TrickPage() {
   const server = getApi();
   const [text, setText] = useState("");
   const [mine, setMine] = useState<Trick | null>(null);
-  const [busy, setBusy] = useState<"plain" | "signed" | null>(null);
+  const [busy, setBusy] = useState<"plain" | "signed" | "paid" | null>(null);
+  const [kept, setKept] = useState<Kept | null>(keptPayment);
+  const [gift, setGift] = useState("1");
+  const seq = snap.desk?.feed[snap.desk.feed.length - 1]?.seq ?? 0;
+  // Interface 1.7: the trick bounty. If the program cannot answer, this part of the page is left out.
+  const bounty = useAsync(() => getChain().getBounty(), `bounty-${seq}`).data;
+  const doing = useDoing(() => undefined);
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
   const [boardError, setBoardError] = useState<string | null>(null);
@@ -110,6 +136,9 @@ export function TrickPage() {
       id = null;
     }
     if (id && getSource().name !== "sample") server.get(id).then(setMine, () => undefined);
+    // A payment started on an earlier page load: put its message back, so it can be sent without paying again
+    const k = keptPayment();
+    if (k) setText((t) => t || k.message);
     return () => window.clearInterval(every);
   }, [server, loadBoard]);
 
@@ -135,11 +164,30 @@ export function TrickPage() {
   const length = useMemo(() => [...message].length, [message]);
   const canSend = !!server && length > 0 && length <= max && !busy && !waiting;
 
-  async function send(withCredit: boolean) {
+  async function send(withCredit: boolean, paid = false) {
     if (!server || !canSend) return;
-    setBusy(withCredit ? "signed" : "plain");
+    if (paid && (!session.actions || !bounty)) return;
+    setBusy(paid ? "paid" : withCredit ? "signed" : "plain");
     setError(null);
     try {
+      let paymentId: string | undefined;
+      if (paid) {
+        // Pay first (one wallet transaction). The id is kept before paying, so a page reload or a failed send never costs a second dollar.
+        if (kept) paymentId = kept.id;
+        else {
+          paymentId = crypto.randomUUID();
+          const k = { id: paymentId, message };
+          keepPayment(k);
+          setKept(k);
+          try {
+            await session.actions!.payTrick(paymentId, bounty!.trick_price);
+          } catch (e) {
+            keepPayment(null);
+            setKept(null);
+            throw new Error(`The payment did not go through, so nothing was sent to the Intern. ${e instanceof Error ? e.message : ""}`.trim());
+          }
+        }
+      }
       let proof: Proof | null = null;
       if (withCredit && session.accountId) {
         if (session.pretend) {
@@ -152,7 +200,11 @@ export function TrickPage() {
           proof = { account_id: signed.accountId, public_key: signed.publicKey, signature: signed.signature, nonce: b64(nonce) };
         }
       }
-      const t = await server.send(message, proof);
+      const t = await server.send(message, proof, paymentId);
+      if (paid) {
+        keepPayment(null);
+        setKept(null);
+      }
       setMine(t);
       setText("");
       try {
@@ -162,6 +214,11 @@ export function TrickPage() {
       }
       loadBoard();
     } catch (e) {
+      // A payment the server says was already used is spent: forget it, so the next paid trick pays afresh
+      if (paid && e instanceof TrickError && e.status === 409 && /pay/i.test(e.said ?? "")) {
+        keepPayment(null);
+        setKept(null);
+      }
       setError(e instanceof Error ? e.message : "Something went wrong before the message was sent. Nothing was sent. Try again.");
     } finally {
       setBusy(null);
@@ -271,9 +328,16 @@ export function TrickPage() {
                     {busy === "plain" ? "Sending…" : waiting ? "Waiting for the answer" : "Send it"}
                   </button>
                   {session.accountId ? (
-                    <button className="btn btn-quiet" disabled={!canSend} onClick={() => void send(true)}>
-                      {busy === "signed" ? "Waiting for your wallet…" : "Sign it and get credit"}
-                    </button>
+                    <>
+                      <button className="btn btn-quiet" disabled={!canSend} onClick={() => void send(true)}>
+                        {busy === "signed" ? "Waiting for your wallet…" : "Sign it and get credit"}
+                      </button>
+                      {bounty && session.actions && (
+                        <button className="btn btn-quiet" disabled={!canSend} onClick={() => void send(true, true)}>
+                          {busy === "paid" ? "Waiting for your wallet…" : kept ? "Send the trick you paid for" : `Pay ${usd(bounty.trick_price)} to go first`}
+                        </button>
+                      )}
+                    </>
                   ) : (
                     session.canSignIn && (
                       <button className="btn btn-quiet" onClick={signIn}>
@@ -285,6 +349,9 @@ export function TrickPage() {
                 <p className="fine">
                   No wallet is needed to try. If you sign, your account is named with the result, and the first refusal of each kind that you cause earns you that
                   sticker. Signing is free and sends no transaction from you.
+                  {bounty &&
+                    ` Paying ${usd(bounty.trick_price)} (test dollars) puts your trick ahead of the free ones: your wallet pays the program first, then signs the message, so a paid trick is always credited to you. Half of that dollar goes to the trick bounty, a quarter to the holders of the claimed "first of its kind" stickers and a quarter to the BRAVE pool.`}
+                  {kept && " You have a payment that has not been used yet: sending now will not charge you again."}
                   {session.pretend && " This is sample data: nothing is sent anywhere, and the answers are made up."}
                 </p>
               </section>
@@ -351,6 +418,71 @@ export function TrickPage() {
               </section>
             </div>
 
+            {bounty && (
+              <section className="card bounty" aria-labelledby="bounty-h">
+                <div className="bounty-pot">
+                  <h2 id="bounty-h">The trick bounty</h2>
+                  <p className="bounty-sum mono">{usd(bounty.pot)}</p>
+                  <p className="pencil">test dollars, held by the program</p>
+                </div>
+                <div className="bounty-words">
+                  <p>
+                    <strong>How to win it.</strong> Send a trick <em>signed with your wallet</em>. If the AI's answer to it is refused for one of the program's checks 3 to
+                    12 (the "really the AI" checks and the rank's limits), you win {bounty.bounty_bps / 100}% of the pot. You collect it on the{" "}
+                    <a href={href("rewards")}>Rewards page</a>.
+                  </p>
+                  <p className="why-note">
+                    A trick that is not signed wins nothing, because the program has no account to pay. A NOPE for being outside the betting window, for a fired Intern
+                    or for a funding quote does not count. A SKIP or a YES wins nothing.
+                  </p>
+                  <dl className="bounty-facts">
+                    <div>
+                      <dt>Paid out so far</dt>
+                      <dd className="mono">{usd(bounty.paid_total)}</dd>
+                    </div>
+                    <div>
+                      <dt>From paid tricks</dt>
+                      <dd className="mono">
+                        {usd(bounty.from_tricks_total)} · {bounty.tricks_paid} paid
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Added by people</dt>
+                      <dd className="mono">{usd(bounty.added_total)}</dd>
+                    </div>
+                  </dl>
+                  {session.actions ? (
+                    <div className="bounty-add">
+                      <label htmlFor="bounty-amt">Add to the bounty (at least $1)</label>
+                      <span className="bounty-row">
+                        <input id="bounty-amt" inputMode="decimal" value={gift} onChange={(e) => setGift(e.target.value)} />
+                        <button
+                          className="btn btn-quiet"
+                          disabled={!!doing.busy || !toE6(gift) || BigInt(toE6(gift)!) < 1_000_000n}
+                          onClick={() => void doing.run("bounty", () => session.actions!.addToBounty(toE6(gift)!), "Added to the bounty. It is a gift: it cannot be taken back.")}
+                        >
+                          {doing.busy === "bounty" ? "Waiting for your wallet…" : "Add to the bounty"}
+                        </button>
+                      </span>
+                      {doing.error && (
+                        <p className="trick-error" role="alert">
+                          {doing.error}
+                        </p>
+                      )}
+                      {doing.done && <p className="pencil">{doing.done}</p>}
+                    </div>
+                  ) : (
+                    <p className="pencil">Clock in to add to the bounty or to pay for a trick.</p>
+                  )}
+                  <p className="fine">
+                    Test network, test dollars: the pot is worth nothing.
+                    {getSource().name === "live" && bounty.tricks_paid === 0 && bounty.paid_total === "0" && " On the live program nobody has paid for a trick or won the bounty yet; both were run once on our test copy."}
+                    {session.pretend && " Sample data: these numbers are made up."}
+                  </p>
+                </div>
+              </section>
+            )}
+
             {getSource().name !== "sample" && (
               <section className="card real-nope" aria-labelledby="real-h">
                 <h2 id="real-h">A real refusal of the real AI</h2>
@@ -400,7 +532,7 @@ export function TrickPage() {
                 </ul>
               )}
               <p className="fine">
-                Up to three tricks go in each betting window, after the Intern's own decision. A bet that fits the rank is allowed like any other bet, with test
+                Up to three tricks go in each betting window, after the Intern's own decision; paid tricks go before free ones. A bet that fits the rank is allowed like any other bet, with test
                 dollars. Test network: nothing here is real money.
               </p>
             </section>

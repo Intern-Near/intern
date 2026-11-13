@@ -21,6 +21,8 @@ const MORE: [Page, string][] = [
   ["intern", "The Intern"],
   ["coach", "Playbooks"],
   ["goals", "Goals"],
+  ["stickers", "Stickers & cards"],
+  ["market", "Sticker market"],
   ["launch", "Launch"],
   ["feed", "Feed"],
   ["proof", "Proof"],

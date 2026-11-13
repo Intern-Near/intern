@@ -6,6 +6,7 @@ import type { MarketInfo, Position, Round, SignedAction } from "../chain/types";
 import { dollarLimit, limitsOf } from "../home/Home";
 import { clock, pct, signedUsd, titleCase, usd, when } from "../lib/format";
 import { day, href } from "../lib/nav";
+import { Challenges } from "./Challenges";
 import { useBetWindow } from "./TailFadePage";
 import { useRewards } from "../lib/useRewards";
 import { WouldPass } from "../ui/WhyNope";
@@ -150,8 +151,12 @@ function BetCard({ p, desk, marks, outbox, now }: { p: Position; desk: Desk; mar
       <p className="bet-caveat">
         {p.result !== null
           ? p.result_source === "REPORTED"
-            ? "Result reported by the runner, not measured by the program."
-            : "Result measured by the program from the dollars that came back."
+            ? "Result reported by the runner, not measured by the program. It can be challenged below for three shifts."
+            : p.result_source === "ABANDONED"
+              ? "No result arrived for three shifts, so the dead-man switch booked this bet as lost."
+              : p.result_source === "CORRECTED"
+                ? "Result corrected by a vote of the bosses after a challenge."
+                : "Result measured by the program from the dollars that came back."
           : "Entry price is what the signed order implies. Price now and the rough result come from Hyperliquid's public data, read by your browser. The program cannot read Hyperliquid, so these are not its numbers."}
       </p>
 
@@ -350,6 +355,8 @@ export function BetsPage() {
         </p>
 
         <History desk={desk} />
+
+        <Challenges desk={desk} />
 
         <WouldPass desk={desk} now={now} rewards={rewards} />
       </main>

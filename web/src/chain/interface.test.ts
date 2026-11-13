@@ -11,7 +11,7 @@ describe("the shared interface files", () => {
   it("agree with the site on the interface version", () => {
     // 1.5 and 1.6 added views and events but changed no refusal code or test case, so these two files
     // keep the version they last changed in. The site must be at least that new.
-    const known = ["1.4", "1.5", "1.6"];
+    const known = ["1.4", "1.5", "1.6", "1.7"];
     expect(known).toContain(INTERFACE_VERSION);
     for (const v of [codes.interface_version, vectors.interface_version]) {
       expect(known).toContain(v);

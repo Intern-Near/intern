@@ -10,6 +10,7 @@ import { limitsOf } from "../home/Home";
 import { amount, clock, pct, titleCase, usd } from "../lib/format";
 import { nextMoment } from "../lib/round";
 import { useNow } from "../lib/useNow";
+import { RescuePanel, StakeCard } from "../ui/Auto17";
 import { TopBar } from "../ui/TopBar";
 import { Usd } from "../ui/Usd";
 import { Waiting } from "../ui/Waiting";
@@ -318,6 +319,11 @@ export function MoneyPage() {
             )}
           </>
         )}
+
+        <div className="auto-gap" style={{ marginTop: "var(--s-5)" }}>
+          <RescuePanel desk={desk} />
+          <StakeCard desk={desk} />
+        </div>
       </main>
     </div>
   );

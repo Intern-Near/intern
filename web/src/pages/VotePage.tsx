@@ -7,12 +7,16 @@ import type { Actions, Limits, RankName, Vote, VoteKind } from "../chain/types";
 import { BossMug } from "../cast/BossMug";
 import { Intern } from "../cast/Intern";
 import { amount, clock, pct, shortAccount, titleCase } from "../lib/format";
+import { day, href } from "../lib/nav";
+import { useAsync } from "../lib/useAsync";
+import { getChain } from "../chain/store";
 import { useNow } from "../lib/useNow";
+import { RescuePanel } from "../ui/Auto17";
 import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
 const ORDER: RankName[] = ["INTERN", "ANALYST", "TRADER"];
-const KIND_WORD: Record<VoteKind, string> = { PROMOTE: "Promote", DEMOTE: "Demote", FIRE: "Fire", REHIRE: "Rehire", LONG_SHOT: "Allow a long shot", SET_PLAYBOOK: "Change playbook" };
+const KIND_WORD: Record<VoteKind, string> = { PROMOTE: "Promote", DEMOTE: "Demote", FIRE: "Fire", REHIRE: "Rehire", LONG_SHOT: "Allow a long shot", SET_PLAYBOOK: "Change playbook", RENEW: "Renew the term", CORRECT: "Correct a result" };
 const TIGHTEN = (k: VoteKind) => k === "DEMOTE" || k === "FIRE";
 
 const share = (part: bigint, whole: bigint) => (whole === 0n ? 0 : Number((part * 1000n) / whole) / 10);
@@ -45,6 +49,13 @@ function verdict(v: Vote, desk: Desk, now: number): string {
     const what = v.playbook_id ? `playbook ${v.playbook_id} goes on the desk` : "the playbook comes off the desk";
     return `This has ${yesPct}% of votes cast, with ${turnout}% turnout (it needs more than half, and ${quorum}% turnout). ${left > 0 ? `${clock(left)} left. ` : "Time is up. "}${passing ? `If this holds, ${what} two shifts after it passes.` : "As it stands, it fails."}`;
   }
+  const tail = `${left > 0 ? `${clock(left)} left. ` : "Time is up. "}`;
+  const count = `${yesPct}% of votes cast, with ${turnout}% turnout (it needs more than half, and ${quorum}% turnout)`;
+  if (v.kind === "RENEW") return `Renewing has ${count}. ${tail}${passing ? "If this holds, 30 days are added to the Intern's term the moment the vote is finished." : "As it stands, it fails, and the term ends when it ends."}`;
+  if (v.kind === "CORRECT")
+    return `This has ${count}. ${tail}${passing ? "If this holds, anyone can apply the correction: the bet's result becomes the challenger's figure and their bond comes back." : "As it stands, it fails: the reported result stays and the challenger's bond goes to the BRAVE pool."}`;
+  if (v.kind === "LONG_SHOT") return `This has ${count}. ${tail}${passing ? "If this holds, the Intern gets one long-shot ticket two shifts after it passes." : "As it stands, it fails."}`;
+  if (v.kind === "REHIRE") return `Rehire has ${count}. ${tail}${passing ? "If this holds, the Intern comes back as an Intern after one full shift, with a new 30-day term." : "As it stands, it fails."}`;
   const after = v.kind === "PROMOTE" ? titleCase(ORDER[Math.min(2, ORDER.indexOf(desk.rank.rank) + 1)]!) : "Intern";
   return `${word} has ${yesPct}% of votes cast, with ${turnout}% turnout (it needs more than half, and ${quorum}% turnout). ${
     left > 0 ? `${clock(left)} left. ` : "Time is up. "
@@ -61,7 +72,19 @@ function VoteCard({ v, desk, now, actions, doing, weight }: { v: Vote; desk: Des
   return (
     <article className={`card vote-card vote-${v.kind.toLowerCase()}`} aria-label={`Vote ${v.id}: ${KIND_WORD[v.kind]}`}>
       <header>
-        <h3>{v.kind === "SET_PLAYBOOK" ? (v.playbook_id ? `Put playbook ${v.playbook_id} on the desk` : "Take the playbook off the desk") : `${KIND_WORD[v.kind]} the Intern`}</h3>
+        <h3>
+          {v.kind === "SET_PLAYBOOK"
+            ? v.playbook_id
+              ? `Put playbook ${v.playbook_id} on the desk`
+              : "Take the playbook off the desk"
+            : v.kind === "RENEW"
+              ? "Renew the Intern's term by 30 days"
+              : v.kind === "CORRECT"
+                ? "Correct a bet's reported result"
+                : v.kind === "LONG_SHOT"
+                  ? "Allow one long shot"
+                  : `${KIND_WORD[v.kind]} the Intern`}
+        </h3>
         <p className="mono pencil">
           VOTE No. {v.id} · OPENED BY {shortAccount(v.opened_by, 20).toUpperCase()}
         </p>
@@ -82,6 +105,12 @@ function VoteCard({ v, desk, now, actions, doing, weight }: { v: Vote; desk: Des
           </div>
           <p className="fine">Turnout {share(cast, open)}% of locked coins. The mark is the {desk.constants.vote.promote_quorum_bps / 100}% it needs.</p>
         </div>
+      )}
+      {v.kind === "CORRECT" && (
+        <p className="fine">
+          Someone put up a bond to say a bet's reported result is wrong. <a href={href("bets")}>See the challenge and its numbers on the bets page</a>, and compare with
+          the fills on Hyperliquid before you vote.
+        </p>
       )}
       <p className="vote-verdict">{v.state === "OPEN" ? verdict(v, desk, now) : v.state === "PASSED" ? `Passed.${v.effective_round ? ` In force from shift ${v.effective_round}.` : ""}` : "Did not pass."}</p>
       {v.state === "OPEN" && (
@@ -116,6 +145,8 @@ function StartVote({ desk, actions, doing }: { desk: Desk; actions: Actions | nu
   const at = ORDER.indexOf(desk.rank.rank);
   const fired = desk.rank.status === "FIRED";
   const now = desk.constants.ranks[at]!;
+  // (1.7) The term: 30 days, renewed by a vote. Hidden if this copy of the program has no term.
+  const auto = useAsync(() => getChain().getAuto(), `auto-vote-${desk.round.id}-${desk.feed[desk.feed.length - 1]?.seq ?? 0}`).data;
   const openKinds = new Set(desk.votes.filter((v) => v.state === "OPEN").map((v) => v.kind));
   const start = (kind: VoteKind) => actions && doing.run(`open-${kind}`, () => actions.openVote(kind), `A vote to ${KIND_WORD[kind].toLowerCase()} is open.`);
   const btn = (kind: VoteKind, cls: string, off: boolean) => (
@@ -185,6 +216,17 @@ function StartVote({ desk, actions, doing }: { desk: Desk; actions: Actions | nu
         <p className="mono">Passes like a promotion: more than half of the votes, 20% turnout.</p>
         {btn("LONG_SHOT", "btn-quiet", false)}
       </div>
+      {auto && (
+        <div className="start-col start-longshot start-renew">
+          <h3>Renew the term</h3>
+          <p>
+            The Intern is hired for 30 days at a time. Its term ends on <strong>{day(auto.term_ends_at)}</strong>. If nobody renews it, the first shift after that fires
+            it by itself. A vote to renew adds 30 days, at once when it passes.
+          </p>
+          <p className="mono">Passes like a promotion: more than half of the votes, 20% turnout.</p>
+          {btn("RENEW", "btn-quiet", false)}
+        </div>
+      )}
     </div>
   );
 }
@@ -241,7 +283,7 @@ export function VotePage() {
           <div>
             <h1>{fired ? "The Intern is fired." : `The Intern is ${/^[AEIOU]/.test(desk.rank.rank) ? "an" : "a"} ${titleCase(desk.rank.rank)}.`}</h1>
             <p>
-              {fired ? "No new bets until the bosses vote to rehire." : `That means ${limitsLine(desk.constants.ranks[ORDER.indexOf(desk.rank.rank)]!)}.`} Bosses can move it
+              {fired ? "No new bets until the bosses vote to rehire, or a rescue fund fills." : `That means ${limitsLine(desk.constants.ranks[ORDER.indexOf(desk.rank.rank)]!)}.`} Bosses can move it
               up or down one rank, or fire it. They can't change the numbers.
             </p>
             {desk.rank.pending && (
@@ -267,6 +309,8 @@ export function VotePage() {
             {doing.error ?? doing.done}
           </p>
         )}
+
+        {fired && <RescuePanel desk={desk} />}
 
         <section aria-labelledby="open-h">
           <h2 id="open-h">Open votes</h2>

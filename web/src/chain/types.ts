@@ -4,7 +4,7 @@
  * If this file and that one disagree, that one is right.
  */
 
-export const INTERFACE_VERSION = "1.6" as const;
+export const INTERFACE_VERSION = "1.7" as const;
 
 /** Whole number as a decimal string, e.g. "20000000". Never a JSON number. */
 export type U128 = string;
@@ -71,7 +71,7 @@ export type MarketInfo = {
 };
 
 export type Constants = {
-  interface_version: "1.6";
+  interface_version: "1.7";
   network: "testnet" | "mainnet";
   usdc_token: AccountId;
   coin_decimals: 6;
@@ -102,7 +102,8 @@ export type Constants = {
     max_funding_cost_bps: Bps;
   };
   result_source: "REPORTED" | "MEASURED";
-  lending: { mode: "NONE" | "STANDIN" | "RHEA" };
+  /** (1.7) `lender`: the lending contract. */
+  lending: { mode: "NONE" | "STANDIN" | "RHEA"; lender?: AccountId | null };
   hl: {
     testnet: boolean;
     address: string;
@@ -170,7 +171,7 @@ export type Position = {
   sz_e8: U128 | null;
   returned: Usdc | null;
   result: Signed | null;
-  result_source: "REPORTED" | "MEASURED" | null;
+  result_source: "REPORTED" | "MEASURED" | "ABANDONED" | "CORRECTED" | null;
 };
 
 export type SignedAction = {
@@ -217,7 +218,7 @@ export type Account = {
 };
 
 /** (1.5) LONG_SHOT: allow one long-shot ticket in the second round after it passes. */
-export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT";
+export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT" | "RENEW" | "CORRECT";
 
 export type Vote = {
   id: number;
@@ -331,7 +332,7 @@ export type EventData = {
     position_id: number;
     returned: Usdc;
     result: Signed;
-    result_source: "REPORTED" | "MEASURED";
+    result_source: "REPORTED" | "MEASURED" | "ABANDONED" | "CORRECTED";
   };
   settled: { round_id: number; result: Signed; brave_after: Usdc };
   vote_opened: {
@@ -361,7 +362,7 @@ export type EventData = {
   golden_dropped: { account_id: AccountId; code: RefusalCode; serial: number };
   jackpot_grew: { amount: Usdc; source: "tips" | "added"; by?: AccountId; jackpot: Usdc };
   jackpot_won: { round_id: number; winners: AccountId[]; each: Usdc };
-  draw_held: { period: number; winner: AccountId | null; prize: Usdc; runners_up: number | [AccountId, Usdc][]; each: Usdc; tickets_total: U128; rolled_over?: boolean };
+  draw_held: { period: number; winner: AccountId | null; prize: Usdc; runners_up: number | [AccountId, Usdc][]; each: Usdc; tickets_total: U128; rolled_over?: boolean; randomness?: DrawLuck; drand_round?: number };
   prize_paid: { account_id: AccountId; amount: Usdc };
   // (1.5)
   long_shot_allowed: { round_id: number };
@@ -369,7 +370,81 @@ export type EventData = {
   league_closed: { week: number; players: number; groups: number; winners: { group: number; account_id: AccountId; points: number }[] };
   review_written: { week: number; bets: number; refused: number; skipped: number; result: Signed; rank_end: RankName };
   review_bar_filled: { week: number; stamps: number };
+  // (1.7)
+  strikes_out: { round_id: number; strikes: number; action: "DEMOTE" | "FIRE"; to?: RankName };
+  brake_on: { round_id: number; result: Signed; base: Usdc; until_round: number };
+  brake_off: { round_id: number };
+  term_lapsed: { round_id: number; term_ended_at: Ms };
+  term_renewed: { term_ends_at: Ms };
+  abandoned: { round_id: number; bets_booked_lost: number };
+  streak_banked: { account_id: AccountId; streak: number; points: number };
+  trick_paid: { id: string; account_id: AccountId; amount: Usdc; to_bounty: Usdc };
+  bounty_grew: { amount: Usdc; by: AccountId; pot: Usdc };
+  bounty_paid: { account_id: AccountId; amount: Usdc; refusal_id: number; code: RefusalCode };
+  rescue_grew: { amount: Usdc; by: AccountId; fund: Usdc; target: Usdc };
+  rescued: { round_id: number; effective_round: number; fund: Usdc; rescuers: number };
+  rescue_paid: { round_id: number; amount: Usdc };
+  nft_earnings_claimed: { token_id: string; account_id: AccountId; amount: Usdc };
+  stake_grew: { round_id: number; coins: Coin; fee: Usdc };
+  stake_burned: { round_id: number; coins: Coin; covered: Usdc };
+  result_challenged: { vote_id: number; position_id: number; challenger: AccountId; reported: Usdc; claimed: Usdc; bond: Usdc };
+  result_corrected: { vote_id: number; position_id: number; from: Usdc; to: Usdc; delta: Signed; brave_after: Usdc };
+  sticker_hl_signed: { code: RefusalCode; kind: string; account_id: AccountId; signer: string };
+  draw_pending: { period: number; drand_round: number };
+  drand_submitted: { round: number; randomness: string };
 };
+
+/** (1.7) Where a payday draw's luck came from: the public drand beacon, NEAR's block seed (fallback), or none needed. */
+export type DrawLuck = "drand" | "block" | "none";
+
+/** (1.7) Section 9.9: what the program does to the Intern by itself, with no vote and no runner. */
+export type AutoView = {
+  strikes: number;
+  strikes_out: number;
+  brake_on: boolean;
+  brake_until: number | null;
+  brake_rounds: number;
+  brake_loss_bps: number;
+  loss_window_result: Signed;
+  loss_window_base: Usdc;
+  term_ends_at: Ms;
+  term_ms: number;
+  dead_man_rounds: number;
+  /** When the current round could be abandoned, if it has an open bet. */
+  abandon_from: Ms | null;
+};
+/** (1.7) Section 9.10 */
+export type Bounty = { pot: Usdc; paid_total: Usdc; added_total: Usdc; from_tricks_total: Usdc; tricks_paid: number; trick_price: Usdc; bounty_bps: Bps };
+/** (1.7) Section 9.12 */
+export type NftEarnings = { owed_total: Usdc; paid_total: Usdc; tokens: { token_id: string; owed: Usdc }[]; careers_minted: number };
+export type Career = { rank: RankName; status: Status; level: number; rounds: number; bets: number; refusals: number; result: Signed; svg: string };
+/** (1.7) Section 9.14 */
+export type ChallengeState = "OPEN" | "PASSED" | "APPLYING" | "APPLIED" | "FAILED";
+export type Challenge = { vote_id: number; position_id: number; challenger: AccountId; bond: Usdc; reported: Usdc; claimed: Usdc; reason: string; state: ChallengeState };
+export type Challenges = { bonds_held: Usdc; bond: Usdc; window_rounds: number; challenges: Challenge[] };
+/** (1.7) Section 9.17: an original's Hyperliquid account and what the coin has signed for it. */
+export type StickerHlSigned = { code: RefusalCode; kind: string; action: object; nonce: Ms; r: string; s: string; v: number; signer: string; for_account: AccountId; at: Ms };
+export type StickerHl = { code: RefusalCode; token_id: string; path: string; signed: StickerHlSigned[] };
+/** (1.7) Section 9.18 */
+export type Drand = {
+  period: number;
+  state: "OPEN" | "WAITING" | "HELD";
+  drand_round: number | null;
+  source: DrawLuck | null;
+  /** Hex. */
+  randomness: string | null;
+  /** The frozen tickets, in order: kept while waiting and for the last 4 periods. */
+  tickets: [AccountId, U128][] | null;
+  chain: string;
+  chain_hash: string;
+  wait_rounds: number;
+};
+/** (1.7) Section 9.13 */
+export type Stake = { coins: Coin; value: Usdc; fee_bps: Bps; grew_total: Coin; burned_total: Coin };
+/** (1.7) Section 9.11 */
+export type Rescue = { fund: Usdc; target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round: number; until_round: number; cut_bps: Bps; paid_total: Usdc; rescues: number };
+/** (1.7) Section 9.16: a listing on the tickets contract's market. */
+export type Listing = { id: number; seller: AccountId; token_id: string; amount: U128; price_each: Usdc };
 
 /** (1.6) Section 9.8: the week (7 rounds), its league and its review. Leagues are points only: there is no prize. */
 export type WeekView = {
@@ -444,7 +519,7 @@ export type PlayerView = {
   streak: number;
   best: number;
   /** This round's guess, or one still waiting for its ruling. */
-  guess: { round_id: number; verdict: Verdict3 } | null;
+  guess: { round_id: number; verdict: Verdict3; wager?: number } | null;
   jackpot_eligible: boolean;
   prize_owed: Usdc;
   /** Won, not yet claimed. */
@@ -456,6 +531,8 @@ export type Rewards = {
   guess_closes_at: Ms;
   /** YES, NOPE, SKIP */
   guesses_this_round: [number, number, number];
+  /** (1.7) Points wagered this round on YES, NOPE, SKIP. */
+  wagers_this_round?: [string, string, string];
   jackpot: Usdc;
   jackpot_added_total: Usdc;
   jackpot_from_tips_total: Usdc;
@@ -545,6 +622,22 @@ export interface Chain {
   getLeague(args?: { week?: number; group?: number; accountId?: AccountId }): Promise<LeagueView>;
   getLeagueResults(week: number): Promise<GroupResult[]>;
   getReviews(from?: number, limit?: number): Promise<ReviewView[]>;
+  // (1.7)
+  getAuto(): Promise<AutoView>;
+  getBounty(): Promise<Bounty>;
+  getNftEarnings(): Promise<NftEarnings>;
+  getCareer(): Promise<Career>;
+  getChallenges(): Promise<Challenges>;
+  getStickerHl(code: RefusalCode): Promise<StickerHl>;
+  getDrand(period?: number): Promise<Drand>;
+  getStake(): Promise<Stake>;
+  getRescue(): Promise<Rescue>;
+  /** The market on the tickets contract. */
+  getListings(): Promise<Listing[]>;
+  /** How many tradable golden units of each code an account holds on the tickets contract: sixteen, in the order of the codes. */
+  getGoldenUnits(accountId: AccountId): Promise<U128[]>;
+  /** Who holds a token on the sticker contract, or null if it was never minted. */
+  getTokenOwner(tokenId: string): Promise<AccountId | null>;
 }
 
 /**
@@ -590,4 +683,30 @@ export interface Actions {
   // (1.6)
   /** One free stamp on last week's review. */
   stampReview(week: number): Promise<void>;
+  // (1.7)
+  /** A guess with points wagered on it (at most the points held). */
+  guessWager(verdict: Verdict3, wager: number): Promise<void>;
+  /** Turns the current streak into streak x streak points. */
+  bankStreak(): Promise<void>;
+  /** Books a round's bets as lost once they have had no result for three round lengths. Anyone may call it. */
+  abandon(roundId: number): Promise<void>;
+  /** Pays the trick price for the payment id the trick page made up. */
+  payTrick(id: string, amount: Usdc): Promise<void>;
+  addToBounty(amount: Usdc): Promise<void>;
+  chipInRescue(amount: Usdc): Promise<void>;
+  /** Opens a CORRECT vote on a reported result, with the bond. `returned` is dollars back, 6 decimals. */
+  challenge(positionId: number, returned: Usdc, reason: string, bond: Usdc): Promise<void>;
+  applyCorrection(voteId: number): Promise<void>;
+  claimNftEarnings(tokenId: string): Promise<void>;
+  claimPlaybookNft(playbookId: number): Promise<void>;
+  mintCareerCard(): Promise<void>;
+  refreshCareerCard(n: number): Promise<void>;
+  /** The coin signs an approveAgent for an original's Hyperliquid account. Holder only. */
+  stickerHlApprove(code: RefusalCode, agent: string): Promise<void>;
+  stickerHlWithdraw(code: RefusalCode, destination: string, amount: string): Promise<void>;
+  /** A won golden sticker as one tradable unit on the tickets contract. */
+  claimGoldenMt(code: RefusalCode, serial: number): Promise<void>;
+  listGolden(tokenId: string, amount: U128, priceEach: Usdc): Promise<void>;
+  unlistGolden(listingId: number): Promise<void>;
+  buyGolden(listingId: number, amount: U128, total: Usdc): Promise<void>;
 }

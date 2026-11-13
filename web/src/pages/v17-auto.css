@@ -1,0 +1,220 @@
+/* Interface 1.7: automatic consequences, the rescue fund, the Intern's stake */
+.auto {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+  min-width: 0;
+}
+.auto h2 {
+  margin-bottom: 0;
+}
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.auto-item {
+  display: grid;
+  gap: var(--s-2);
+  align-content: start;
+  padding: var(--s-4);
+  background: var(--cream);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-m);
+  min-width: 0;
+}
+.auto-item h3 {
+  font-size: var(--text-m);
+}
+.auto-big {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  font-weight: 700;
+  font-size: var(--text-m);
+}
+.auto-big .mono {
+  font-size: var(--mono-m);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.auto-note {
+  font-size: var(--text-s);
+  overflow-wrap: anywhere;
+}
+.auto-note .mono,
+.auto .warn .mono {
+  font-size: var(--mono-s);
+}
+.auto-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  font-weight: 400;
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+}
+.auto-tag.is-on {
+  background: var(--tomato);
+}
+.rescue-list .auto-tag {
+  margin-left: var(--s-2);
+}
+.strikes {
+  display: inline-flex;
+  gap: 6px;
+}
+.strikes i {
+  width: 22px;
+  height: 22px;
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: 50%;
+}
+.strikes i.is-on {
+  background: var(--tomato);
+}
+.auto-said {
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--text-s);
+  font-weight: 600;
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-s);
+}
+.auto-said.is-ok {
+  background: var(--mint);
+}
+.auto-said.is-bad {
+  background: var(--tomato);
+}
+.auto .btn {
+  justify-self: start;
+}
+.auto .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.auto-rows {
+  margin: 0;
+}
+.auto-rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  border-top: 1px solid #d9d2c3;
+  font-size: var(--text-s);
+}
+.auto-rows dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  text-align: right;
+}
+
+/* One line on the desk */
+.auto-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-2) var(--s-5);
+  font-size: var(--text-s);
+  font-weight: 600;
+  background: var(--card);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-l);
+}
+.auto-line .mono {
+  font-size: var(--mono-s);
+  font-weight: 400;
+}
+.auto-line .is-hot {
+  padding: 2px 10px;
+  background: var(--sticky);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+}
+.auto-line a {
+  margin-left: auto;
+}
+
+/* Rescue */
+.rescue-bar {
+  height: 22px;
+  background: var(--cream);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.rescue-bar span {
+  display: block;
+  height: 100%;
+  background: var(--mint);
+}
+.rescue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rescue-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  border-top: 1px solid #d9d2c3;
+  font-size: var(--text-s);
+  overflow-wrap: anywhere;
+}
+.rescue-list .mono {
+  font-size: var(--mono-s);
+}
+.rescue-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.rescue-form label {
+  font-weight: 600;
+  font-size: var(--text-s);
+}
+.rescue-form input {
+  width: 110px;
+  padding: var(--s-2) var(--s-3);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--mono-s);
+  border: var(--line-card) solid var(--ink);
+  border-radius: var(--radius-s);
+}
+/* Page-level spacing where a page has no gap of its own */
+.auto-gap {
+  display: grid;
+  gap: var(--s-5);
+}
+.start-col.start-renew {
+  background: var(--card);
+}
+
+@media (max-width: 1000px) {
+  .auto-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .auto-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .auto-line {
+    padding: var(--s-2) var(--s-3);
+  }
+  .auto-line a {
+    margin-left: 0;
+  }
+}
