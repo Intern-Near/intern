@@ -1118,3 +1118,135 @@ number-flow-react {
 .pill-me {
   background: var(--mint);
 }
+
+/* --- The "More" menu in the top bar --- */
+.nav-more {
+  position: relative;
+  flex: none;
+}
+.nav-more summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--s-4);
+  font-weight: 700;
+  font-size: var(--text-s);
+  list-style: none;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+}
+.nav-more summary::-webkit-details-marker {
+  display: none;
+}
+.nav-more summary::after {
+  content: "▾";
+  margin-left: var(--s-1);
+}
+.nav-more summary[aria-current="page"],
+.nav-more[open] summary {
+  color: var(--cream);
+  background: var(--ink);
+}
+.nav-more nav {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  left: 0;
+  z-index: 40;
+  display: grid;
+  min-width: 190px;
+  padding: var(--s-2);
+  background: var(--card);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--lift);
+}
+.nav-more nav a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  font-weight: 700;
+  font-size: var(--text-s);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: var(--radius-s);
+}
+.nav-more nav a:hover {
+  background: var(--cream);
+}
+.nav-more nav a[aria-current="page"] {
+  color: var(--cream);
+  background: var(--ink);
+}
+@media (max-width: 720px) {
+  .nav-more {
+    order: 2;
+    margin-left: auto;
+  }
+  .nav-more nav {
+    left: auto;
+    right: 0;
+  }
+}
+
+/* The top bar stays on one row: the name never shrinks, the tags never wrap */
+.topbar .brand {
+  flex: none;
+}
+.topbar-tags {
+  flex-wrap: nowrap;
+  flex: none;
+}
+.topbar-tags .pill {
+  white-space: nowrap;
+}
+@media (max-width: 1180px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+  .nav-more nav {
+    left: auto;
+    right: 0;
+  }
+  .topbar-tags {
+    order: 4;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+/* The jackpot strip on the desk */
+.desk-jackpot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-5);
+  padding: var(--s-3) var(--s-5);
+  background: var(--sticky);
+  border: var(--line-bold) solid var(--ink);
+  border-radius: var(--radius-l);
+  box-shadow: var(--lift);
+}
+.desk-jackpot p:first-child {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-l);
+}
+.desk-jackpot .mono {
+  font-size: var(--mono-m);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.desk-jackpot small {
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.desk-jackpot-how {
+  flex: 1 1 280px;
+  font-size: var(--text-s);
+  font-weight: 600;
+}
+.desk-jackpot .btn {
+  margin-left: auto;
+}

@@ -16,6 +16,7 @@ import { TopBar } from "../ui/TopBar";
 import { Usd } from "../ui/Usd";
 import { Waiting } from "../ui/Waiting";
 import { href } from "../lib/nav";
+import { useRewards } from "../lib/useRewards";
 
 const RANK_ORDER: RankName[] = ["INTERN", "ANALYST", "TRADER"];
 const FRESH_MS = 9_000;
@@ -466,7 +467,7 @@ function PoolCard({ desk }: { desk: Desk }) {
         </div>
         {lending !== "NONE" && (
           <div>
-            <dt>Interest earned so far{lending === "STANDIN" ? " (stand-in: worth nothing)" : ""}</dt>
+            <dt>Interest so far, paid out through the payday draw{lending === "STANDIN" ? " (stand-in: worth nothing)" : ""}</dt>
             <dd>
               <Usd e6={brave.interest} />
             </dd>
@@ -474,7 +475,7 @@ function PoolCard({ desk }: { desk: Desk }) {
         )}
         {BigInt(brave.income_waiting) > 0n && (
           <div>
-            <dt>Tips and fees arriving next shift</dt>
+            <dt>Tips (the pool's half) and fees arriving next shift</dt>
             <dd>
               <Usd e6={brave.income_waiting} />
             </dd>
@@ -493,6 +494,30 @@ function PoolCard({ desk }: { desk: Desk }) {
         Test network. Test dollars. Nothing here is real money. You can lose what you put in BRAVE. No profit is promised.
       </p>
     </section>
+  );
+}
+
+/** The streak jackpot and the free guess, one tap from the desk. */
+function JackpotStrip({ now }: { now: number }) {
+  const r = useRewards();
+  if (!r) return null;
+  const open = r.guess_closes_at > now;
+  return (
+    <aside className="desk-jackpot" aria-label="The streak jackpot">
+      <p>
+        Jackpot{" "}
+        <span className="mono">
+          <Usd e6={r.jackpot} />
+        </span>{" "}
+        {BigInt(r.jackpot_added_total) > 0n && <small>seeded by the team</small>}
+      </p>
+      <p className="desk-jackpot-how">
+        Guess the stamp right {r.constants.jackpot_streak} shifts in a row. {open ? `Guessing closes in ${clock(r.guess_closes_at - now)}.` : "Guessing is closed for this shift."}
+      </p>
+      <a className="btn" href={href("rewards")}>
+        {open ? "Make your guess" : "See the rewards"}
+      </a>
+    </aside>
   );
 }
 
@@ -517,6 +542,7 @@ export function Home() {
         <main id="main">
           <DeskScene desk={desk} fresh={snap.fresh} now={now} moment={moment} />
           <ShiftStrip desk={desk} now={now} />
+          <JackpotStrip now={now} />
           <div className="panels">
             <FeedPanel desk={desk} fresh={snap.fresh} now={now} />
             <TodayPanel desk={desk} now={now} moment={moment} />

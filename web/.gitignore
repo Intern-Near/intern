@@ -3,3 +3,5 @@ dist
 .env
 .env.local
 *.log
+# sample Live2D models used only to test the loader on this machine
+live2d-test/

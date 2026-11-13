@@ -1,10 +1,12 @@
 import "./pages.css";
 import "./bets.css";
+import "./live.css";
 import { getChain, useDesk, type Desk } from "../chain/store";
 import type { MarketInfo, Position, Round, SignedAction } from "../chain/types";
 import { dollarLimit, limitsOf } from "../home/Home";
-import { pct, signedUsd, titleCase, usd, when } from "../lib/format";
-import { day } from "../lib/nav";
+import { clock, pct, signedUsd, titleCase, usd, when } from "../lib/format";
+import { day, href } from "../lib/nav";
+import { useBetWindow } from "./TailFadePage";
 import { phaseAt } from "../lib/round";
 import { useAsync } from "../lib/useAsync";
 import { price, useMarks, type Marks } from "../lib/useMarks";
@@ -116,7 +118,10 @@ function BetCard({ p, desk, marks, outbox, now }: { p: Position; desk: Desk; mar
         </div>
         <div>
           <dt>Leverage</dt>
-          <dd>{p.leverage}x</dd>
+          <dd>
+            {p.leverage}x
+            {desk.feed.some((f) => f.event === "approved" && f.data.position_id === p.id && f.data.long_shot) && <span className="now-tag"> the long shot</span>}
+          </dd>
         </div>
         <div>
           <dt>Position size</dt>
@@ -243,6 +248,7 @@ function History({ desk }: { desk: Desk }) {
 export function BetsPage() {
   const snap = useDesk();
   const now = useNow();
+  const tf = useBetWindow(snap.desk?.feed, now);
   const { desk } = snap;
   const { marks, error: marksDown } = useMarks(desk?.constants.hl.testnet ?? true);
   const outbox = useAsync(() => getChain().getOutbox(undefined, 50), `outbox-${desk?.feed[desk.feed.length - 1]?.seq ?? 0}`);
@@ -274,6 +280,16 @@ export function BetsPage() {
     <div className="home">
       <TopBar source={snap.source} scene={snap.scene} />
       <main id="main">
+        {tf && (
+          <aside className="bets-tf" aria-label="Tail or Fade">
+            <p>
+              Tail or Fade is open on {tf.market} for <span className="mono">{clock(tf.closes_at - now).slice(3)}</span>
+            </p>
+            <a className="btn" href={href("tailfade")}>
+              Bet with it, or against it
+            </a>
+          </aside>
+        )}
         <header className="bets-head">
           <h1>The Intern's bets</h1>
           <p>

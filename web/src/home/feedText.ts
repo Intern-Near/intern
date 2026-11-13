@@ -33,7 +33,9 @@ export function feedRow(f: FeedItem): Row {
     case "approved":
       return {
         face: "stamp", tag: "YES", tone: "yes",
-        text: `${titleCase(f.data.side)} ${f.data.market} with ${usd(f.data.margin)} at ${f.data.leverage}x. Inside every limit.`,
+        text: f.data.long_shot
+          ? `The long shot: ${titleCase(f.data.side)} ${f.data.market} with ${usd(f.data.margin)} at ${f.data.leverage}x. The bosses voted for this one ticket.`
+          : `${titleCase(f.data.side)} ${f.data.market} with ${usd(f.data.margin)} at ${f.data.leverage}x. Inside every limit.`,
       };
     case "order_signed":
       return {
@@ -89,5 +91,35 @@ export function feedRow(f: FeedItem): Row {
         face: "mug", tag: "Claimed", tone: "vote",
         text: `${shortAccount(f.data.account_id)} claimed ${f.data.token_id.startsWith("badge:") ? "a boss badge" : f.data.token_id.startsWith("original:") ? `the original ${f.data.token_id.slice(9)}` : "a goal sticker"}.`,
       };
+    case "guessed":
+      return { face: "mug", tag: "Guess", tone: "vote", text: `${shortAccount(f.data.account_id)} guessed what the stamp will say this shift.` };
+    case "guess_settled":
+      return { face: "stamp", tag: "Guesses", tone: "plain", text: `The answer for shift ${f.data.round_id} was ${f.data.verdict}. ${f.data.right} guessed right, ${f.data.wrong} wrong.` };
+    case "golden_dropped":
+      return { face: "mug", tag: "Golden", tone: "yes", text: `${shortAccount(f.data.account_id)} won golden ${f.data.code} number ${f.data.serial}.` };
+    case "jackpot_grew":
+      return {
+        face: "tin", tag: "Jackpot", tone: "money",
+        text: f.data.source === "tips" ? `${usd(f.data.amount)} of a tip went into the jackpot. It holds ${usd(f.data.jackpot)}.` : `${f.data.by ? shortAccount(f.data.by) : "Someone"} added ${usd(f.data.amount)} to the jackpot. It holds ${usd(f.data.jackpot)}.`,
+      };
+    case "jackpot_won":
+      return { face: "mug", tag: "Jackpot won", tone: "yes", text: `${f.data.winners.length === 1 ? shortAccount(f.data.winners[0]!) : `${f.data.winners.length} bosses`} guessed seven in a row and won ${usd(f.data.each)}${f.data.winners.length === 1 ? "" : " each"}.` };
+    case "draw_held":
+      return {
+        face: "tin", tag: "Payday draw", tone: "money",
+        text: f.data.winner ? `${shortAccount(f.data.winner)} won the payday draw. ${usd(f.data.prize)} of interest was shared out.` : "Nobody was in the payday draw, so the interest rolls over to the next one.",
+      };
+    case "long_shot_allowed":
+      return { face: "mug", tag: "Long shot", tone: "vote", text: `The bosses allowed one long shot in shift ${f.data.round_id}: a small bet at up to 10x. It usually loses.` };
+    case "prize_paid":
+      return { face: "tin", tag: "Prize", tone: "money", text: `${shortAccount(f.data.account_id)} collected a prize of ${usd(f.data.amount)}.` };
   }
+  // The program can announce a kind of event this site was not built for yet. Say so plainly instead of breaking the page.
+  return unknownRow(f as { event: string; data: Record<string, unknown> });
+}
+
+function unknownRow(f: { event: string; data: Record<string, unknown> }): Row {
+  const name = String(f.event).replace(/_/g, " ");
+  const sum = typeof f.data?.amount === "string" && /^\d+$/.test(f.data.amount) ? ` (${usd(f.data.amount)})` : "";
+  return { face: "stamp", tag: "New", tone: "plain", text: `The program announced "${name}"${sum}.`, note: "This site does not have a sentence for this kind of event yet" };
 }

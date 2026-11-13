@@ -1810,3 +1810,22 @@
     padding-bottom: var(--s-4);
   }
 }
+
+/* --- Landing page additions --- */
+.number-words > .number-plain {
+  color: var(--screen-text);
+  font-weight: 700;
+}
+.number-plain .mono {
+  font-size: var(--mono-m);
+  color: var(--sticky);
+}
+.trick-live-link {
+  justify-self: start;
+  margin-top: var(--s-3);
+}
+
+.wall-row a {
+  color: inherit;
+  text-underline-offset: 3px;
+}

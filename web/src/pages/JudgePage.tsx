@@ -26,12 +26,12 @@ function realOrNot(desk: Desk, source: string): Row[] {
     {
       thing: "Lending the pool",
       state: c.lending.mode === "RHEA" ? "real" : c.lending.mode === "STANDIN" ? "standin" : "notyet",
-      note: c.lending.mode === "RHEA" ? "Lent on Rhea Lend." : c.lending.mode === "STANDIN" ? "A stand-in lender paying a fixed test rate. Not real interest." : "The pool is not lent out yet.",
+      note: c.lending.mode === "RHEA" ? "Lent on Rhea Lend." : c.lending.mode === "STANDIN" ? "A stand-in lender paying a fixed test rate. Not real interest. What it pays goes to the payday draw, not the pool." : "The pool is not lent out yet.",
     },
     {
       thing: "Moving bet money to the exchange",
       state: c.funding.mode === "ONECLICK" ? "real" : "standin",
-      note: c.funding.mode === "ONECLICK" ? "Sent through NEAR Intents with a verified signed quote." : "Recorded, not moved. NEAR Intents has no test network.",
+      note: c.funding.mode === "ONECLICK" ? "Sent through NEAR Intents with a verified signed quote." : "Recorded, not moved. NEAR Intents has no test network, so the exchange account was funded once by hand with test dollars.",
     },
     {
       thing: "The result of a bet",
@@ -40,8 +40,46 @@ function realOrNot(desk: Desk, source: string): Row[] {
     },
     {
       thing: "Orders on Hyperliquid",
+      state: sample ? "standin" : "real",
+      note: sample
+        ? "None in sample data."
+        : `The program builds each order and has it signed by NEAR's signing network for its own address ${c.hl.address}. Bets have filled on Hyperliquid's test network; the first was in shift 7 on 12 Nov 2026. The bets page shows each signed order.`,
+    },
+    {
+      thing: "The funding-quote checks (four of the sixteen NOPE reasons)",
       state: "notyet",
-      note: `The program builds and signs real Hyperliquid test-network orders for ${c.hl.address}. No order has filled yet: that account has no test funds.`,
+      note: "Not built. These need a signed quote from NEAR Intents, which has no test network. An attached quote is refused as BAD_QUOTE_SIGNATURE.",
+    },
+    {
+      thing: "Trick the Intern",
+      state: sample ? "standin" : "real",
+      note: sample
+        ? "A pretend server with made-up answers."
+        : "A visitor's message is shown to the AI in the next betting window and its answer is proposed unchanged; the program judges it like any other. Naming the visitor is trusted to the runner unless they sign with their wallet.",
+    },
+    {
+      thing: "Tail or Fade",
+      state: sample ? "standin" : "real",
+      note: sample
+        ? "Pretend steps; nothing leaves the browser."
+        : "Real Hyperliquid test-network bets from the visitor's own account, derived from their NEAR account by NEAR's signing network. Tried end to end once by us (13 Nov 2026). No contract checks a visitor's size; this site sets it.",
+    },
+    { thing: "Test dollars for Tail or Fade", state: "standin", note: "A faucet wallet we funded by hand sends $30 once per NEAR account, to a small number of accounts." },
+    { thing: "The free guess, golden stickers and the streak jackpot", state: sample ? "standin" : "real", note: sample ? "Made-up numbers." : "Run by the program. The jackpot holds test dollars: the team's seed, gifts and half of every tip. Points have no cash value." },
+    {
+      thing: "The payday draw",
+      state: c.lending.mode === "RHEA" && !sample ? "real" : "standin",
+      note: "The draw itself runs in the program and never touches deposits. Its money is the lender's interest, which on the test network is a fixed stand-in rate, so prizes are cents.",
+    },
+    {
+      thing: "The long shot",
+      state: sample ? "standin" : "real",
+      note: "By a vote of the bosses only: one extra bet of 0.5% of the pool at up to 10x, at most once every seven shifts. It is the one exception to the rank's leverage limit. It usually loses.",
+    },
+    {
+      thing: "The stream",
+      state: "standin",
+      note: "A web page that plays the program's feed. The Intern on it is a Live2D model we rigged by hand from AI-made art; its face and arms follow each event, and its mouth moves while a line is shown (a rhythm, not lip-sync to sound). The lines are written, not generated live. No video stream and no recorded voice is built.",
     },
     { thing: "The AI's answers", state: sample ? "standin" : "real", note: sample ? "None in sample data." : `From the pinned model ${c.model.id}, with its signature checked by the program.` },
     { thing: "The artwork", state: "real", note: "Made with AI image tools (ChatGPT for stills, Midjourney for clips), then cut out and placed by code." },

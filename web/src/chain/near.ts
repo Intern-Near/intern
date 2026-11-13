@@ -77,5 +77,9 @@ export function nearChain(rpcUrl: string, contractId: string): Chain {
     getLaunchInfo: async () => view(rpcUrl, (await consts()).launchpad, "get_info", {}),
     getLaunchBalance: async (token_id, account_id) => view(rpcUrl, (await consts()).launchpad, "get_balance", { token_id, account_id }),
     getLaunchQuote: async (token_id, side, amount) => view(rpcUrl, (await consts()).launchpad, "get_quote", { token_id, side, amount }),
+    getRewards: () => ask("get_rewards"),
+    getPlayer: (account_id) => ask("get_player", { account_id }),
+    getDrawResults: (from, limit) => ask("get_draw_results", { from, limit }),
+    getJackpotWins: (limit) => ask("get_jackpot_wins", { limit }),
   };
 }

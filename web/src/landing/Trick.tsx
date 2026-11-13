@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Intern, type InternMood } from "../cast/Intern";
 import { Stamp, type StampPose } from "../cast/Stamp";
 import type { RefusalCode } from "../chain/types";
+import { href } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 import { thud } from "./sound";
 import { Typed } from "./Typed";
@@ -83,8 +84,11 @@ export function Trick() {
         </div>
         <p className="trick-fine">
           {tries === 0 ? "Three ready-made tricks. " : `Tries so far: ${tries}. Bets that got past the stamp: 0. `}
-          The Intern's replies here are examples we wrote; the stamp's answers are the program's real rules. Typing your own to the live Intern comes at the desk.
+          The Intern's replies here are examples we wrote; the stamp's answers are the program's real rules.
         </p>
+        <a className="btn trick-live-link" href={href("trick")}>
+          Write your own to the live Intern
+        </a>
       </div>
 
       <div className={`trick-stage${phase === "nope" ? " is-shaking" : ""}`}>

@@ -5,6 +5,10 @@
  * (poll the feed, react to a new item) is exercised without a contract.
  */
 import type {
+  DrawResult,
+  JackpotWin,
+  PlayerView,
+  Rewards,
   Account,
   Actions,
   Claimable,
@@ -77,6 +81,10 @@ type Wallet = { dollars: bigint; registered: boolean; coin: bigint; locked: bigi
 export const SAMPLE_ACCOUNT = "you.testnet";
 
 type World = {
+  rewards: Rewards;
+  players: Map<string, PlayerView>;
+  draws: DrawResult[];
+  jackpotWins: JackpotWin[];
   playbooks: Playbook[];
   activePlaybook: number | null;
   goals: Goals;
@@ -113,7 +121,7 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
   const rankName: RankName = promoted ? "ANALYST" : "INTERN";
 
   const constants: Constants = {
-    interface_version: "1.3",
+    interface_version: "1.5",
     network: "testnet",
     usdc_token: "usdc.sample.testnet",
     coin_decimals: 6,
@@ -332,7 +340,21 @@ function build(scene: Scene, t0: Ms): { world: World; script: Scripted[] } {
     { id: 2, name: "Tin Token", symbol: "TIN", creator: "dave.testnet", created_at: start - 5 * H, sold: "41000000000000", usdc_reserve: "42700000", price_e6: "1" },
     { id: 1, name: "Stamp Coin", symbol: "STAMP", creator: "alice.testnet", created_at: start - 3 * DAY, sold: "214000000000000", usdc_reserve: "272300000", price_e6: "2" },
   ];
-  return { world: { playbooks, activePlaybook: 1, goals, fills, tippers: new Set(), claimable, owned: new Map(), launches, launchHeld: new Map(), wallets, constants, rank, round, previous, positions, pot, refusals, votes, firsts, feed }, script };
+  const rewards: Rewards = {
+    round_id: 42, guess_closes_at: start + 11 * H, guesses_this_round: [9, 14, 3],
+    jackpot: "131500000", jackpot_added_total: "100000000", jackpot_from_tips_total: "31500000", jackpot_last_won_round: null,
+    draw_pot: "86000", draw_period: 6, draw_from_round: 43, entrants: 12, prizes_owed: "42000",
+    long_shot: { ticket_round: null, used: false, margin: null, max_leverage: 10, vote_from_round: 40 },
+    golden_minted: REFUSAL_CODES.map((_, i) => (i === 10 ? 3 : i === 5 ? 1 : 0)),
+    constants: { golden_odds: 50, golden_cap: 100, jackpot_streak: 7, min_boss_usd: "10000000", min_boss_rounds: 7, tip_to_jackpot_bps: 5000, draw_rounds: 7, draw_top_bps: 7000, draw_runners: 10, max_entrants: 200 },
+  };
+  const players = new Map<string, PlayerView>([
+    [SAMPLE_ACCOUNT, { account_id: SAMPLE_ACCOUNT, points: 11, right: 11, wrong: 6, streak: 3, best: 5, guess: null, jackpot_eligible: true, prize_owed: "42000", goldens: [{ code: "OVER_TRADE_LIMIT", serial: 3 }], draw: null }],
+  ]);
+  const draws: DrawResult[] = [
+    { period: 5, held_at: start - 6 * H, held_in_round: 36, prize: "140000", winner: "carol.testnet", winner_prize: "98000", runners_up: [[SAMPLE_ACCOUNT, "42000"]], tickets_total: "9100000000" },
+  ];
+  return { world: { rewards, players, draws, jackpotWins: [], playbooks, activePlaybook: 1, goals, fills, tippers: new Set(), claimable, owned: new Map(), launches, launchHeld: new Map(), wallets, constants, rank, round, previous, positions, pot, refusals, votes, firsts, feed }, script };
 }
 
 /** Made-up earlier shifts, so the Intern's record has something in it. */
@@ -474,6 +496,7 @@ function weightOf(w: World, a: Wallet): bigint {
   return (a.locked * (rounds < full ? rounds : full)) / full;
 }
 
+const E6 = 1_000_000n;
 const usdText = (v: bigint) => `$${(Number(v) / 1e6).toFixed(2)}`;
 
 /**
@@ -685,10 +708,15 @@ function sampleActions(w: World, clock: () => Ms, who: string): Actions {
       need(v <= a.dollars, `You only have ${usdText(a.dollars)} in your wallet.`);
       need(w.rank.status !== "FIRED", "Tips are refused while the Intern is fired.");
       a.dollars -= v;
-      w.pot.brave.income_waiting = add(w.pot.brave.income_waiting, v);
-      w.pot.outside_income_total = add(w.pot.outside_income_total, v);
+      // (1.4) Half of a tip goes to the streak jackpot, the other half to the pool
+      const toJackpot = (v * BigInt(w.rewards.constants.tip_to_jackpot_bps)) / 10_000n;
+      w.pot.brave.income_waiting = add(w.pot.brave.income_waiting, v - toJackpot);
+      w.pot.outside_income_total = add(w.pot.outside_income_total, v - toJackpot);
+      w.rewards.jackpot = add(w.rewards.jackpot, toJackpot);
+      w.rewards.jackpot_from_tips_total = add(w.rewards.jackpot_from_tips_total, toJackpot);
       w.tippers.add(who);
       say("tipped", { account_id: who, amount });
+      say("jackpot_grew", { amount: toJackpot.toString(), source: "tips", jackpot: w.rewards.jackpot });
       // The jar fills at its target; what spills over starts the next jar
       const target = BigInt(w.goals.tip_jar.target);
       let now = BigInt(w.goals.tip_jar.now) + v;
@@ -734,6 +762,64 @@ function sampleActions(w: World, clock: () => Ms, who: string): Actions {
       mintTo(w, who, `goal:${fillId}:${who}`, `Goal filled: ${fill?.goal ?? "?"} level ${fill?.level ?? "?"}`, `${who} helped fill a goal.`);
       say("sticker_claimed", { account_id: who, token_id: `goal:${fillId}:${who}` });
     },
+    async guess(verdict) {
+      await pause();
+      const a = me();
+      const p = player(w, who);
+      need(clock() < w.rewards.guess_closes_at, "Guessing has closed for this shift. Nothing was sent. Guess again next shift.");
+      need(p.guess?.round_id !== w.round.id, "You have already guessed this shift.");
+      a.registered = true;
+      p.guess = { round_id: w.round.id, verdict };
+      w.rewards.guesses_this_round[verdict === "YES" ? 0 : verdict === "NOPE" ? 1 : 2] += 1;
+      say("guessed", { round_id: w.round.id, account_id: who });
+    },
+    async claimGolden(code, serial) {
+      await pause();
+      const p = player(w, who);
+      need(p.goldens.some((g) => g.code === code && g.serial === serial), "That golden sticker isn't yours to claim.");
+      p.goldens = p.goldens.filter((g) => !(g.code === code && g.serial === serial));
+      mintTo(w, who, `golden:${code}:${serial}`, `Golden ${code} no. ${serial}`, `One of at most 100 golden ${code} stickers.`);
+      say("sticker_claimed", { account_id: who, token_id: `golden:${code}:${serial}` });
+    },
+    async enterDraw() {
+      await pause();
+      const a = me();
+      const p = player(w, who);
+      const held = (a.coin * price()) / E6 + a.pending + a.safe;
+      need(held > 0n, "Only a boss can join the draw. Pay in first; nothing was sent.");
+      need(p.draw === null, "You are already in the draw.");
+      p.draw = { since_round: w.round.id, base_usd: held.toString(), usd_now: held.toString(), tickets: "0" };
+      w.rewards.entrants += 1;
+    },
+    async leaveDraw() {
+      await pause();
+      const p = player(w, who);
+      need(p.draw !== null, "You are not in the draw.");
+      p.draw = null;
+      w.rewards.entrants -= 1;
+    },
+    async addToJackpot(amount) {
+      await pause();
+      const a = me();
+      const v = BigInt(amount);
+      need(v >= E6, "The smallest addition is $1.");
+      need(v <= a.dollars, `You only have ${usdText(a.dollars)} in your wallet.`);
+      a.dollars -= v;
+      w.rewards.jackpot = add(w.rewards.jackpot, v);
+      w.rewards.jackpot_added_total = add(w.rewards.jackpot_added_total, v);
+      say("jackpot_grew", { amount, source: "added", by: who, jackpot: w.rewards.jackpot });
+    },
+    async claimPrizes() {
+      await pause();
+      const a = me();
+      const p = player(w, who);
+      const owed = BigInt(p.prize_owed);
+      need(owed > 0n, "No prize is waiting for you.");
+      a.dollars += owed;
+      p.prize_owed = "0";
+      w.rewards.prizes_owed = add(w.rewards.prizes_owed, -owed);
+      say("prize_paid", { account_id: who, amount: owed.toString() });
+    },
     async launch(name, symbol) {
       await pause();
       need(name.trim().length >= 2 && name.trim().length <= 32, "A name is 2 to 32 characters.");
@@ -776,6 +862,15 @@ function sampleActions(w: World, clock: () => Ms, who: string): Actions {
       say("outside_income", { source: "launchpad", amount: q.fee });
     },
   };
+}
+
+function player(w: World, who: string): PlayerView {
+  let p = w.players.get(who);
+  if (!p) {
+    p = { account_id: who, points: 0, right: 0, wrong: 0, streak: 0, best: 0, guess: null, jackpot_eligible: false, prize_owed: "0", goldens: [], draw: null };
+    w.players.set(who, p);
+  }
+  return p;
 }
 
 function mintTo(w: World, who: string, token_id: string, title: string, description: string): void {
@@ -929,6 +1024,19 @@ export function sampleChain(scene: Scene, clock: () => Ms = Date.now, options: {
     },
     async getLaunchQuote(tokenId, side, amount) {
       return quote(w.launches.find((l) => l.id === tokenId)!, side, BigInt(amount));
+    },
+    async getRewards() {
+      tick();
+      return copy({ ...w.rewards, round_id: w.round.id });
+    },
+    async getPlayer(accountId) {
+      return copy(player(w, accountId));
+    },
+    async getDrawResults(_from, limit) {
+      return copy(w.draws).slice(0, limit ?? 20);
+    },
+    async getJackpotWins(limit) {
+      return copy(w.jackpotWins).slice(0, limit ?? 20);
     },
   };
 }

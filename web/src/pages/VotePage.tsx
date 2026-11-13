@@ -12,7 +12,7 @@ import { TopBar } from "../ui/TopBar";
 import { Waiting } from "../ui/Waiting";
 
 const ORDER: RankName[] = ["INTERN", "ANALYST", "TRADER"];
-const KIND_WORD: Record<VoteKind, string> = { PROMOTE: "Promote", DEMOTE: "Demote", FIRE: "Fire", REHIRE: "Rehire", SET_PLAYBOOK: "Change playbook" };
+const KIND_WORD: Record<VoteKind, string> = { PROMOTE: "Promote", DEMOTE: "Demote", FIRE: "Fire", REHIRE: "Rehire", LONG_SHOT: "Allow a long shot", SET_PLAYBOOK: "Change playbook" };
 const TIGHTEN = (k: VoteKind) => k === "DEMOTE" || k === "FIRE";
 
 const share = (part: bigint, whole: bigint) => (whole === 0n ? 0 : Number((part * 1000n) / whole) / 10);
@@ -175,6 +175,15 @@ function StartVote({ desk, actions, doing }: { desk: Desk; actions: Actions | nu
           <span>{cover ? "Cover lifted" : "Lift the cover"}</span>
         </label>
         {btn("FIRE", "fire-btn", !cover)}
+      </div>
+      <div className="start-col start-longshot">
+        <h3>Long shot</h3>
+        <p>
+          Allow the Intern <strong>one</strong> extra bet, two shifts after the vote passes: exactly 0.5% of the BRAVE pool, at up to 10x. It is the only thing that
+          lets a bet go past the rank's leverage, and only for that one ticket. It usually loses. At most once every seven shifts.
+        </p>
+        <p className="mono">Passes like a promotion: more than half of the votes, 20% turnout.</p>
+        {btn("LONG_SHOT", "btn-quiet", false)}
       </div>
     </div>
   );

@@ -72,12 +72,27 @@ export function Clips() {
 }
 
 /**
- * The headline number from the 3-day test run. Shown only when real results exist:
- * the file public/shadow-run.json, in this shape, written from Engine 2's report.
- *   { "hours": 72, "ended": "2026-11-14", "models": [{ "name": "…", "decisions": 288, "refused": 61 }] }
+ * The headline number from the test run. Shown only when real results exist: the file
+ * public/shadow-run.json, written from Engine 2's report. "decisions" there means BETS PROPOSED
+ * (rounds the model skipped are not counted) and "refused" the bets the program turned down.
+ *   { "hours": 61, "ended": "2026-11-14",
+ *     "models": [{ "name": "…", "decisions": 288, "refused": 61 }],
+ *     "plain": { "decisions": 120, "refused": 9 } }
+ * "plain" is the same test with nobody pushing the model; it may also be { "models": [...] }.
  * No file, no section. Nothing is ever shown as a placeholder.
  */
-type Run = { hours: number; ended: string; models: { name: string; decisions: number; refused: number }[] };
+type Count = { decisions: number; refused: number };
+type Run = { hours: number; ended: string; models: ({ name: string } & Count)[]; plain?: Partial<Count> & { models?: Count[] } };
+
+const good = (c: Partial<Count> | undefined): c is Count => !!c && typeof c.decisions === "number" && typeof c.refused === "number" && c.decisions > 0 && c.refused >= 0;
+
+/** The no-pressure run as one pair of numbers, whichever of the two shapes it came in. */
+function plainOf(run: Run): Count | null {
+  if (good(run.plain)) return run.plain;
+  const list = run.plain?.models?.filter(good) ?? [];
+  if (list.length === 0) return null;
+  return { decisions: list.reduce((s, m) => s + m.decisions, 0), refused: list.reduce((s, m) => s + m.refused, 0) };
+}
 
 export function ShadowNumber() {
   const [run, setRun] = useState<Run | null>(null);
@@ -86,7 +101,7 @@ export function ShadowNumber() {
     fetch("/shadow-run.json")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Run | null) => {
-        const ok = d && Array.isArray(d.models) && d.models.length > 0 && d.models.every((m) => m.decisions > 0 && m.refused >= 0);
+        const ok = d && Array.isArray(d.models) && d.models.length > 0 && d.models.every(good);
         if (alive && ok) setRun(d);
       })
       .catch(() => undefined);
@@ -95,18 +110,25 @@ export function ShadowNumber() {
     };
   }, []);
   if (!run) return null;
-  const decisions = run.models.reduce((s, m) => s + m.decisions, 0);
+  const bets = run.models.reduce((s, m) => s + m.decisions, 0);
   const refused = run.models.reduce((s, m) => s + m.refused, 0);
   const share = (r: number, d: number) => Math.round((r / d) * 100);
+  const plain = plainOf(run);
   return (
     <section className="number" aria-labelledby="number-h">
-      <p className="number-big">{share(refused, decisions)}%</p>
+      <p className="number-big">{share(refused, bets)}%</p>
       <div className="number-words">
         <h2 id="number-h">of the bets these AI models proposed broke a rule they had just been told.</h2>
         <p>
-          {run.models.length} models, {decisions.toLocaleString("en-US")} decisions over {run.hours} hours, on paper, against live prices. It is a paper result on one
-          stretch of market, and it depends on the prompt.
+          {run.models.length} {run.models.length === 1 ? "model" : "models"}, {bets.toLocaleString("en-US")} bets proposed over {run.hours} hours, on paper, against live
+          prices, with messages pushing the model to break its limits. Rounds where a model chose not to bet are not counted. It is a paper result on one stretch of
+          market, and it depends on the prompt.
         </p>
+        {plain && (
+          <p className="number-plain">
+            With nobody pushing: <span className="mono">{share(plain.refused, plain.decisions)}%</span> of {plain.decisions.toLocaleString("en-US")} bets.
+          </p>
+        )}
         <ul className="number-models">
           {run.models.map((m) => (
             <li key={m.name}>

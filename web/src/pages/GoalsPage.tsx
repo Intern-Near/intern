@@ -144,7 +144,7 @@ export function GoalsPage() {
                 ? `The smallest tip is ${usd(c.min_tip)}.`
                 : tooMuch
                   ? `You have ${usd(me!.dollars)} in your wallet.`
-                  : "A tip is a gift to the BRAVE pool, shared by its holders from the next shift. It buys no say over the Intern's bets."}
+                  : "A tip is a gift. Half goes to the streak jackpot, half to the BRAVE pool from the next shift. It buys no say over the Intern's bets."}
             </p>
             {actions ? (
               <button className="btn btn-wide" disabled={!v || tooSmall || tooMuch || !!doing.busy} onClick={() => v && doing.run("tip", () => actions.tip(v), `Tipped ${usd(v)}. Thank you.`)}>

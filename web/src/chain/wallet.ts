@@ -55,6 +55,23 @@ export async function walletSignOut(): Promise<void> {
   await connector?.disconnect();
 }
 
+/**
+ * A signed message (NEP-413): free, sends no transaction. Used to prove who wrote a trick.
+ * near-connect 0.12.0 returns { accountId, publicKey, signature }.
+ */
+export async function walletSignMessage(message: string, recipient: string, nonce: Uint8Array): Promise<{ accountId: string; publicKey: string; signature: string }> {
+  if (!connector) throw new Error("Sign in first.");
+  const wallet = await connector.wallet();
+  return wallet.signMessage({ message, recipient, nonce });
+}
+
+/** Sends one transaction to any contract and hands back the network's answer (Tail or Fade reads a signature out of it). */
+export async function walletSendRaw(tx: { receiverId: string; actions: { type: "FunctionCall"; params: { methodName: string; args: object; gas: string; deposit: string } }[] }): Promise<unknown> {
+  if (!connector) throw new Error("Sign in first.");
+  const wallet = await connector.wallet();
+  return wallet.signAndSendTransaction(tx);
+}
+
 async function send(receiverId: string, calls: Call[]): Promise<void> {
   if (!connector) throw new Error("Sign in first.");
   const wallet = await connector.wallet();
@@ -113,6 +130,22 @@ export function walletActions(accountId: string, contractId: string, constants: 
       if (reg.length) await send(pad, reg);
       await send(usdc, [{ method: "ft_transfer_call", args: { receiver_id: pad, amount, msg: JSON.stringify({ buy: { token_id, min_out } }) }, gas: GAS_TRANSFER_CALL, deposit: ONE_YOCTO }]);
     },
+    // Interface 1.4, section 9.7. Guessing needs a registered account, so registration rides along the first time.
+    async guess(verdict) {
+      const has = await view<object | null>(rpc, contractId, "storage_balance_of", { account_id: accountId });
+      const calls: Call[] = [];
+      if (!has) {
+        const bounds = await view<{ min: string }>(rpc, contractId, "storage_balance_bounds", {});
+        calls.push({ method: "storage_deposit", args: { account_id: accountId }, deposit: bounds.min });
+      }
+      calls.push({ method: "guess", args: { verdict } });
+      await send(contractId, calls);
+    },
+    claimGolden: (code, serial) => coin("claim_golden", { code, serial }, NEAR_0_02, GAS_TRANSFER_CALL),
+    enterDraw: () => coin("enter_draw", {}),
+    leaveDraw: () => coin("leave_draw", {}),
+    addToJackpot: (amount) => send(usdc, [{ method: "ft_transfer_call", args: { receiver_id: contractId, amount, msg: JSON.stringify({ jackpot: {} }) }, gas: GAS_TRANSFER_CALL, deposit: ONE_YOCTO }]),
+    claimPrizes: () => coin("claim_prizes", {}, ONE_YOCTO, GAS_TRANSFER_CALL),
     sellLaunch: (token_id, amount, min_out) => send(pad, [{ method: "sell", args: { token_id, amount, min_out }, deposit: ONE_YOCTO, gas: GAS_TRANSFER_CALL }]),
   };
 }

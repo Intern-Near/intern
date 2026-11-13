@@ -4,7 +4,7 @@
  * If this file and that one disagree, that one is right.
  */
 
-export const INTERFACE_VERSION = "1.3" as const;
+export const INTERFACE_VERSION = "1.5" as const;
 
 /** Whole number as a decimal string, e.g. "20000000". Never a JSON number. */
 export type U128 = string;
@@ -71,7 +71,7 @@ export type MarketInfo = {
 };
 
 export type Constants = {
-  interface_version: "1.3";
+  interface_version: "1.5";
   network: "testnet" | "mainnet";
   usdc_token: AccountId;
   coin_decimals: 6;
@@ -216,7 +216,8 @@ export type Account = {
   vote_weight: U128;
 };
 
-export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK";
+/** (1.5) LONG_SHOT: allow one long-shot ticket in the second round after it passes. */
+export type VoteKind = "PROMOTE" | "DEMOTE" | "FIRE" | "REHIRE" | "SET_PLAYBOOK" | "LONG_SHOT";
 
 export type Vote = {
   id: number;
@@ -322,6 +323,8 @@ export type EventData = {
     side: Side;
     margin: Usdc;
     leverage: number;
+    /** (1.5) True when this bet is the long-shot ticket. */
+    long_shot?: boolean;
   };
   order_signed: { action_id: number; position_id: number; kind: SignedAction["kind"] };
   result_reported: {
@@ -352,7 +355,68 @@ export type EventData = {
   goal_filled: { fill_id: number; goal: GoalKind; level: number; round_id: number };
   hype_level: { train: number; level: number; points: number };
   sticker_claimed: { account_id: AccountId; token_id: string };
+  // (1.4) the reward ladder
+  guessed: { round_id: number; account_id: AccountId };
+  guess_settled: { round_id: number; verdict: Verdict3; right: number; wrong: number };
+  golden_dropped: { account_id: AccountId; code: RefusalCode; serial: number };
+  jackpot_grew: { amount: Usdc; source: "tips" | "added"; by?: AccountId; jackpot: Usdc };
+  jackpot_won: { round_id: number; winners: AccountId[]; each: Usdc };
+  draw_held: { period: number; winner: AccountId | null; prize: Usdc; runners_up: number | [AccountId, Usdc][]; each: Usdc; tickets_total: U128; rolled_over?: boolean };
+  prize_paid: { account_id: AccountId; amount: Usdc };
+  // (1.5)
+  long_shot_allowed: { round_id: number };
 };
+
+/** (1.4) Section 9.7: the reward ladder. Every prize comes from a named source; none changes what the Intern may bet. */
+export type Verdict3 = "YES" | "NOPE" | "SKIP";
+export type PlayerView = {
+  account_id: AccountId;
+  points: number;
+  right: number;
+  wrong: number;
+  streak: number;
+  best: number;
+  /** This round's guess, or one still waiting for its ruling. */
+  guess: { round_id: number; verdict: Verdict3 } | null;
+  jackpot_eligible: boolean;
+  prize_owed: Usdc;
+  /** Won, not yet claimed. */
+  goldens: { code: RefusalCode; serial: number }[];
+  draw: { since_round: number; base_usd: Usdc; usd_now: Usdc; tickets: U128 } | null;
+};
+export type Rewards = {
+  round_id: number;
+  guess_closes_at: Ms;
+  /** YES, NOPE, SKIP */
+  guesses_this_round: [number, number, number];
+  jackpot: Usdc;
+  jackpot_added_total: Usdc;
+  jackpot_from_tips_total: Usdc;
+  jackpot_last_won_round: number | null;
+  draw_pot: Usdc;
+  draw_period: number;
+  draw_from_round: number;
+  entrants: number;
+  prizes_owed: Usdc;
+  /** Sixteen, in the order of the refusal codes. */
+  golden_minted: number[];
+  /** (1.5) The long shot. `margin` is set only in the ticket's round while it is unused. */
+  long_shot: { ticket_round: number | null; used: boolean; margin: Usdc | null; max_leverage: number; vote_from_round: number };
+  constants: {
+    golden_odds: number;
+    golden_cap: number;
+    jackpot_streak: number;
+    min_boss_usd: Usdc;
+    min_boss_rounds: number;
+    tip_to_jackpot_bps: number;
+    draw_rounds: number;
+    draw_top_bps: number;
+    draw_runners: number;
+    max_entrants: number;
+  };
+};
+export type DrawResult = { period: number; held_at: Ms; held_in_round: number; prize: Usdc; winner: AccountId | null; winner_prize: Usdc; runners_up: [AccountId, Usdc][]; tickets_total: U128 };
+export type JackpotWin = { round_id: number; winners: AccountId[]; each: Usdc };
 
 export type EventName = keyof EventData;
 
@@ -404,6 +468,11 @@ export interface Chain {
   getLaunchInfo(): Promise<LaunchInfo>;
   getLaunchBalance(tokenId: number, accountId: AccountId): Promise<U128>;
   getLaunchQuote(tokenId: number, side: "BUY" | "SELL", amount: U128): Promise<Quote>;
+  // (1.4)
+  getRewards(): Promise<Rewards>;
+  getPlayer(accountId: AccountId): Promise<PlayerView>;
+  getDrawResults(from?: number, limit?: number): Promise<DrawResult[]>;
+  getJackpotWins(limit?: number): Promise<JackpotWin[]>;
 }
 
 /**
@@ -436,4 +505,14 @@ export interface Actions {
   launch(name: string, symbol: string): Promise<void>;
   buyLaunch(tokenId: number, amount: Usdc, minOut: U128): Promise<void>;
   sellLaunch(tokenId: number, amount: U128, minOut: Usdc): Promise<void>;
+  // (1.4)
+  /** Free, once a round, before the guessing closes. */
+  guess(verdict: Verdict3): Promise<void>;
+  claimGolden(code: RefusalCode, serial: number): Promise<void>;
+  enterDraw(): Promise<void>;
+  leaveDraw(): Promise<void>;
+  /** A gift to the streak jackpot, at least 1 dollar. */
+  addToJackpot(amount: Usdc): Promise<void>;
+  /** Pays every prize owed to the caller. */
+  claimPrizes(): Promise<void>;
 }

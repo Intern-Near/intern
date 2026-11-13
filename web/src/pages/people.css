@@ -632,3 +632,9 @@
     align-items: flex-start;
   }
 }
+
+/* (1.5) The long-shot vote sits under the three rank votes, full width */
+.start-longshot {
+  grid-column: 1 / -1;
+  background: var(--sky);
+}

@@ -10,6 +10,7 @@ import { href } from "../lib/nav";
 import { refusalSentence } from "../lib/refusals";
 import { nextMoment } from "../lib/round";
 import { useNow } from "../lib/useNow";
+import { useRewards } from "../lib/useRewards";
 import { Boss } from "./Boss";
 import { Clips, ShadowNumber, ShiftClock, SoundToggle } from "./extras";
 import { pop, thud } from "./sound";
@@ -84,6 +85,7 @@ const POKES: { mood: InternMood; say: string }[] = [
 /** The opening: the Intern asks, Stamp answers. Poke either of them and they answer back. */
 function Hero() {
   const snap = useDesk();
+  const rewards = useRewards();
   const now = useNow();
   const [beat, setBeat] = useState(() => (reducedMotion() ? 2 : 0));
   const [poke, setPoke] = useState<{ n: number; i: number } | null>(null);
@@ -194,6 +196,12 @@ function Hero() {
                 <span>NOPEs today</span>
                 <span className="mono">{desk.round.refused}</span>
               </p>
+              {rewards && (
+                <p className="wall-row">
+                  <a href={href("rewards")}>Jackpot{BigInt(rewards.jackpot_added_total) > 0n ? " (seeded by the team)" : ""}</a>
+                  <span className="mono">{usd(rewards.jackpot)}</span>
+                </p>
+              )}
             </div>
           )}
           <p className="note note-a" aria-hidden="true">
