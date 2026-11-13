@@ -238,6 +238,11 @@ impl Coin {
                 }
             }
             KIND_GOLDEN => self.rw_golden_restore(&account_id, (key >> 16) as u8, (key & 0xffff) as u16),
+            // 1.7: a playbook NFT that failed to mint can be claimed again; a career card number is simply skipped.
+            crate::earn::KIND_PLAYBOOK => {
+                env::storage_remove(&[b"e7p".as_slice(), &key.to_le_bytes()].concat());
+            }
+            crate::earn::KIND_CAREER => {}
             _ => {
                 self.goal_claims.remove(&(key, account_id.clone()));
             }

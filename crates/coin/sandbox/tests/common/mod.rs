@@ -196,6 +196,7 @@ impl World {
         // 1.7: the trick bounty is held apart too.
         let bounty = self.view(&self.coin, "get_bounty", json!({})).await?;
         let rescue = self.view(&self.coin, "get_rescue", json!({})).await?;
+        let earn = self.view(&self.coin, "get_nft_earnings", json!({})).await?;
         let held = self.usdc_of(self.coin.id()).await?;
         assert_eq!(
             held,
@@ -208,6 +209,7 @@ impl World {
                 + u(&rw["prizes_owed"])
                 + u(&bounty["pot"])
                 + u(&rescue["fund"])
+                + u(&earn["owed_total"])
                 + ignored,
             "USDC held vs books: {pot} {rw}"
         );

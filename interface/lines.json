@@ -625,6 +625,14 @@
       "mascot": null,
       "intern": null,
       "system": "RESCUERS PAID — round {round_id}: {amount} of the win to the rescuers."
+    },
+    "nft_earnings_claimed": {
+      "speak": false,
+      "priority": 5,
+      "intern_pose": "idle",
+      "mascot": null,
+      "intern": null,
+      "system": "NFT EARNINGS — {account} claimed {amount} earned by {token_id}."
     }
   },
   "refusals": {

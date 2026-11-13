@@ -171,6 +171,7 @@ wire_enum!(
         RescueGrew,
         Rescued,
         RescuePaid,
+        NftEarningsClaimed,
     }
 );
 

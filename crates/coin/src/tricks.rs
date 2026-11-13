@@ -4,7 +4,8 @@
 //! - **Paid tricks.** A visitor pays `TRICK_PRICE` ($1, test USDC on testnet) to the coin with
 //!   `ft_transfer_call(coin, amount, '{"trick":{"id":"<the trick page's id>"}}')`. The payment is recorded under that
 //!   id (`get_trick_payment`) so the trick page can check it, and paid tricks go ahead of free ones in its queue.
-//!   Half goes to the bounty pot, half to the BRAVE pool as outside income (all to the bounty while the Intern is
+//!   Half goes to the bounty pot, a quarter to the claimed "first of its kind" originals (`earn.rs`; the bounty's
+//!   if none is claimed) and a quarter to the BRAVE pool as outside income (the bounty's while the Intern is
 //!   fired). This is a payment on NEAR, not the x402 HTTP protocol.
 //! - **The bounty.** Anyone may add to the pot (`'{"bounty":{}}'`, at least $1). When a trick credited to a visitor
 //!   (`propose(.., credited_to)`) gets the AI's answer refused for checks 3 to 12, the visitor wins `BOUNTY_BPS`
@@ -105,9 +106,13 @@ impl Coin {
         }
         self.tick();
         let round_id = self.current.expect("round").id;
+        // Half to the bounty; a quarter to the claimed originals (the bounty's, if none is claimed); a quarter to the
+        // pool (the bounty's too while the Intern is fired).
         let employed = self.rank_now().1 == Status::Employed;
-        let to_bounty = if employed { amount / 2 } else { amount };
-        let to_pool = amount - to_bounty;
+        let quarter = amount / 4;
+        let to_pool = if employed { quarter } else { 0 };
+        let not_placed = self.share_with_originals(quarter);
+        let to_bounty = amount - to_pool - (quarter - not_placed);
         let mut s = bounty_state();
         s.pot += to_bounty;
         s.from_tricks_total += to_bounty;

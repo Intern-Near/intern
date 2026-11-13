@@ -95,6 +95,19 @@ impl Coin {
             .cloned()
             .expect("an active playbook exists");
         let cut = result.saturating_mul(COACH_CUT_BPS as u128) / 10_000;
+        // 1.7: a playbook with its NFT: the cut is kept for whoever holds the token (`claim_nft_earnings`).
+        if crate::earn::playbook_nft(pid) {
+            let token_id = format!("playbook:{pid}");
+            self.credit_nft(&token_id, cut);
+            p.paid_total += cut;
+            self.playbooks.insert(pid, p);
+            self.feed.push(
+                EventName::CoachPaid,
+                json!({"round_id": round_id, "playbook_id": pid, "amount": U128(cut),
+                       "paid": [{"token_id": token_id, "amount": U128(cut)}]}),
+            );
+            return cut;
+        }
         let mut sent = 0u128;
         let mut paid = vec![];
         for (account, share) in &p.authors {

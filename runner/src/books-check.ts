@@ -46,6 +46,8 @@ export interface BooksSnapshot {
   bounty: bigint;
   /** 01 1.7: a rescue fund still collecting (`get_rescue().fund`), 0 on an older contract. */
   rescue: bigint;
+  /** 01 1.7: what earning NFTs are owed (`get_nft_earnings().owed_total`), 0 on an older contract. */
+  nft_owed: bigint;
   usdc_of_coin: bigint;
   /** Null when no lender was read (nothing lent, or none named). */
   lender: {
@@ -105,6 +107,10 @@ export async function readBooks(at: AtBlock, coin: string, lender: string | null
     rescue: await at
       .view(coin, "get_rescue")
       .then((v) => u128(record(v, "get_rescue"), "fund", "get_rescue"))
+      .catch(() => 0n),
+    nft_owed: await at
+      .view(coin, "get_nft_earnings")
+      .then((v) => u128(record(v, "get_nft_earnings"), "owed_total", "get_nft_earnings"))
       .catch(() => 0n),
     usdc_of_coin: u128Value(
       await at.view(usdc, "ft_balance_of", { account_id: coin }),
@@ -305,6 +311,14 @@ export function checkBooks(s: BooksSnapshot): BooksReport {
       part: false,
       note: "contributions to rescue a fired Intern, waiting for the target (01 1.7)",
     },
+    {
+      name: "NFT earnings",
+      source: "get_nft_earnings.owed_total",
+      amount_e6: s.nft_owed.toString(),
+      held_at: coin,
+      part: false,
+      note: "earned by originals and playbook NFTs, not yet claimed (01 1.7)",
+    },
   ];
   const atCoin =
     brave.total -
@@ -316,7 +330,8 @@ export function checkBooks(s: BooksSnapshot): BooksReport {
     s.draw_pot +
     s.prizes_owed +
     s.bounty +
-    s.rescue;
+    s.rescue +
+    s.nft_owed;
   const owedTotal = atCoin + brave.lent;
 
   const lenderNeeded = brave.lent > 0n || s.lender !== null;

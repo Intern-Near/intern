@@ -280,10 +280,12 @@ fn a_bet_with_no_result_can_be_abandoned_three_rounds_after_its_close() {
 #[test]
 fn a_paid_trick_splits_between_the_bounty_and_the_pool_and_a_caught_trick_wins_a_share() {
     let mut c = three();
-    // A $2 trick payment: $1 to the bounty, $1 to the pool as outside income (credited at the next opening).
+    // A $2 trick payment: half to the bounty, a quarter to the pool as outside income, and a quarter for the claimed
+    // originals: none is claimed yet, so that quarter goes to the bounty too.
     assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 2_000_000, r#"{"trick":{"id":"abc-123"}}"#), 0);
     let b = c.get_bounty();
-    assert_eq!((b.pot.0, b.tricks_paid, b.from_tricks_total.0), (1_000_000, 1, 1_000_000));
+    assert_eq!((b.pot.0, b.tricks_paid, b.from_tricks_total.0), (1_500_000, 1, 1_500_000));
+    assert_eq!(c.s9.income_waiting, 500_000);
     let paid = c.get_trick_payment("abc-123".into()).expect("recorded");
     assert_eq!((paid.account_id.as_str(), paid.amount.0, paid.round_id), ("bob.test", 2_000_000, 2));
     // The same id again, too little, or a bad id: refunded in full.
@@ -292,18 +294,18 @@ fn a_paid_trick_splits_between_the_bounty_and_the_pool_and_a_caught_trick_wins_a
     assert_eq!(transfer_in(&mut c, at(2, 2_300), "bob.test", 1_000_000, r#"{"trick":{"id":"no spaces"}}"#), 1_000_000);
     // Anyone adds to the bounty.
     assert_eq!(transfer_in(&mut c, at(2, 2_400), "carol.test", 9_000_000, r#"{"bounty":{}}"#), 0);
-    assert_eq!(c.get_bounty().pot.0, 10_000_000);
+    assert_eq!(c.get_bounty().pot.0, 10_500_000);
     // A trick that is not credited wins nothing; one credited to bob that gets the AI refused wins 10% of the pot.
     assert!(matches!(propose(&mut c, 2, &TOO_BIG), wire::Verdict::Nope { .. }));
-    assert_eq!(c.get_bounty().pot.0, 10_000_000);
+    assert_eq!(c.get_bounty().pot.0, 10_500_000);
     ctx(at(2, IN_WINDOW), RUNNER, 0);
     let rb = c.get_rulebook();
     let line = decision_line(rb.round_id, &rb.nonce, &TOO_BIG);
     let v = c.propose(b64(rb.text.as_bytes()), b64(line.as_bytes()), b64(b"FAKE"), None, Some(acct("bob.test")));
     assert!(matches!(v, wire::Verdict::Nope { code: Refusal::OverTradeLimit, .. }));
     let b = c.get_bounty();
-    assert_eq!((b.pot.0, b.paid_total.0), (9_000_000, 1_000_000));
-    assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 1_000_000);
+    assert_eq!((b.pot.0, b.paid_total.0), (9_450_000, 1_050_000));
+    assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 1_050_000);
     assert_eq!(events(&c, EventName::BountyPaid)[0]["account_id"], "bob.test");
 }
 
@@ -347,4 +349,74 @@ fn a_rehire_by_vote_gives_a_waiting_rescue_back() {
     assert_eq!(c.get_rescue().fund.0, 0);
     ctx(at(3, 2_000), "anyone.test", 0);
     assert_eq!(c.get_player(acct("bob.test")).prize_owed.0, 10_000_000);
+}
+
+
+// ----- NFTs that do something (items 13, 14, 24) ------------------------------------------------------------
+
+#[test]
+fn claimed_originals_share_a_quarter_of_paid_tricks() {
+    let mut c = three();
+    // Two originals claimed (their first-of-kind stickers exist): OVER_TRADE_LIMIT and FIRED.
+    c.s9.sticker_firsts[Refusal::OverTradeLimit as usize] = Some((acct("bob.test"), 2, true));
+    c.s9.sticker_firsts[Refusal::Fired as usize] = Some((acct("carol.test"), 2, true));
+    // An unclaimed one does not share.
+    c.s9.sticker_firsts[Refusal::ZeroMargin as usize] = Some((acct("carol.test"), 2, false));
+    assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 4_000_000, r#"{"trick":{"id":"t-1"}}"#), 0);
+    let e = c.get_nft_earnings();
+    assert_eq!(e.owed_total.0, 1_000_000);
+    let owed: Vec<(String, u128)> = e.tokens.iter().map(|t| (t.token_id.clone(), t.owed.0)).collect();
+    assert!(owed.contains(&("original:OVER_TRADE_LIMIT".to_string(), 500_000)));
+    assert!(owed.contains(&("original:FIRED".to_string(), 500_000)));
+    assert_eq!(c.get_bounty().pot.0, 2_000_000);
+}
+
+#[test]
+fn whoever_holds_an_earning_token_claims_it_and_nobody_else() {
+    let mut c = three();
+    c.s9.sticker_firsts[Refusal::Fired as usize] = Some((acct("carol.test"), 2, true));
+    assert_eq!(transfer_in(&mut c, at(2, 2_000), "bob.test", 4_000_000, r#"{"trick":{"id":"t-2"}}"#), 0);
+    // The sticker contract says dave holds it now (it was sold): carol's claim fails, dave's succeeds.
+    let token = r#"{"token_id":"original:FIRED","owner_id":"dave.test"}"#.as_bytes().to_vec();
+    ctx_full(at(2, 3_000), ME, 0, vec![PromiseResult::Successful(token.clone())]);
+    assert!(!c.on_nft_owner("original:FIRED".into(), acct("carol.test")));
+    ctx_full(at(2, 3_100), ME, 0, vec![PromiseResult::Successful(token)]);
+    assert!(c.on_nft_owner("original:FIRED".into(), acct("dave.test")));
+    ctx(at(2, 3_200), "anyone.test", 0);
+    assert_eq!(c.get_player(acct("dave.test")).prize_owed.0, 1_000_000);
+    assert_eq!(c.get_nft_earnings().owed_total.0, 0);
+}
+
+#[test]
+fn a_playbook_with_its_nft_keeps_the_coach_cut_for_the_token() {
+    let mut c = three();
+    // Playbook 1 by bob, active in round 3, with its NFT.
+    ctx(at(2, 2_000), "bob.test", 50_000_000_000_000_000_000_000);
+    let pid = c.submit_playbook("Prefer DOGE on calm days.".into(), vec![wire::Author { account_id: acct("bob.test"), share_bps: 10_000 }]);
+    c.round_playbook.insert(3, pid);
+    env::storage_write(&[b"e7p".as_slice(), &pid.to_le_bytes()].concat(), &[1]);
+    goto(&mut c, 3, 1_000);
+    ctx(at(3, 2_000), "anyone.test", 0);
+    let before = c.books.brave_total;
+    c.finish_settle(3, 0, 10_000_000);
+    // 10% of a $10 win: $1 kept for the token, not sent to bob.
+    assert_eq!(c.books.brave_total, before + 9_000_000);
+    let e = c.get_nft_earnings();
+    assert_eq!(e.owed_total.0, 1_000_000);
+    assert!(e.tokens.iter().any(|t| t.token_id == format!("playbook:{pid}") && t.owed.0 == 1_000_000));
+}
+
+#[test]
+fn the_career_card_is_drawn_from_the_record() {
+    let c = three();
+    ctx(at(2, 2_000), "anyone.test", 0);
+    let v = c.get_career();
+    assert_eq!((v.rank, v.status, v.rounds), (Rank::Intern, Status::Employed, 2));
+    assert!(v.svg.starts_with("data:image/svg+xml;base64,"));
+    use near_sdk::base64::Engine;
+    let svg = String::from_utf8(
+        near_sdk::base64::engine::general_purpose::STANDARD.decode(v.svg.trim_start_matches("data:image/svg+xml;base64,")).unwrap(),
+    )
+    .unwrap();
+    assert!(svg.contains("THE INTERN") && svg.contains("INTERN · EMPLOYED") && svg.contains("LEVEL 0"));
 }

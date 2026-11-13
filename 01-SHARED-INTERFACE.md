@@ -310,6 +310,8 @@ Read-only and free. The site and the runner use only these.
 | `get_week` *(1.6)* | — | `WeekView` (section 9.8) |
 | `get_auto` *(1.7)* | — | `AutoView` (section 9.9) |
 | `get_bounty` *(1.7)* | — | `{ pot, paid_total, added_total, from_tricks_total: Usdc; tricks_paid: number; trick_price: Usdc; bounty_bps: number }` (section 9.10) |
+| `get_nft_earnings` *(1.7)* | — | `{ owed_total, paid_total: Usdc; tokens: { token_id, owed: Usdc }[]; careers_minted: number }` (section 9.12) |
+| `get_career` *(1.7)* | — | `{ rank, status, level, rounds, bets, refusals: number; result: Signed; svg: string }` (section 9.12) |
 | `get_rescue` *(1.7)* | — | `{ fund, target: Usdc; contributors: number; rescuers: [AccountId, Usdc][]; from_round, until_round: number; cut_bps: number; paid_total: Usdc; rescues: number }` (section 9.11) |
 | `get_trick_payment` *(1.7)* | `{ id: string }` | `{ account_id, amount: Usdc, at: Ms, round_id } \| null` (section 9.10) |
 | `get_rebalance` *(1.7)* | — | `{ action: "LEND" \| "RECALL" \| "NONE" \| "BUSY" \| "NO_LENDER", amount: Usdc }`: what `rebalance` would move now, without moving it |
@@ -688,7 +690,7 @@ The owner's decisions of 2026-11-13 (`05-REWARDS-LATER.md`). Every prize is paid
 - **The payday draw (R4).** Every `draw_rounds` (7) rounds, the interest collected in those rounds is drawn: `draw_top_bps` (70%) to one winner, the rest in `draw_runners` (10) equal shares; with nobody in it, it rolls over. *(1.7, Engine 2's "f3")* **Each of the eleven prizes is drawn by tickets with replacement**, so an account's expected prize is its share of the tickets however its money is split across accounts (one account may win several). A boss's tickets are **the smaller of the BRAVE dollars held when the period began (or when joining) and at the draw** *(1.7: BRAVE coins at today's value only; SAFE risks nothing and is not lent)*, times the rounds of the period they were in. `enter_draw` needs some BRAVE. **When the draw is full (200), a newcomer holding more BRAVE takes the place of the entrant holding least**; otherwise it is refused. Money added in the middle of a period counts from the next one. **Nobody's deposit is touched.** On testnet the interest is the STAND-IN lender's test rate, so prizes are cents.
 - **Point wagers** *(1.7)*. `guess({ verdict, wager? })`: `wager` points (at most the points held) are taken when guessing; when the round's first ruling comes, the right guessers share all the round's wagered points in proportion to their own wagers (a guesser's share is `wager × all wagered ÷ wagered on the right answer`, rounded down), on top of the usual point. A round with no ruling gives the wager back. `get_rewards().wagers_this_round` is `[YES, NOPE, SKIP]` (U64 strings); `PlayerView.guess.wager`. Points have no cash value.
 - **Banking a streak** *(1.7)*. `bank_streak()`: the current streak becomes `streak × streak` points and starts again (`streak_banked { account_id, streak, points }`): sure points instead of chasing the jackpot's seven. Not while a guess waits for its ruling.
-- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed + get_bounty().pot + get_rescue().fund` *(1.7: the trick bounty and a rescue still collecting)*.
+- **Books.** The rewards hold their money apart from both pools: `USDC held = brave.total − brave.lent + brave.pending + safe.total + brave.income_waiting + jackpot + draw_pot + prizes_owed + get_bounty().pot + get_rescue().fund + get_nft_earnings().owed_total` *(1.7: the trick bounty, a rescue still collecting, and NFT earnings not yet claimed)*.
 - **The long shot (R6, 1.5).** Bosses may vote `LONG_SHOT` (section 9.2). In the round it allows, the Intern may place **one extra bet**: margin **exactly 0.5% of the pool at round open**, leverage up to 10 (5 on PENGU and WIF), on a coin and side its rank allows, inside the round's limit (section 7). The rulebook says so that round only (section 6.1). The result is shared by all BRAVE holders, like any bet. **It usually loses: that is what a long shot is.** At most once every seven rounds. `get_rewards().long_shot` shows it.
 
 ```ts
@@ -791,6 +793,15 @@ Owner's decisions on Engine 2's list (items 9 and 16). Test USDC on testnet; a p
 
 Owner's decision on Engine 2's list (item 16). While the Intern is `FIRED` (and no rehire is on its way), anyone may pay into a rescue: `ft_transfer_call(.., msg: '{"rescue":{}}')`, at least $1 (`rescue_grew`); at most 50 rescuers. The money is held apart until the fund reaches $50: then it goes to the BRAVE pool as outside income and the Intern is rehired at INTERN from the next round, with a new 30-day term (`rescued`). For the 14 rounds after that, each winning round pays 10% of its result to the rescuers, split by what each put in, as prizes (`rescue_paid`; `claim_prizes`); the pool keeps the rest. If holders rehire the Intern by vote first, every contribution still waiting is given back as a prize.
 
+### 9.12 NFTs that do something *(1.7)*
+
+Owner's decisions on Engine 2's list (items 13, 14, 24). The tokens live on the sticker contract (NEP-171); the coin keeps what they have earned.
+
+- **The originals earn.** A quarter of every paid trick (section 9.10) is shared equally by the claimed "first of its kind" originals (`original:<CODE>`); with none claimed it goes to the bounty.
+- **A playbook's NFT carries its coach cut.** An author mints it: `claim_playbook_nft({ playbook_id })`, 0.02 NEAR, at least 60 TGas, once per playbook (`playbook:<id>`, transferable). From then on, that playbook's 10% coach cut of a winning round is kept for whoever holds the token, not sent to the authors (`coach_paid` lists `{ token_id, amount }`).
+- **Claiming.** `claim_nft_earnings({ token_id })`, at least 50 TGas: the coin asks the sticker contract who holds the token; if it is the caller, what the token earned becomes the caller's prize (`claim_prizes`; event `nft_earnings_claimed { token_id, account_id, amount }`).
+- **Career cards.** `mint_career_card()`, 0.02 NEAR, at least 60 TGas: `career:<n>`, transferable. Its picture (`media`) is an SVG `data:` URI the contract draws from the Intern's record (rank, status, level, rounds, bets, refusals, result); `refresh_career_card({ n })` (anyone, at least 30 TGas) redraws it with the record now, through the sticker contract's new `update_token` (callable by the coin only). The level is the number of whole weeks (7 rounds) the record covers. `get_career()` shows the record and the picture.
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -853,6 +864,7 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `rescue_grew` *(1.7)* | `{ amount, by, fund, target }` |
 | `rescued` *(1.7)* | `{ round_id, effective_round, fund, rescuers }` |
 | `rescue_paid` *(1.7)* | `{ round_id, amount }` |
+| `nft_earnings_claimed` *(1.7)* | `{ token_id, account_id, amount }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 

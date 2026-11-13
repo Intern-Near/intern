@@ -113,6 +113,7 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   rescue_grew: { amount: "20000000", by: "boss1.desk-lab-2026.testnet", fund: "30000000", target: "50000000" },
   rescued: { round_id: 70, effective_round: 71, fund: "50000000", rescuers: ["boss1.desk-lab-2026.testnet"] },
   rescue_paid: { round_id: 72, amount: "120000" },
+  nft_earnings_claimed: { token_id: "original:FIRED", account_id: "boss2.desk-lab-2026.testnet", amount: "500000" },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

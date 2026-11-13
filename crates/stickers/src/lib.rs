@@ -109,6 +109,42 @@ impl Stickers {
         )
     }
 
+    /// 1.7: the coin contract only. Updates a token's title, description, picture (`media`, for example a `data:`
+    /// SVG) and `extra`; fields left out stay. Used for the career card, whose picture follows the Intern's record.
+    pub fn update_token(
+        &mut self,
+        token_id: TokenId,
+        title: Option<String>,
+        description: Option<String>,
+        media: Option<String>,
+        extra: Option<String>,
+    ) {
+        require!(
+            env::predecessor_account_id() == self.minter,
+            "only the $INTERN coin contract updates stickers"
+        );
+        let map = self
+            .tokens
+            .token_metadata_by_id
+            .as_mut()
+            .unwrap_or_else(|| env::panic_str("no metadata"));
+        let mut m = map.get(&token_id).unwrap_or_else(|| env::panic_str("no such token"));
+        if title.is_some() {
+            m.title = title;
+        }
+        if description.is_some() {
+            m.description = description;
+        }
+        if media.is_some() {
+            m.media = media;
+        }
+        if extra.is_some() {
+            m.extra = extra;
+        }
+        m.updated_at = Some(env::block_timestamp_ms().to_string());
+        map.insert(&token_id, &m);
+    }
+
     /// Whether a token can be transferred (false for boss badges).
     pub fn is_transferable(&self, token_id: TokenId) -> bool {
         !self.fixed.contains(&token_id)
