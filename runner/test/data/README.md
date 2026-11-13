@@ -38,3 +38,9 @@ as received and its own `fetched_at`. `test/books-check.test.ts` replays them.
 seq 1 to 103; its round 23 was due and not yet written). Every exchange as above: `status`, `block`,
 `get_constants`, every `get_feed` page, `get_pot`, `get_round`, `ft_total_supply` and `ft_balance_of` of the coin
 contract itself. `test/supply-log.test.ts` replays them.
+
+`quote-2026-11-13T151111Z.json`: one real read-only run of `npm run quote -- --market PEPE --side long --margin 20
+--leverage 1 --save …` on 2026-11-13 at 15:11 UTC, while round 54 of `coin.desk-lab-2026.testnet` was in its proposal
+window and the live runner had just placed bet #35 (PEPE long $15). Every NEAR RPC exchange with
+`https://test.rpc.fastnear.com`, exactly as received: `status`, the latest final block (277526635), then six views at
+that block (get_constants, get_round, get_rank, get_pot, get_rulebook, get_positions). `test/quote.test.ts` replays it.

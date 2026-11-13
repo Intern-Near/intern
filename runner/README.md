@@ -185,6 +185,9 @@ Hyperliquid testnet balance of the contract's address. It exits with 1 if any ch
 | `npm run key-scope -- <account> [--expect runner\|relayer] [--key <public key>]` | Read-only. The key an account signs with against what is declared, and its other keys ("key-scope" below) |
 | `npm run books -- [--coin <account>] [--json <file>]` | Read-only. Whether the coin holds and has lent exactly what it owes, bucket by bucket ("books" below) |
 | `npm run supply-log -- [--coin <account>] [--json <file>] [--csv <file>]` | Read-only. Every mint and burn of $INTERN, rebuilt from the feed, against `ft_total_supply` ("supply-log" below) |
+| `npm run quote -- --market PEPE --side long --margin 20 [--leverage 1]` | Read-only. "Why NOPE?": the verdict a bet would get from checks 6 to 12 right now, with the rule, its 01 section and the numbers ("quote" below) |
+| `npm run --silent mcp` | The read-only MCP server for other AI agents, over stdio ("mcp" below) |
+| `npm run mcp-check` | Starts that server the way an MCP client does, lists its tools, calls `intern_status` and `intern_quote`. Read-only |
 | `npm test` | The tests. Offline |
 | `npm run verify` | Type check, lint, tests |
 
@@ -487,6 +490,188 @@ coins: round 2 (100.000000, of which 0.001000 locked), round 3 (900.000000), rou
 - The feed has used 313 of its 1,000 places, about 5.9 a round: in about 116 more rounds (around 2.4 days at 30-minute
   rounds) seq 1 drops out and the log can no longer be rebuilt from the feed alone.
 
+## quote: "Why NOPE?", a free dry run of a bet
+
+```
+npm run quote -- --market PEPE --side long --margin 20 [--leverage 1] [--coin <account>] [--rpc <url>] [--json] [--save <file>]
+```
+
+The verdict a bet would get from checks 6 to 12 (01 §7) right now: YES, or the NOPE code, with the rule in plain
+words, its 01 section, and the numbers it hit (asked against limit, and where the limit comes from). Each check is
+listed; the ones after the deciding check are "not reached", with what each would say on its own. It is free: it only
+reads the contract's views (`get_constants`, `get_rank`, `get_round`, `get_pot`, `get_rulebook`, `get_positions`),
+all at the latest final block. Nothing is signed or sent, no key is needed, no `.env` is read. `--margin` is in
+dollars (up to 6 decimals). Exit code: 0 YES; 1 NOPE; 2 no quote.
+
+**Checks 1 to 5 are not part of a dry run**: the proposal window (1), the firing (2), the AI's signature (3), the
+request carrying the exact rulebook (4) and the decision line (5). The output says where checks 1 and 2 stood when the
+views were read, for information only.
+
+- **The verdict is `rules.ts`'s.** `src/explain.ts` calls `rankChecks` for it and never works it out again; it only
+  lists checks 6 to 12 with their numbers, every limit taken from `ranks.ts` and `rules.ts` (none typed in it). If its
+  own list ever disagreed with `rankChecks`, it would throw rather than give a wrong reason.
+- **The state is the one `propose` uses** (`crates/coin/src/round.rs`): the rank and status now (`get_rank`: a
+  demotion applies at once, while `get_round().rank` is the rank at round open), the pool at round open and now (the
+  limit base is the smaller), the round's counters, `min_notional`, and the long-shot ticket the rulebook states
+  (`rulebook.ts` `longShotOf`).
+- **It refuses rather than guess** (exit 2): the contract's rank limits differ from `ranks.ts`, the rulebook is for
+  another round, or the network is not testnet. A bet that cannot be written as a decision line (01 §6.2: an unknown
+  market, leverage 0, more than 6 decimals) is refused with check 5's own reason, from `decision.ts`.
+- **Browser-safe**, so the website can bundle it: `explain.ts` loads only `rules.ts` and `ranks.ts`; `quote.ts` (views
+  to state, the bet, the text) adds `contract.ts`, `decision.ts`, `rulebook.ts`, `pricing.ts`, `markets.ts` and
+  `json.ts`. No `node:` import and no package in either; the one Node global among them is `Buffer` inside
+  `rulebook.ts`'s `buildRulebook`, which they never call. `test/explain.test.ts` walks their imports to keep it so.
+- **Parity tests** (`test/explain.test.ts`): Engine 1's vectors in `interface/vectors/checks.json`. 22 of the 26 rule
+  cases apply and give the expected verdict, code, asked and limit. Cases 21, 22, 23 and 26 do not apply: checks 1 and
+  2 decide them (`FIRED`, `OUTSIDE_WINDOW`), and a dry run never runs those (for them the test still checks that the
+  explainer equals `rankChecks`). The decision-line cases test check 5's reader and the rulebook cases pin the §6.1
+  text, so neither applies; two decision-line notes name what the rank checks do next (D10, D13), and those are checked.
+  Then 5,000 random states against `rankChecks` (long-shot tickets, counters above the rank's limits as after a
+  demotion, pools that shrank, other `min_notional`s), covering every code of checks 6 to 12, YES and SKIP.
+- `quote.test.ts` replays one real run (`test/data/quote-2026-11-13T151111Z.json`).
+
+Real run, 2026-11-13 15:11 UTC (the live coin, round 54, in its proposal window, just after the runner's bet #35):
+
+```
+$ npm run quote -- --market PEPE --side long --margin 20 --leverage 1
+quote: a free dry run of checks 6 to 12 (01 §7) for coin.desk-lab-2026.testnet. Read-only: views at block 277526635 (2026-11-13T15:11:10.223Z); nothing signed or sent.
+the bet:    PEPE long, margin $20.00 × 1 = notional $20.00
+the round:  54, phase PROPOSE, 17:10 in; rank INTERN (EMPLOYED); bets so far 1 of 1, $15.00 at risk
+            #35 PEPE long $15.00 ×1 (OPEN_SIGNED)
+the pool:   $1,572.985657 when the round opened, $1,572.985657 now
+
+VERDICT of checks 6 to 12: NOPE TOO_MANY_TRADES (check 10)
+  rule:     Each rank allows max_bets bets per round; once they are used, another bet is refused. (01 §7 check 10; §3)
+  numbers:  asked 2 (bets_used + 1) against limit 1 (max_bets)
+  limits:   INTERN's max_bets, 1 per round (01 §3).
+  checks:
+     6 NOT_ON_LIST        pass                             PEPE is on INTERN's list (DOGE, SHIB, PEPE, PENGU)
+     ...
+    10 TOO_MANY_TRADES    fail                             INTERN allows 1 bet per round and 1 is used: this would be bet 2
+    11 OVER_TRADE_LIMIT   not reached (alone: pass)        margin $20.00 is within the per-bet limit $31.459713
+    12 OVER_ROUND_LIMIT   not reached (alone: fail)        at risk this round $15.00 + this margin $20.00 = $35.00, above the per-round limit $31.459713
+
+Checks 1 to 5 are not part of a dry run: the proposal window (1) and the firing (2) come before the rank checks, and the AI's signature (3), the request carrying the exact rulebook (4) and the decision line (5) need a real signed answer from the AI. This verdict is checks 6 to 12 only, on the state read now.
+For information, when the views were read: check 1 would pass now (17:10 into the round, phase PROPOSE; proposals are taken from 15:00 to 20:00 into the round); check 2 would pass (the Intern is EMPLOYED).
+```
+
+Not done: checks 13 to 16 (the funding quote; nothing attaches one on testnet). The state can change between the
+dry run and a real proposal (another bet, a cash-out, a vote, a new round); the output says so.
+
+## mcp: a read-only MCP server for other AI agents
+
+```
+npm run --silent mcp -- [--coin <account>] [--rpc <url>]      # or: node src/cli/mcp.ts [--coin …] [--rpc …]
+npm run mcp-check -- [--market PEPE --side long --margin 20 --leverage 1] [--coin <account>] [--rpc <url>]
+```
+
+An MCP server over stdio, built with the official TypeScript SDK (`@modelcontextprotocol/sdk` 1.32.2), so that other
+AI agents can look at the Intern. Six tools:
+
+| Tool | What it answers |
+|---|---|
+| `intern_status` | Rank and status, the round (id, phase, times, counters), the pool (BRAVE: idle, lent, in play, pending; SAFE; coin price; bosses), the limits in force now from `get_constants`, this round's bets |
+| `intern_rulebook` | The exact rulebook text `get_rulebook` serves now (the AI's system message), with round and nonce |
+| `intern_quote` | `quote` above for a hypothetical bet: `market`, `side` (`long`/`short`), `margin_usd`, `leverage` (default 1) |
+| `intern_feed` | Recent events from `get_feed`, oldest first: `after_seq` (optional), `limit` (1 to 100, default 20) |
+| `intern_verify_round` | `verify-round` above for one propose transaction: `tx_hash`, `sender` (default: the contract's runner) |
+| `intern_fills_check` | `fills-check` above for the last N rounds: `rounds` (1 to 200, default 10) |
+
+**Every tool only reads. No tool signs, sends or spends anything, and none reads a key or `.env`.** Each tool's
+description says so, and each is marked `readOnlyHint`. They read the coin's views (01 §8) at the latest final block
+over NEAR RPC, public transactions (verify-round, with the archival fallback) and Hyperliquid testnet's public
+`/info` (fills-check). The server reads no environment variable and no file but `interface/deployments.json` (the
+default coin); `mcp-check` starts it with the SDK's default environment (`HOME`, `LOGNAME`, `PATH`, `SHELL`, `TERM`,
+`USER`). Its code loads no module that holds a key or can sign a NEAR transaction (no `near.ts`,
+`chain.ts`, `secret.ts` or near-api-js; a test walks its imports). It loads `hl-exchange.ts` for the `/info` readers;
+no tool calls that file's `/exchange` delivery, and the tests record every request the tools make: views only, NEAR
+RPC `status`, `block`, `query` and `tx`, and `/info` `userFillsByTime` and `userFunding`.
+
+Each answer is plain text first, then the same data as JSON (also as `structuredContent`). Amounts ending in `_e6`
+are dollars times 1,000,000. A bet that cannot be quoted, or a quote the explainer cannot give, comes back as a tool
+error with the reason.
+
+**Add it to an MCP client.** It needs Node 24.11 or newer (it runs the `.ts` files directly) and absolute paths.
+stdout carries only the protocol: plain `npm run mcp` prints npm's own banner on stdout first, so let the client
+start `node` itself. Claude Desktop, in `claude_desktop_config.json` (the shape from MCP's own guide,
+https://modelcontextprotocol.io/docs/develop/connect-local-servers, read 2026-11-13):
+
+```json
+{
+  "mcpServers": {
+    "intern": {
+      "command": "node",
+      "args": ["/absolute/path/to/intern/runner/src/cli/mcp.ts"]
+    }
+  }
+}
+```
+
+Claude Code (the form `claude mcp add --help` gives: `claude mcp add [options] <name> <commandOrUrl> [args...]`):
+
+```
+claude mcp add intern -- node /absolute/path/to/intern/runner/src/cli/mcp.ts
+```
+
+Add `--coin coin-fast.desk-lab-2026.testnet` after the path for the test copy with 5-minute rounds. Run `npm ci`
+in `runner/` first: the SDK and `zod` are dev dependencies (below).
+
+**Dependencies.** `@modelcontextprotocol/sdk` 1.32.2 (published 2026-10-23) and its required peer `zod` 4.6.7
+(2026-10-12), pinned exactly and installed with `npm install --before=2026-10-30`, so every package in their tree is
+at least two weeks old. That adds 81 packages, among them the SDK's HTTP and auth parts (express, hono, ajv, jose),
+which the stdio server does not load. They are **dev dependencies on purpose**: the runner's Docker image (`npm ci
+--omit=dev`) holds the runner's keys, and it gets nothing new.
+
+**Tests** (`test/mcp.test.ts`, offline): the SDK's own client over its in-memory transport, against a fake chain
+(`test/support/fake-coin-views.ts`, the coin's views from memory; it throws on anything that is not a view) and
+against recorded real replies (verify-round's and fills-check's). They list the tools, call every one (with errors
+too), and check the requests above.
+
+Real run, 2026-11-13 15:18 UTC (read-only, against `coin.desk-lab-2026.testnet`; round 54 in HOLD):
+
+```
+$ npm run --silent mcp-check -- --market PEPE --side long --margin 20 --leverage 1
+mcp: the Intern's read-only MCP server is running on stdio (coin coin.desk-lab-2026.testnet, RPC https://test.rpc.fastnear.com)
+server: intern-testnet 0.1.0, over stdio (…/node …/runner/src/cli/mcp.ts )
+tools (6):
+  intern_status: The Intern now [readOnlyHint=true, destructiveHint=false, idempotentHint=true, openWorldHint=true]
+  intern_rulebook: The rulebook now [readOnlyHint=true, …]
+  intern_quote: Why NOPE? A free dry run of a bet [readOnlyHint=true, …]
+  intern_feed: Recent events [readOnlyHint=true, …]
+  intern_verify_round: Re-check a proposal from public data [readOnlyHint=true, …]
+  intern_fills_check: Reported results against Hyperliquid's fills [readOnlyHint=true, …]
+
+=== intern_status {}
+$INTERN, coin.desk-lab-2026.testnet on testnet, block 277527377 (2026-11-13T15:18:22.706Z). Read-only: it signs nothing, sends no transaction and spends nothing, and it reads no key and no .env.
+rank INTERN, EMPLOYED since round 1
+round 54: phase HOLD, 24:22 in; proposals 15:00 to 20:00, closing from 25:00; ends 2026-11-13T15:24:00.000Z; skipped 2, refused 0
+pool: BRAVE $1,572.985657 (at round open $1,572.985657; idle $15.845331, lent $1,542.140326, in play $15.00, pending $0.00); SAFE $221.106315; coin price $1.199702; 2 boss(es)
+limits now (INTERN, from get_constants): per bet $31.459713, per round $31.459713 ($16.459713 left), bets 1 of 1, leverage up to 1x, DOGE, SHIB, PEPE, PENGU, long; min notional $11.00; limit base $1,572.985657
+bets this round: #35 PEPE long $15.00 ×1 OPEN_SIGNED
+
+=== intern_quote {"market":"PEPE","side":"long","margin_usd":"20","leverage":1}
+quote: a free dry run of checks 6 to 12 (01 §7) for coin.desk-lab-2026.testnet. Read-only: views at block 277527380 (2026-11-13T15:18:24.630Z); nothing signed or sent.
+…
+VERDICT of checks 6 to 12: NOPE TOO_MANY_TRADES (check 10)
+…
+For information, when the views were read: check 1 would refuse a proposal now with OUTSIDE_WINDOW (24:24 into the round, phase HOLD; proposals are taken from 15:00 to 20:00 into the round); check 2 would pass (the Intern is EMPLOYED).
+```
+
+The other four tools were also called once, live and read-only, the same minute: `intern_feed` (events 315 to 318),
+`intern_rulebook` (round 54), `intern_verify_round` on the round-51 proposal (verified, as above) and
+`intern_fills_check` for rounds 52 to 54 (2 OK, 1 NOT REPORTED: bet #35 was still open).
+
+Not done, and what to know:
+- **SDK v1.** The SDK's README calls 1.x "the maintenance line" (bug and security fixes for at least six months after
+  2026-07-27): it implements the MCP spec up to 2025-11-25. The current stable line is v2, in separate packages
+  (`@modelcontextprotocol/server` and `/client`, 2.4.0), for the 2026-07-28 spec. This uses the package the brief
+  names; a client and server agree on a protocol version when they connect, so a client that still speaks 2025-11-25
+  or older works. Moving to v2 would be a separate change.
+- **stdio only**: it runs next to the client, on the client's machine. No HTTP transport, so nothing to host and no
+  auth; it holds nothing worth protecting.
+- Each call reads a fresh final block (a second or two behind the chain), through public RPCs with their rate limits.
+  `intern_fills_check` reads the whole feed and outbox each time, as the command does: a few seconds.
+
 ## What is in `src/`
 
 | File | What it is |
@@ -520,6 +705,8 @@ coins: round 2 (100.000000, of which 0.001000 locked), round 3 (900.000000), rou
 | `books-check.ts`, `books-text.ts` | `books`: the coin's buckets and what holds them, at one block; 01 §9.7's rule, the verdict, the text |
 | `supply-log.ts`, `supply-text.ts` | `supply-log`: the feed at one block, the supply rebuilt with the contract's share rule, the text and CSV |
 | `at-block.ts`, `view-fields.ts`, `deployed.ts` | Views read at one final block (testnet only); strict readers for view answers; any name from `deployments.json` |
+| `explain.ts`, `quote.ts`, `chain-snapshot.ts`, `cli/quote.ts` | `quote`: the explanation of checks 6 to 12 (browser-safe; the verdict is `rules.ts`'s), the views turned into the round's state and the bet (browser-safe), the views at one final block, the command |
+| `mcp.ts`, `cli/mcp.ts`, `cli/mcp-check.ts` | The read-only MCP server's six tools, its stdio entry point, and a client that starts it and calls two tools |
 
 Tests drive the round loop against test doubles in `test/support/`: an in-memory stand-in for the contract and a
 `fetch` answering like NEAR AI and Hyperliquid testnet. They are labelled as test doubles, live only under `test/`,

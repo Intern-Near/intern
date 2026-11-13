@@ -23,12 +23,17 @@
     "fills-check": "node src/cli/fills-check.ts",
     "key-scope": "node src/cli/key-scope.ts",
     "books": "node src/cli/books-check.ts",
-    "supply-log": "node src/cli/supply-log.ts"
+    "supply-log": "node src/cli/supply-log.ts",
+    "quote": "node src/cli/quote.ts",
+    "mcp": "node src/cli/mcp.ts",
+    "mcp-check": "node src/cli/mcp-check.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@types/node": "24.19.2",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "zod": "4.6.7"
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
