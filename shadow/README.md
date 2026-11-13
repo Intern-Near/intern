@@ -155,3 +155,59 @@ What they do not prove:
 | `./run-forever.sh <run-dir>` | `run`, restarted after a crash; stops when the run finishes or cannot start |
 | `npm test` | The tests (offline) |
 | `npm run verify` | Type check, lint, tests |
+
+## The 60-day simulation (`npm run sim`)
+
+A simulation of the $INTERN coin over 60 days: the memecoin track's "simulate 60 days of community behaviour first and
+show supply over time under a few scenarios, then pick the parameters". It follows 01-SHARED-INTERFACE.md version 1.5
+rule by rule, each with its section cited in `src/sim/`: rounds of 24 hours (the product) or 30 minutes (the demo);
+BRAVE and SAFE, pay-ins that become coins at the next opening, cash-outs; the Intern's bets, every one judged by
+`runner/src/rules.ts` with the limits of `runner/src/ranks.ts`; promote, demote, fire and rehire votes, with weight growing
+over 7 rounds and the 34% rule; the playbook's 10% coach cut; the free guess, the streak jackpot and the payday draw.
+Offline, deterministic from its seed, a few seconds.
+
+What goes in, all saved in the repository:
+
+- **Real prices:** `fixtures/sim/hl-candles-2026-11-13/`, Hyperliquid mainnet 30-minute candles of the six markets from
+  2026-08-01 to 2026-11-13: the raw replies of the read-only `POST https://api.hyperliquid.xyz/info {"type":"candleSnapshot"}`,
+  gzipped, with `fetch.json` saying what was asked and when. Each seed takes one of the 45 possible 60-day windows.
+- **The Intern:** a model's own recorded answers from a shadow run folder, read from the raw files the way the report reads
+  them. Default: `z-ai/glm-5.3-flash` in `data/2026-11-11-intern` (72 skips, 54 bets, none refused when recorded). Each
+  round one recorded answer is drawn at random and sized against that round's rulebook: the example amount, the largest
+  margin allowed, or the same share of it.
+- **The community:** assumed numbers (how many bosses, what they pay in, how often they cash out, lock and vote), printed
+  with every report. `src/sim/community.ts`.
+- `fixtures/sim/testnet-views-2026-11-13/`: the live testnet coin's public views; `test/sim-rules01.test.ts` checks the
+  simulation's numbers against them.
+
+```
+npm run sim -- [--days 60] [--seeds 5] [--scenario all|<name>] [--round-minutes 1440|30] [--out <dir>]
+               [--model <id>] [--behaviour-run <run-dir>] [--answer-rule strict|trim] [--prices <fixture-dir>]
+node src/sim/fetch.ts [--out fixtures/sim]    # fetch the fixtures again (read-only calls only)
+```
+
+It writes `sim-report.md`, `sim-report.json` and `projection-kit.json` to `--out` (default `data/sim/<minutes>m`). The
+scenarios: `baseline`, `losing-streak`, `brave-run`, `always-max`, `whale-alone`, `nobody-votes`, `fake-farm`. Each runs
+with the rank limits and again, as a control, with them switched off. The pass marks are in `src/sim/scenarios.ts` and the
+report prints them before any result.
+
+**The projection.** `fastForward(input, days)` in `src/sim/projection.ts` takes the coin's public state (`get_pot`,
+`get_rank`) and a number of days and returns a projected state, labelled `PROJECTION`. Pure: no I/O, no clock; the website
+could call it. `projection-kit.json` holds the recorded answers and price moves it needs. The JSON reports (about 1 MB each) and the 30-minute projection kit are not committed; `npm run sim` writes them again. The two `sim-report.md` files and the 24-hour `projection-kit.json` are.
+
+**What the run of 2026-11-13 says** (`data/sim/1440m/`, `data/sim/30m/`):
+
+- With the rank limits every pool pass mark holds for both round lengths: the coin's deepest fall in any seed was 11.9%
+  (an Intern that always bets the maximum, 24-hour rounds). With them off the worst seed fell 15% to 100%.
+- Fake accounts beat the reward ladder. 200 accounts registered before the first round fill the payday draw's 200 places,
+  take all of its prizes and 84% to 92% of the streak jackpot while holding 7% of the dollars, and turn about 100 honest
+  bosses a run away. They cost 2.56 NEAR of registration and $2,002 parked, nearly all of it in SAFE.
+- A bet of exactly the rulebook's largest margin is refused (`OVER_TRADE_LIMIT`) whenever anyone cashed out between the
+  round's opening and the proposal (01 §3 calls this rare). With 24-hour rounds that was 9 of the Intern's 11.4 such bets a
+  run.
+
+**Stand-ins.** The community is assumed. At ANALYST and TRADER the Intern replays its INTERN record (no run has asked a
+model at a higher rank). With 30-minute rounds a bet is held for the whole 30-minute candle, about three times the demo's
+real hold. With the limits off the Intern is told the whole pool is its limit and keeps its habits (UNVERIFIED how a model
+would answer). **Not modeled:** visitors' trick-page messages, the long shot, funding quotes and payments, partial fills,
+stickers, goal bars and the launchpad, turning the dial after paying in; the full lists are in every report.

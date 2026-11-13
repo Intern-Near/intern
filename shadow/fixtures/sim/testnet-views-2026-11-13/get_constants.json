@@ -1,0 +1,142 @@
+{
+  "interface_version": "1.5",
+  "network": "testnet",
+  "usdc_token": "usdc.desk-lab-2026.testnet",
+  "coin_decimals": 6,
+  "ranks": [
+    {
+      "rank": "INTERN",
+      "per_bet_bps": 200,
+      "max_bets": 1,
+      "per_round_bps": 200,
+      "sides": ["LONG"],
+      "max_leverage": 1,
+      "markets": ["DOGE", "SHIB", "PEPE", "PENGU"]
+    },
+    {
+      "rank": "ANALYST",
+      "per_bet_bps": 500,
+      "max_bets": 2,
+      "per_round_bps": 800,
+      "sides": ["LONG"],
+      "max_leverage": 1,
+      "markets": ["DOGE", "SHIB", "PEPE", "PENGU", "WIF", "TRUMP"]
+    },
+    {
+      "rank": "TRADER",
+      "per_bet_bps": 1000,
+      "max_bets": 3,
+      "per_round_bps": 2000,
+      "sides": ["LONG", "SHORT"],
+      "max_leverage": 2,
+      "markets": ["DOGE", "SHIB", "PEPE", "PENGU", "WIF", "TRUMP"]
+    }
+  ],
+  "markets": [
+    {
+      "market": "DOGE",
+      "hl_name": "DOGE",
+      "hl_asset": 173,
+      "sz_decimals": 0
+    },
+    {
+      "market": "SHIB",
+      "hl_name": "kSHIB",
+      "hl_asset": 29,
+      "sz_decimals": 0
+    },
+    {
+      "market": "PEPE",
+      "hl_name": "kPEPE",
+      "hl_asset": 12,
+      "sz_decimals": 0
+    },
+    {
+      "market": "PENGU",
+      "hl_name": "PENGU",
+      "hl_asset": 139,
+      "sz_decimals": 0
+    },
+    {
+      "market": "WIF",
+      "hl_name": "WIF",
+      "hl_asset": 78,
+      "sz_decimals": 0
+    },
+    {
+      "market": "TRUMP",
+      "hl_name": "TRUMP",
+      "hl_asset": 150,
+      "sz_decimals": 1
+    }
+  ],
+  "min_notional": "11000000",
+  "round": {
+    "genesis_ms": 1794419640000,
+    "round_ms": 1800000,
+    "guess_close_ms": 840000,
+    "propose_from_ms": 900000,
+    "propose_until_ms": 1200000,
+    "close_from_ms": 1500000,
+    "tail_fade_ms": 600000
+  },
+  "vote": {
+    "promote_pass_bps": 5000,
+    "promote_quorum_bps": 2000,
+    "tighten_pass_bps": 3400,
+    "vote_ms": 1800000,
+    "weight_full_rounds": 7
+  },
+  "model": {
+    "id": "z-ai/glm-5.3-flash",
+    "signing_algo": "ed25519",
+    "signer": "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff"
+  },
+  "funding": {
+    "mode": "RECORDED",
+    "quote_signer": "ed25519:reYaWhvwu8Jzo3WUM3zhn6VrhuMEF4eADL17qtRVifc",
+    "quote_max_age_ms": 60000,
+    "max_funding_cost_bps": 400
+  },
+  "result_source": "REPORTED",
+  "lending": {
+    "mode": "STANDIN"
+  },
+  "hl": {
+    "testnet": true,
+    "address": "0x46f8eb2a044a826c70e9682fe3bfd65970340132",
+    "signer_contract": "v1.signer-prod.testnet",
+    "path": "intern-1",
+    "order_expiry_ms": 120000
+  },
+  "runner": "intern-runner-ed25519.testnet",
+  "min_first_deposit": "10000000",
+  "refusal_codes": [
+    "OUTSIDE_WINDOW",
+    "FIRED",
+    "BAD_MODEL_SIGNATURE",
+    "WRONG_RULEBOOK",
+    "MALFORMED_DECISION",
+    "NOT_ON_LIST",
+    "SHORT_NOT_UNLOCKED",
+    "ZERO_MARGIN",
+    "OVER_LEVERAGE",
+    "TOO_MANY_TRADES",
+    "OVER_TRADE_LIMIT",
+    "OVER_ROUND_LIMIT",
+    "BAD_QUOTE_SIGNATURE",
+    "STALE_QUOTE",
+    "QUOTE_MISMATCH",
+    "TOO_EXPENSIVE"
+  ],
+  "coach_cut_bps": 1000,
+  "goals": {
+    "boss_ladder": [10, 25, 50, 100, 250, 500, 1000],
+    "tip_jar_target": "100000000",
+    "min_tip": "1000000",
+    "hype_window_ms": 300000,
+    "hype_levels": [3, 6, 10, 15, 25]
+  },
+  "stickers": "stickers.desk-lab-2026.testnet",
+  "launchpad": "launch.desk-lab-2026.testnet"
+}

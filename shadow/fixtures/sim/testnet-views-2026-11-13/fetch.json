@@ -1,0 +1,37 @@
+{
+  "about": "Read-only NEAR RPC views (query, call_function, finality final) of the live testnet coin and its stand-in lender.",
+  "rpc": "https://test.rpc.fastnear.com",
+  "fetched_at": "2026-11-13T13:56:04.988Z",
+  "calls": [
+    {
+      "account": "coin.desk-lab-2026.testnet",
+      "method": "get_constants",
+      "block_height": 277518978,
+      "file": "get_constants.json"
+    },
+    {
+      "account": "coin.desk-lab-2026.testnet",
+      "method": "get_rewards",
+      "block_height": 277518979,
+      "file": "get_rewards.json"
+    },
+    {
+      "account": "coin.desk-lab-2026.testnet",
+      "method": "get_pot",
+      "block_height": 277518979,
+      "file": "get_pot.json"
+    },
+    {
+      "account": "coin.desk-lab-2026.testnet",
+      "method": "get_rank",
+      "block_height": 277518979,
+      "file": "get_rank.json"
+    },
+    {
+      "account": "lender.desk-lab-2026.testnet",
+      "method": "get_rate",
+      "block_height": 277518979,
+      "file": "lender-get_rate.json"
+    }
+  ]
+}

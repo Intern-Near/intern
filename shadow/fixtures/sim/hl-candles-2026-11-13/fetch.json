@@ -1,0 +1,123 @@
+{
+  "about": "Raw replies of Hyperliquid's read-only POST /info candleSnapshot, gzipped byte for byte. Read by shadow/src/sim/load.ts.",
+  "url": "https://api.hyperliquid.xyz/info",
+  "fetched_at": "2026-11-13T13:56:04.988Z",
+  "interval": "30m",
+  "docs": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+  "requests": [
+    {
+      "market": "DOGE",
+      "coin": "DOGE",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "DOGE",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "DOGE-30m-0.json.gz"
+    },
+    {
+      "market": "SHIB",
+      "coin": "kSHIB",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "kSHIB",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "kSHIB-30m-0.json.gz"
+    },
+    {
+      "market": "PEPE",
+      "coin": "kPEPE",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "kPEPE",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "kPEPE-30m-0.json.gz"
+    },
+    {
+      "market": "PENGU",
+      "coin": "PENGU",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "PENGU",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "PENGU-30m-0.json.gz"
+    },
+    {
+      "market": "WIF",
+      "coin": "WIF",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "WIF",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "WIF-30m-0.json.gz"
+    },
+    {
+      "market": "TRUMP",
+      "coin": "TRUMP",
+      "page": 0,
+      "request": {
+        "type": "candleSnapshot",
+        "req": {
+          "coin": "TRUMP",
+          "interval": "30m",
+          "startTime": 1785578164988,
+          "endTime": 1794578164988
+        }
+      },
+      "status": 200,
+      "candles": 5001,
+      "first_open": "2026-08-01T09:30:00.000Z",
+      "last_open": "2026-11-13T13:30:00.000Z",
+      "file": "TRUMP-30m-0.json.gz"
+    }
+  ]
+}
