@@ -3,10 +3,11 @@
 # is exactly this source. Read-only towards the network: it sends no transaction and uses no key.
 #
 #   ./verify.sh            everything (about 10-15 minutes: the sandbox suite runs a local NEAR node)
-#   ./verify.sh --quick    builds + unit tests + the testnet comparison, no local node
+#   ./verify.sh --quick    the same without the local node
 #
 # Needs: the Rust toolchain of rust-toolchain.toml (1.95.0, wasm32-unknown-unknown), cargo-near 0.23.0,
-# python3. The sandbox suite downloads a NEAR node binary on first run.
+# python3, and Node 24 with npm for step 6 (skipped if npm is missing). The sandbox suite downloads a NEAR node
+# binary on first run; step 6 downloads the npm packages of package-lock.json.
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here"
@@ -20,6 +21,7 @@ step "1. Tools"
 note "rustc:      $(rustc --version 2>/dev/null || echo MISSING)   (expected 1.95.0, from rust-toolchain.toml)"
 note "cargo-near: $(cargo near --version 2>/dev/null || echo MISSING)   (expected 0.23.0)"
 note "near-sdk:   $(grep -A1 'name = "near-sdk"' Cargo.lock | grep version | head -1 | cut -d'"' -f2)   (pinned =5.30.1 in Cargo.toml)"
+note "node:       $(node --version 2>/dev/null || echo MISSING)   (expected 24, from .nvmrc; only for step 6)"
 
 step "2. Build every contract (wasm)"
 build() { # crate dir, extra args, log suffix
@@ -85,6 +87,19 @@ for key, path in rows:
     print(f"  {key:10s} {account:38s} local {local[:12]}…  on chain {chain[:12]}…  {'SAME' if ok else 'DIFFERENT'}")
 sys.exit(1 if bad else 0)
 EOF
+
+step "6. The off-chain parts: tests of the runner, Tail or Fade, the stream cues and the shadow run (TypeScript)"
+if command -v npm >/dev/null 2>&1; then
+  for p in runner tailfade stream shadow; do
+    l="$log/npm-$p.log"
+    if (cd "$p" && npm ci --no-audit --no-fund && npm test) >"$l" 2>&1; then r=""; else r="FAILED (see $l)"; fail=1; fi
+    np=$(grep -aE '^(ℹ|#) pass [0-9]+' "$l" | tail -1 | grep -oE '[0-9]+$')
+    nf=$(grep -aE '^(ℹ|#) fail [0-9]+' "$l" | tail -1 | grep -oE '[0-9]+$')
+    note "$(printf '%-9s' "$p") passed: ${np:-?}   failed: ${nf:-?}   $r"
+  done
+else
+  note "skipped: npm not found (Node 24 is needed for this step only)"
+fi
 
 step "Summary"
 if [ $fail = 0 ]; then note "ALL CHECKS PASSED"; else note "SOME CHECKS FAILED (logs in $log)"; fi
