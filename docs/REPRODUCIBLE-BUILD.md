@@ -51,16 +51,17 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
 
 ## What has been checked, and what has not
 
-- **The same machine, another folder: identical.** The whole `intern/` folder was copied elsewhere and the coin
-  built there gave the same hash (then `3yDwSmrChLAwwYX6fLq3VLsuo9QjZdkhtRc3U8Z4GkDb`, the 1.3 code). The build does not depend on where
-  the folder lives.
+- **The same machine, a fresh clone: identical.** On 2026-11-13 the repository was cloned into an empty folder
+  and `./verify.sh --quick` run there with an empty `target/`: all seven contracts gave the hashes above (`SAME`
+  seven times), 251 Rust tests and the four TypeScript suites passed. The build does not depend on where the
+  folder lives.
 - **Another machine: not yet checked.** The same Rust, cargo-near and `Cargo.lock` should give the same bytes on
   another Linux machine, but nobody has tried it. If a judge gets a different hash, the most likely cause is a
   different Rust version (check `rustc --version` inside `intern/` says 1.95.0).
 - **The fully reproducible build (in Docker) is not used.** `cargo near build reproducible-wasm` builds inside a
   pinned Docker image and records the source's git commit in the contract, so NEAR explorers can show
-  "verified source". It needs the code in a git repository, and this folder is not one yet. Putting the code in
-  a repository is the owner's decision; once it is, the build can be switched and the contracts redeployed.
+  "verified source". It needs the code in a public git repository. The repository is private until the owner
+  makes it public; after that the build could be switched and the contracts redeployed. Not done.
 - **The contracts can still be changed.** Each account still has its full-access key, so a matching hash today
   says nothing about tomorrow; re-run `./verify.sh`. Removing the keys is the owner's decision
   (`ACCESS-KEYS.md`).
