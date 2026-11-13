@@ -72,13 +72,30 @@ export async function walletSendRaw(tx: { receiverId: string; actions: { type: "
   return wallet.signAndSendTransaction(tx);
 }
 
+/**
+ * A wallet hands back the network's answer even when the program refused the call, without throwing.
+ * This finds a refusal in that answer and returns the program's own sentence, or null if there is none.
+ */
+export function refusalIn(outcome: unknown): string | null {
+  for (const o of Array.isArray(outcome) ? outcome : [outcome]) {
+    const failure = (o as { status?: { Failure?: unknown } } | null)?.status?.Failure;
+    if (failure === undefined || failure === null) continue;
+    const text = JSON.stringify(failure);
+    const said = /"ExecutionError":"((?:[^"\\]|\\.)*)"/.exec(text)?.[1]?.replace(/\\"/g, '"') ?? text;
+    return said.replace(/^Smart contract panicked: /, "").replace(/^[a-z]/, (c) => c.toUpperCase());
+  }
+  return null;
+}
+
 async function send(receiverId: string, calls: Call[]): Promise<void> {
   if (!connector) throw new Error("Sign in first.");
   const wallet = await connector.wallet();
-  await wallet.signAndSendTransaction({
+  const outcome = await wallet.signAndSendTransaction({
     receiverId,
     actions: calls.map((c) => ({ type: "FunctionCall" as const, params: { methodName: c.method, args: c.args, gas: c.gas ?? GAS, deposit: c.deposit ?? "0" } })),
   });
+  const refused = refusalIn(outcome);
+  if (refused) throw new Error(`The program refused: ${refused}. Nothing changed.`);
 }
 
 /** The visitor's actions, as the calls of interface section 9. */

@@ -141,7 +141,7 @@ function VoteCard({ v, desk, now, actions, doing, weight }: { v: Vote; desk: Des
   );
 }
 
-function StartVote({ desk, actions, doing }: { desk: Desk; actions: Actions | null; doing: Doing }) {
+function StartVote({ desk, actions, doing, canOpen }: { desk: Desk; actions: Actions | null; doing: Doing; canOpen: boolean }) {
   const [cover, setCover] = useState(false);
   const at = ORDER.indexOf(desk.rank.rank);
   const fired = desk.rank.status === "FIRED";
@@ -151,7 +151,7 @@ function StartVote({ desk, actions, doing }: { desk: Desk; actions: Actions | nu
   const openKinds = new Set(desk.votes.filter((v) => v.state === "OPEN").map((v) => v.kind));
   const start = (kind: VoteKind) => actions && doing.run(`open-${kind}`, () => actions.openVote(kind), `A vote to ${KIND_WORD[kind].toLowerCase()} is open.`);
   const btn = (kind: VoteKind, cls: string, off: boolean) => (
-    <button className={`btn ${cls}`} disabled={!actions || !!doing.busy || off || openKinds.has(kind)} onClick={() => start(kind)}>
+    <button className={`btn ${cls}`} disabled={!actions || !canOpen || !!doing.busy || off || openKinds.has(kind)} onClick={() => start(kind)}>
       {doing.busy === `open-${kind}` ? "Opening…" : openKinds.has(kind) ? "Already open" : `Open a vote to ${KIND_WORD[kind].toLowerCase()}`}
     </button>
   );
@@ -363,7 +363,14 @@ export function VotePage() {
         <section aria-labelledby="start-h">
           <h2 id="start-h">Start a vote</h2>
           {!session.actions && <p className="fine">Clock in and lock some coins to open a vote.</p>}
-          <StartVote desk={desk} actions={session.actions} doing={doing} />
+          {session.actions && weight === 0n && (
+            <p className="warn">
+              {me && BigInt(me.account.locked) > 0n
+                ? "Your locked coins don't count yet. They start counting after one full shift locked, so you can open a vote or cast one from the shift after next."
+                : "Lock some coins first. They start counting after one full shift locked; only then can you open a vote."}
+            </p>
+          )}
+          <StartVote desk={desk} actions={session.actions} doing={doing} canOpen={weight > 0n} />
         </section>
 
         {past.length > 0 && (

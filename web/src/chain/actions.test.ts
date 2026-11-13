@@ -93,3 +93,18 @@ describe("the pretend account's vote", () => {
     expect((await chain.getRank()).rank).toBe("INTERN");
   });
 });
+
+import { refusalIn } from "./wallet";
+
+describe("a refused transaction", () => {
+  it("is found in the wallet's answer, in the program's own words", () => {
+    const failed = { status: { Failure: { ActionError: { index: 0, kind: { FunctionCallError: { ExecutionError: "Smart contract panicked: no locked coin has any weight yet: coins count after one full round locked" } } } } } };
+    expect(refusalIn(failed)).toBe("No locked coin has any weight yet: coins count after one full round locked");
+    expect(refusalIn([{ status: { SuccessValue: "" } }, failed])).toContain("No locked coin");
+  });
+  it("is not invented when the call went through, or when the wallet says nothing", () => {
+    expect(refusalIn({ status: { SuccessValue: "" } })).toBeNull();
+    expect(refusalIn(undefined)).toBeNull();
+    expect(refusalIn({ transaction: { hash: "abc" } })).toBeNull();
+  });
+});
