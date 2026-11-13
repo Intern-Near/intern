@@ -194,6 +194,10 @@ tests run without them.
   `package.json` and `package-lock.json`). Fonts: Departure Mono (`web/public/fonts/DepartureMono-LICENSE.txt`),
   Bricolage Grotesque and DynaPuff through Fontsource.
 
+## License
+
+MIT: see [`LICENSE`](LICENSE). The fonts and outside libraries keep their own licences.
+
 ## Team
 
 - [Kaustubh-404](https://github.com/Kaustubh-404): the contracts (Engine 1), the website, the product and the art.
