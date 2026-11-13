@@ -30,17 +30,17 @@ or simply `./verify.sh --quick`, which runs these, the tests, and the comparison
 The coin includes Engine 2's crates `ai-check` (the "really the AI" check) and `hl-order` (Hyperliquid
 orders), from `crates/` in this folder; their code is part of the coin's hash.
 
-## The expected hashes (2026-11-13, interface 1.5)
+## The expected hashes (2026-11-13, interface 1.6)
 
 | Account | Wasm | Size (bytes) | sha256, base58 (= the account's `code_hash`) |
 |---|---|---|---|
-| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 632,157 | `9oufg5viW3x5eQ49p8zBkZMNvdLzyQFT7Pd4GRjuBoZK` |
+| `coin.desk-lab-2026.testnet` | `target/near/coin/coin.wasm` | 677,417 | `GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ` |
 | `usdc.desk-lab-2026.testnet` | `target/near/mock_usdc/mock_usdc.wasm` | 149,106 | `C1HZ8APmPbLQSQ9YbWNxQ563bt5XNNreneNR56qg3n8H` |
 | `lender.desk-lab-2026.testnet` | `target/near/lender/lender.wasm` | 131,977 | `2uAJpQ3nxMsXYA5MHtVHTBMxa1WYjFaB2QAnK9uAu9Em` |
 | `stickers.desk-lab-2026.testnet` | `target/near/stickers/stickers.wasm` | 203,578 | `22dhHG3m9RS7F2jofoenjt2kESaWpnLRDw7JvhCjTmnm` |
 | `launch.desk-lab-2026.testnet` | `target/near/launchpad/launchpad.wasm` | 208,384 | `Drf72TPyCMNRw7G2YVUsj6h2k8WWxWFjXjAmEo1P82DT` |
-| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,530 | `4vtJ6cRc5t6aXE1GzgajcmGPyg5TYktgKAqZrZCwNPtV` |
-| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 629,392 | `DdPGocHujJSw9F5nXuXZCCbhe4gkM6wHCN89Y9Bb5WYN` |
+| `stub.hackcheck-2026-1103.testnet` | `target/near/stub/stub.wasm` | 291,881 | `2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs` |
+| `coin-fast.desk-lab-2026.testnet` (test copy) | `target/near/coin-fake/coin.wasm` | 674,646 | `36BjP1TJkPJhHBqttAQKopBhUkXzi8DazeEfNm8Tw6kf` |
 
 `./verify.sh --quick` on 2026-11-13 printed `SAME` for all seven. To check one by hand:
 
@@ -51,10 +51,10 @@ curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' -d '{"
 
 ## What has been checked, and what has not
 
-- **The same machine, a fresh clone: identical.** On 2026-11-13 the repository was cloned into an empty folder
-  and `./verify.sh --quick` run there with an empty `target/`: all seven contracts gave the hashes above (`SAME`
-  seven times), 251 Rust tests and the four TypeScript suites passed. The build does not depend on where the
-  folder lives.
+- **The same machine, a fresh clone: identical.** On 2026-11-13 (interface 1.5) the repository was cloned into an
+  empty folder and `./verify.sh --quick` run there with an empty `target/`: all seven contracts gave the hashes
+  then on chain (`SAME` seven times), and every test passed. The build does not depend on where the folder lives.
+  After the 1.6 upgrade, `./verify.sh --quick` printed `SAME` seven times again (269 Rust tests).
 - **Another machine: not yet checked.** The same Rust, cargo-near and `Cargo.lock` should give the same bytes on
   another Linux machine, but nobody has tried it. If a judge gets a different hash, the most likely cause is a
   different Rust version (check `rustc --version` inside `intern/` says 1.95.0).

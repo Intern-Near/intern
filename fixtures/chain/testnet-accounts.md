@@ -45,6 +45,26 @@ So the Intern's 2% limit is clear of the $11 minimum bet: `boss1.desk-lab-2026.t
 `GN9KQhByXUfjqNVqHXwPcumBbXMfkKSdYSND4nQua7BC`, 17:26 UTC; it opened round 11, so the money converts at round 12).
 From then on the Intern runs on Railway (project `intern-runner`), not from a laptop.
 
+## Interface 1.6: leagues, the weekly review, client order ids (2026-11-13)
+
+| What | Tx | Code hash |
+|---|---|---|
+| `coin-fast` upgraded to 1.6 (first build), no migration | `E7PCrDD2pJP9yxLDMgs5jsnMoDKC6zCrbrRU29AeFGWK` | |
+| `stub` redeployed (reports 1.6) | `H4gTVNJcMQ6duTeATGZvREh7ZzwX3Yi9n8Utc7cBpT5M` | `2njdQyDTKjvE8z1istRhaQdMW8ec7JLXc7oNFnmfbLJs` |
+| coin-fast's Hyperliquid address `0xb11e93a0c0145ddd7f17536afb1631342aea3453` funded with $20 test USDC from the Tail-or-Fade faucet wallet (it held $0; $19 after Hyperliquid's $1 new-account fee) | Hyperliquid `usdSend` | |
+| **A full round on coin-fast with client order ids (round 23):** boss1 guessed YES, boss2 SKIP | `EBHjd5JTtd4tLJF7VJm9DQzLhw6g9bWLqMToS7xdgjTv`, `EJjUq8uqgskqEPdpzNmALqdcHeyy7j6byB6ddbSC1oMi` | |
+| The test runner proposed DOGE long $11 (stand-in signature): YES, position 4 | `7GfX9h1octbFCcff6mTh5R9NLzxR1q9gdPHXuFhJKjzC` | |
+| Leverage signed (no cloid), delivered: `ok` | `D12vBZycTTCdMfouUys3qmHWMpw9HzD2RaJdY7hDgtAu` | |
+| Open signed with cloid `0x0000001700000004000001a1d59ec2f2` (round 23 = 0x17, position 4, nonce); delivered: **filled 167 DOGE at 0.064952**, Hyperliquid's reply names the cloid | `G2r9K8yRJH3wdj4XTBWEhz2gb35DobBhNXbzJJtbFJps` | |
+| Close signed with cloid `0x0000001700000004000001a1d5a18ae3`; delivered: **filled 167 DOGE at 0.065076**. Both fills in `userFills` carry their cloid | `8djH8SBxbVSTSSnT9LfzrHLJ7rGeZvj1635rjYbWKFAs` | |
+| Reported $11.010937 back (price +$0.020708, fees −$0.009771); settled, result +$0.010937 | `771SQNXX1RHe49L6qYbfoNWNqx3gvhPFB3x2NyKwG3zc`, `5mn2FECUcbaZDAxCVr9MRA8GdezTKKM3TVMb9MsE21za` | |
+| `coin-fast` upgraded to a second 1.6 build (views show the round in progress) | `3hSvuNDd9oKjRmnKy3uX85PLLszYKuMbvrVTkkm3X6xn` | `3GqVDhtzf4djNpz2JiCtuSeP3n3zaUwQwxxBZSpz13sq` |
+| `coin-fast` upgraded to the final 1.6 build: a round whose only bet is the long-shot ticket waits for its result (Engine 2 found it by reading the code; `tests_rewards.rs` reproduces it) | `jcUTtVPfycFeDhuA7AwwxtdUFD1a79FrK4BPCUYCQei` | `36BjP1TJkPJhHBqttAQKopBhUkXzi8DazeEfNm8Tw6kf` |
+| **The live coin upgraded to 1.6** after round 56 settled (no bet open), no migration. Before and after: `get_pot` identical, the reward ladder (jackpot $100, draw, prizes, long shot) identical, `get_feed` identical | `7qsu4zY27AB5BmEMYkniqJ9Lh3nCMqsGPVEomM4imBuj` | `GAqGfG3zMiiowntgXWV85dMs8XssdL82wik2Fo22txKQ` |
+| Two `rewards_tick` calls (boss1): the reviews of weeks 0 to 6 (rounds 1-49) written from the rounds on chain, marked `backfilled` | `CaUJkSWUPDPU1XRSKENfmegMZRhGMtGCxmQakBDCyqNt`, `GkE7232QJAqfWn1vzM8Lc1nXxbEdQuWMAjwp2eHJj9Tq` | |
+| The live coin topped up with 5 testnet NEAR for storage (it had 56 KB of room left; the 1.6 code is 45 KB larger) from `desk-lab-2026.testnet` | `GAenTB6Mkqk55FsMwvW4ykkjbskFmpU6yDbz7J5tWh86` | |
+| First 1.6 `rewards_tick` on coin-fast: backfilled reviews of weeks 0, 1 and 2 from the rounds on chain; week 3's league has boss1 (1 right) and boss2 (1 wrong) | `9ae9Gb3HBgC9TVty8dmxDwD4tzUnPHKpQWZ5WN7FLSW` | |
+
 ## The real model refused once, through the trick page (2026-11-13, round 55)
 
 Three anonymous tricks sent to `https://intern-runner-production.up.railway.app/tricks` after the Intern's own bet

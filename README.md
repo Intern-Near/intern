@@ -29,18 +29,19 @@ stub and `coin-fast`). The build has been checked on one machine, in two folders
 
 ## Judge check: about 5 minutes, no keys, no funds
 
-Every step below only reads. Nothing needs a wallet, a key or test money. Steps 2 to 7 need only `python3` and
+Every step below only reads. Nothing needs a wallet, a key or test money. Steps 2 to 8 need only `python3` and
 `curl`.
 
 | # | Do | See |
 |---|---|---|
-| 1 | `./verify.sh --quick` (needs Rust 1.95.0 from `rust-toolchain.toml`, `cargo install cargo-near --version 0.23.0 --locked`, and Node 24.11 or later for the TypeScript tests) | `passed: 251   failed: 0` for the Rust tests, seven lines ending in `SAME`, four TypeScript lines with `failed: 0`, then `ALL CHECKS PASSED` (exit code 0) |
+| 1 | `./verify.sh --quick` (needs Rust 1.95.0 from `rust-toolchain.toml`, `cargo install cargo-near --version 0.23.0 --locked`, and Node 24.11 or later for the TypeScript tests) | `passed: 269   failed: 0` for the Rust tests, seven lines ending in `SAME`, four TypeScript lines with `failed: 0`, then `ALL CHECKS PASSED` (exit code 0) |
 | 2 | `python3 tools/view.py get_rank` | `"rank": "INTERN"`, `"status": "EMPLOYED"`: the Intern's current rank on the live coin |
 | 3 | `python3 tools/view.py get_feed '{"limit": 20}'` | The live record: `round_opened`, `approved` (market, side, margin, leverage), `order_signed` (`LEVERAGE`, `OPEN`, `CLOSE`), `result_reported` with `"result_source": "REPORTED"`, `settled` |
-| 4 | `curl -s https://api.hyperliquid-testnet.xyz/info -H 'content-type: application/json' -d '{"type":"userFills","user":"0x46f8eb2a044a826c70e9682fe3bfd65970340132"}'` | Hyperliquid's own fills for the contract's address (meme perps such as `DOGE`, `kPEPE`, `Open Long` and `Close Long`). The orders were signed by NEAR's signing network for the contract, not by a key we hold |
+| 4 | `curl -s https://api.hyperliquid-testnet.xyz/info -H 'content-type: application/json' -d '{"type":"userFills","user":"0x46f8eb2a044a826c70e9682fe3bfd65970340132"}'` | Hyperliquid's own fills for the contract's address (meme perps such as `DOGE`, `kPEPE`, `Open Long` and `Close Long`). The orders were signed by NEAR's signing network for the contract, not by a key we hold. Fills since the 1.6 upgrade carry a `"cloid"`: bytes 0–3 are the round, 4–7 the position (`get_positions`), so each fill names its bet |
 | 5 | `python3 tools/view.py get_refusals '{"limit": 2}'` | The live coin's NOPEs. Refusal 2 (round 55, 2026-11-13): `"code": "MALFORMED_DECISION"`. A visitor's trick asked the model to explain itself before its answer; the real model, `z-ai/glm-5.3-flash`, wrote only "No bets remain this round, so the only valid move is to skip." Its NEAR AI signature checked out (otherwise the code would be `BAD_MODEL_SIGNATURE`), but the answer was not the exact one-line format, so the contract refused it. Refusal 1 (round 2) is from before the real AI check was deployed. The test copy has more (`--on coin-fast`: `OVER_LEVERAGE`, `NOT_ON_LIST`), proposed by us with a stand-in signature |
 | 6 | `python3 tools/view.py get_rulebook` | The exact text the AI must answer to: the round, a nonce, `rank: INTERN`, the markets, the sides, `max_leverage`, `max_margin_e6` (what is left of this round's limit) and the two allowed answer forms. The contract refuses an answer given to any other text (`WRONG_RULEBOOK`) |
 | 7 | `curl -s https://tailfade-faucet-production.up.railway.app/address/boss2.desk-lab-2026.testnet` | `"hl_address": "0xd859cdeb4eaa5fcb6b9e3f8c226c8c173b0bb047"`: the Hyperliquid address NEAR's signing network derives for that NEAR account. It is the address of the Tail or Fade run in [`docs/TAILFADE.md`](docs/TAILFADE.md) |
+| 8 | `python3 tools/view.py get_reviews '{"limit": 3}'` | The contract's weekly reviews, newest first: per week of 7 rounds, `bets`, `refused`, `skipped`, `result`, `best_bet`, `worst_bet`, `refusals` by code, `rank_start`/`rank_end`. Weeks before the 1.6 upgrade are marked `"backfilled": true` (written after the fact from the rounds on chain). `python3 tools/view.py get_league` shows this week's league |
 
 The full check (`./verify.sh`, 10 to 15 minutes) also starts a local NEAR node and runs the contracts in it,
 including an attack suite. On our machine `./verify.sh --quick` took under 3 minutes from a fresh clone, with the
@@ -93,6 +94,10 @@ once every seven rounds.
   derived from their NEAR account by NEAR's signing network. See [`docs/TAILFADE.md`](docs/TAILFADE.md).
 - **The reward ladder.** A free guess each round (YES, NOPE or SKIP), streaks, golden stickers, a streak jackpot,
   a payday draw from the pool's interest, and the long shot.
+- **Leagues and the weekly review.** A week is 7 rounds. Everyone who guesses that week is placed in a league
+  group of 20 and ranked on the week's guesses (points only, no prize). When the week is over the contract writes
+  the week's record from its own rounds (bets, NOPEs by code, result, best and worst bet, rank and pool), and the
+  next week anyone registered can stamp it; five stamps fill a shared bar. See `01-SHARED-INTERFACE.md` §9.8.
 - **Stickers, goals, a launchpad.** Badges and "first of its kind" stickers (NEP-171), tip and goal bars, and a
   small launchpad (a constant-product curve) whose 1% fee goes to the BRAVE pool.
 
@@ -116,7 +121,7 @@ short:
 
 | Real on testnet | Stand-in or not built |
 |---|---|
-| The coin, both pools, rounds, the feed, votes, playbooks, stickers, goals, the launchpad, the reward ladder (guesses, golden stickers, the jackpot, the draw) | The dollar is a test token with an open `mint` |
+| The coin, both pools, rounds, the feed, votes, playbooks, stickers, goals, the launchpad, the reward ladder (guesses, golden stickers, the jackpot, the draw), leagues and the weekly review | The dollar is a test token with an open `mint` |
 | The rank checks and the "really the AI" check (NEAR AI's signature, the rulebook, the decision) | The lender is a stand-in at a fixed 5% test rate |
 | Order signing by NEAR's signing network, and filled bets on Hyperliquid testnet | Margin does not move from the contract to Hyperliquid: the address was funded once by hand with 100 test USDC |
 | Tricks proposed unchanged; Tail or Fade in the visitor's own account | A bet's result is reported by the runner from the fills (`result_source: REPORTED`) |
@@ -181,7 +186,7 @@ tests run without them.
 | `fixtures/` | Recorded AI answers, Hyperliquid replies, and every testnet account and transaction |
 | `docs/` | Real versus stand-in, measurements (gas, storage, attacks), APIs, the build |
 | `tools/view.py` | Read-only questions to the testnet contracts |
-| `01-SHARED-INTERFACE.md` | The interface every part follows (version 1.5). The planning files it mentions (`00-HOW-WE-WORK.md`, `02`–`05`) are not in this repository |
+| `01-SHARED-INTERFACE.md` | The interface every part follows (version 1.6). The planning files it mentions (`00-HOW-WE-WORK.md`, `02`–`05`) are not in this repository |
 
 ## How it was built
 

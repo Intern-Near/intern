@@ -44,6 +44,7 @@ MALFORMED_DECISION 4 TGas, BAD_MODEL_SIGNATURE (one byte changed) 3 TGas.
 | `settle` (a win: test dollars minted, coach cut to two authors) | 17.69 | 135 TGas minimum attached with a coach cut |
 | launchpad `storage_deposit` / `launch` | 1.81 / 2.29 | 0.05 NEAR attached to register |
 | launchpad buy / sell | 15.80 / 15.65 | the 1% fee goes to the coin as outside income |
+| `rewards_tick` that closes a week (1.6): its league (two players) and its review | 6 | `crates/coin/sandbox/tests/weekly.rs`; at most 4 groups and 4 reviews per call, 150 TGas attached by the runner |
 
 Every call burns well under 20 TGas; the minimums attached are for the callbacks that put things back
 when something fails.

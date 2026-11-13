@@ -524,7 +524,7 @@ Calls that change something. Each row says who may call.
 
 - The first deposit ever into BRAVE must be at least `min_first_deposit`; 1,000 units of coin from it are locked for ever (so the first depositor cannot bend the share price).
 - **Cashing out while a bet is open** *(1.1)*: margin that is out on an open bet (`brave.in_play`) is not paid out and is not counted in `coin_price_e6`. Someone who leaves during an open bet gives up their share of that bet, win or lose; it stays with the bosses who remain. Without this rule a boss could watch the bet on Hyperliquid, which is public, and leave at full value whenever it is losing. The site shows a warning on the cash-out form while a bet is open.
-- If the lending market is short of dollars, cash-out pays what is available and reports the rest as still owed. `TO VERIFY` with the real market in phase 5.
+- If the lending market cannot pay back what a cash-out needs, nothing changes and the call can be made again (section 9.6, as the contract does). *(1.6: this line used to say "pays what is available and reports the rest as still owed", which the contract never did.)*
 
 ### 9.2 Voting
 
