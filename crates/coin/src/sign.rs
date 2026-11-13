@@ -290,9 +290,18 @@ impl Coin {
     ) -> Promise {
         let nonce = self.next_hl_nonce();
         let expires_after = nonce + self.pins.order_expiry_ms;
-        let built = hl_order::build(
+        // 1.6: every order (not a leverage change) carries a client order id, so each Hyperliquid fill names its bet.
+        let cloid = match action {
+            hl_order::Action::Order { .. } => {
+                let round_id = self.positions.get(&position_id).map_or(0, |p| p.round_id);
+                Some(order_cloid(round_id, position_id, nonce))
+            }
+            hl_order::Action::Leverage { .. } => None,
+        };
+        let built = hl_order::build_with_cloid(
             &host::NearHost,
             &action,
+            cloid,
             nonce,
             expires_after,
             self.pins.testnet,
@@ -542,4 +551,14 @@ impl Coin {
             .map(Self::action_view)
             .collect()
     }
+}
+
+/// 1.6: an order's client order id (01 §11.2): bytes 0-3 the round id, 4-7 the position id (their low 32 bits),
+/// 8-15 the order's own Hyperliquid nonce, all big-endian. Unique, because the contract never signs a nonce twice.
+pub fn order_cloid(round_id: u64, position_id: u64, nonce: u64) -> hl_order::Cloid {
+    let mut id = [0u8; 16];
+    id[..4].copy_from_slice(&(round_id as u32).to_be_bytes());
+    id[4..8].copy_from_slice(&(position_id as u32).to_be_bytes());
+    id[8..].copy_from_slice(&nonce.to_be_bytes());
+    hl_order::Cloid(id)
 }

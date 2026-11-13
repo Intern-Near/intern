@@ -191,6 +191,10 @@ function values(item: FeedItem, ctx: CueContext): Record<string, string> {
   out.winner_count = Array.isArray(d.winners) ? String(d.winners.length) : "?";
   out.runner_count = Array.isArray(d.runners_up) ? String(d.runners_up.length) : "?";
   out.playbook_state = String(d.playbook_id) === "0" ? "cleared" : `playbook ${s("playbook_id")} active`;
+  // 1.6: leagues (the first group's winner).
+  const top = Array.isArray(d.winners) ? (d.winners[0] as Record<string, unknown> | undefined) : undefined;
+  out.league_winner = top && typeof top === "object" && top.account_id ? account(top.account_id) : "nobody";
+  out.league_points = top && typeof top === "object" && top.points !== undefined ? String(top.points) : "0";
   return out;
 }
 

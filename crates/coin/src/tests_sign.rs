@@ -453,13 +453,32 @@ fn last_request(c: &Coin, expect: hl_order::Action) -> Asked {
     );
     assert_eq!(a.nonce, c.last_hl_nonce);
     assert_eq!(a.expires, a.nonce + 120_000);
-    let built = hl_order::build(&host::NearHost, &expect, a.nonce, a.expires, true).unwrap();
+    // 1.6: an order carries its client order id (round, position, nonce); a leverage change carries none.
+    let cloid = match expect {
+        hl_order::Action::Order { .. } => {
+            let round_id = c.positions.get(&a.pid).unwrap().round_id;
+            Some(crate::sign::order_cloid(round_id, a.pid, a.nonce))
+        }
+        hl_order::Action::Leverage { .. } => None,
+    };
+    let built =
+        hl_order::build_with_cloid(&host::NearHost, &expect, cloid, a.nonce, a.expires, true).unwrap();
     assert_eq!(
         (a.action_json.as_str(), a.digest.as_str()),
         (built.action_json.as_str(), hex(&built.digest).as_str()),
         "the order asked for"
     );
+    match cloid {
+        Some(id) => assert!(a.action_json.ends_with(&format!(r#","c":"{}"}}],"grouping":"na"}}"#, id.to_hex()))),
+        None => assert!(!a.action_json.contains(r#""c":"#)),
+    }
     a
+}
+
+#[test]
+fn an_orders_client_order_id_is_its_round_position_and_nonce() {
+    // The worked example of crates/hl-order/README.md: round 7's opening order, position 3, nonce 1794483574065.
+    assert_eq!(crate::sign::order_cloid(7, 3, 1_794_483_574_065).to_hex(), "0x0000000700000003000001a1cf8e5531");
 }
 
 /// Lands a signing call's callback with `reply`.

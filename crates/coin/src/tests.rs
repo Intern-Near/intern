@@ -642,7 +642,7 @@ fn every_view_has_the_section_8_field_names() {
         ])
     );
     let constants = serde_json::to_value(c.get_constants()).unwrap();
-    assert_eq!(constants["interface_version"], "1.5");
+    assert_eq!(constants["interface_version"], "1.6");
     assert_eq!(constants["round"]["genesis_ms"], G);
     assert_eq!(constants["refusal_codes"].as_array().unwrap().len(), 16);
     assert_eq!(c.get_sticker_firsts().len(), 16);

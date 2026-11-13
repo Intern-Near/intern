@@ -1,5 +1,5 @@
 {
-  "interface_version": "1.5",
+  "interface_version": "1.6",
   "about": "The Intern's lines for the stream and the site: one cue per feed event (01 section 10, with 1.4's reward events) and per refusal code (01 section 7). Text only; the stream turns `intern` lines into speech and shows `system` lines as Stamp's caption. Voice: spec 24.14. The Intern: first person, short, earnest, a little anxious, office words for bad news, never brags, never talks prices or advice, at most one joke and always on itself. The contract: no person, no feelings; code, rank, limit, asked, with units; no adjectives, no exclamation marks. A line is chosen by the event's seq (seq modulo the number of lines), so the stream and the site say the same thing for the same event. Placeholders in braces are filled by stream/cues.ts; amounts are already formatted (\"$11.49\").",
   "poses": {
     "intern": [
@@ -455,6 +455,39 @@
         "Round {round_id}: one long shot, if I want it. I'll think about it properly."
       ],
       "system": "LONG SHOT — one ticket in round {round_id}: 0.5% of the pool, up to 10x, inside the round's limit."
+    },
+    "league_closed": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "happy",
+      "mascot": null,
+      "intern": [
+        "Week {week}'s leagues are closed: {players} players in {groups} group(s). {league_winner} topped group one with {league_points} right.",
+        "That's the week. {players} people guessed along; {league_winner} read me best, {league_points} right."
+      ],
+      "system": "LEAGUES — week {week} closed: {players} players, {groups} group(s). Group 1 winner {league_winner}, {league_points} right. Points only, no prize."
+    },
+    "review_written": {
+      "speak": true,
+      "priority": 2,
+      "intern_pose": "waiting",
+      "mascot": "stamp:watching",
+      "intern": [
+        "My review for week {week}: {bets} bet(s), {refused} NOPE(s), {skipped} skip(s). Result {result}. If you agree, stamp it.",
+        "Week {week}, on the record: {bets} bet(s), {refused} refused, {skipped} skipped, {result} overall. Stamp it if that's fair."
+      ],
+      "system": "REVIEW — week {week}: {bets} bet(s), {refused} NOPE(s), {skipped} SKIP(s), result {result}. Stamping open this week."
+    },
+    "review_bar_filled": {
+      "speak": true,
+      "priority": 3,
+      "intern_pose": "happy",
+      "mascot": null,
+      "intern": [
+        "{stamps} of you stamped week {week}'s review. The bar is full. Thank you.",
+        "The review bar for week {week} is full: {stamps} stamps."
+      ],
+      "system": "REVIEW BAR — week {week} filled with {stamps} stamps."
     }
   },
   "refusals": {

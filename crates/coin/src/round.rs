@@ -322,6 +322,7 @@ impl Coin {
                 if let Some(account) = credited_to {
                     self.credit_refusal(id, refused.code, r.id, account); // 1.3
                 }
+                self.wk_refusal(r.id, refused.code as u8); // 1.6: the weekly review
                 r.refused += 1;
                 self.save_round(r);
                 let (asked, limit) = (refused.asked.map(U128), refused.limit.map(U128));

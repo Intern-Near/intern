@@ -29,6 +29,7 @@ mod round;
 mod safe;
 pub mod sign;
 pub mod vote;
+pub mod weekly;
 
 use feed::Feed;
 use goals::GoalFillRec;
@@ -1841,3 +1842,5 @@ mod tests_safe;
 mod tests_sign;
 #[cfg(test)]
 mod tests_vote;
+#[cfg(test)]
+mod tests_weekly;

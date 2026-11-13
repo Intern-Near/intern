@@ -87,6 +87,18 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
   prize_paid: { account_id: "boss1.desk-lab-2026.testnet", amount: "114900000" },
   // 1.5: the long shot
   long_shot_allowed: { round_id: 44 },
+  // 1.6: leagues and the weekly review
+  league_closed: {
+    week: 7,
+    players: 23,
+    groups: 2,
+    winners: [
+      { group: 0, account_id: "boss1.desk-lab-2026.testnet", points: 5 },
+      { group: 1, account_id: "boss2.desk-lab-2026.testnet", points: 3 },
+    ],
+  },
+  review_written: { week: 7, bets: 6, refused: 1, skipped: 1, result: "-1250000", rank_end: "INTERN" },
+  review_bar_filled: { week: 7, stamps: 5 },
 };
 const item = (event: string, data: Record<string, unknown>, seq = 1): FeedItem => ({
   seq,

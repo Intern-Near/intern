@@ -1,6 +1,6 @@
 # $INTERN — the shared interface
 
-**Version 1.5, 2026-11-13.** Read `00-HOW-WE-WORK.md` first. *(In the public repository: `00-HOW-WE-WORK.md` and the
+**Version 1.6, 2026-11-13.** Read `00-HOW-WE-WORK.md` first. *(In the public repository: `00-HOW-WE-WORK.md` and the
 other planning files, `02` to `05`, are not included. This file is complete without them.)*
 
 This is the one rulebook that the program (Engine 1), the off-chain Intern (Engine 2) and the website all follow. If any other file disagrees with this one, this one wins. To change it, see `00-HOW-WE-WORK.md` section 7.
@@ -307,6 +307,11 @@ Read-only and free. The site and the runner use only these.
 | `get_draw_results` *(1.4)* | `{ from?: number, limit?: number }` | `DrawResult[]`, newest first |
 | `get_jackpot_wins` *(1.4)* | `{ limit?: number }` | `JackpotWin[]`, newest first |
 | `get_claimable` *(1.3)* | `{ account_id: AccountId }` | `Claimable` |
+| `get_week` *(1.6)* | — | `WeekView` (section 9.8) |
+| `get_league` *(1.6)* | `{ week?: number, group?: number, account_id?: AccountId }` | `LeagueView` (section 9.8) |
+| `get_league_results` *(1.6)* | `{ week: number }` | `GroupResult[]` (section 9.8) |
+| `get_review` *(1.6)* | `{ week: number }` | `ReviewView \| null` (section 9.8) |
+| `get_reviews` *(1.6)* | `{ from?: number, limit?: number }` | `ReviewView[]`, newest first; `limit` defaults to 10, at most 50 |
 | `ft_balance_of`, `ft_total_supply`, `ft_metadata`, `storage_balance_of` | standard | standard NEP-141 / NEP-145 / NEP-148 |
 
 `limit` defaults to 50 and is capped at 100.
@@ -315,6 +320,7 @@ Paging *(1.1)*:
 - On the newest-first lists (`get_votes`, `get_refusals`), `from` is the highest id to return. Leave it out to start from the newest.
 - `get_feed` with no `after_seq` returns the latest `limit` items, still oldest first.
 - The feed keeps 1,000 items. If a reader has fallen further behind than that, the reply starts at the oldest item still kept; the jump in `seq` shows that items were missed.
+- *(1.6)* `get_outbox` keeps the last 200 signed actions (`OUTBOX_KEEP`). An older bet's orders can no longer be read back from the contract; its fills on Hyperliquid can still be found by their client order id (section 11.2).
 
 ### 8.1 Shapes
 
@@ -702,6 +708,49 @@ type DrawResult = { period: number; held_at: Ms; held_in_round: number; prize: U
 type JackpotWin = { round_id: number; winners: AccountId[]; each: Usdc };
 ```
 
+### 9.8 Leagues and the weekly review *(1.6)*
+
+A **week** is 7 rounds by round id: week `w` covers rounds `w×7+1` to `(w+1)×7`, the payday draw's periods. On testnet that is 3.5 hours; in the product, a week.
+
+**Leagues.** An account's first guess of a week (section 9.7, `guess`) places it in that week's league, in group `n ÷ 20` in order of joining (`group_size` 20, at most `max_groups` 25; later guessers still earn points and streaks but have no group that week). A group is ranked on that week's guesses only: `points` (right guesses), then `best_run` (the longest run of right guesses; a round not guessed pauses it, a wrong guess ends it), then fewer `wrong`, then who joined first. A guess counts once its round has its first ruling; a round that ends without one counts for nothing. Points have no cash value and a league has no prize. When the week is over, `rewards_tick` keeps each group's top three, frees the rest of the week's storage, and announces `league_closed`.
+
+**The weekly review.** When a week is over, `rewards_tick` writes the week's record from the rounds themselves and announces `review_written`. During the following week (only then) every registered account may stamp it once: `stamp_review({ week })`, free, returns `ReviewView`. `review_bar` (5) stamps fill the shared bar (`review_bar_filled`); at most `max_stamps` (100) are kept. `stamp_review` writes a due review itself if no `rewards_tick` has run yet that week. Weeks that ended before the 1.6 upgrade get a review written after the fact, marked `backfilled`, without a feed event.
+
+`rewards_tick` does this work a little at a time (4 groups and 4 reviews per call), so a large week takes a few rounds' ticks to close.
+
+```ts
+type WeekView = {
+  round_id: number; week: number; first_round: number; last_round: number; rounds_per_week: number;
+  league_players: number; league_groups: number; group_size: number; max_groups: number;
+  review_to_stamp: number | null;   // last week's review, once written
+  review_bar: number; max_stamps: number;
+};
+type Standing = { place: number; account_id: AccountId; points: number; wrong: number; best_run: number;
+                  waiting: number };   // waiting: guesses whose round has no ruling yet
+type LeagueView = {
+  week: number; first_round: number; last_round: number; players: number; groups: number;
+  group: number | null;   // account_id given: that account's group; else `group`, default 0
+  closed: boolean;
+  standings: Standing[];  // the whole group while the week runs; its top three once closed
+  group_size: number; max_groups: number;
+};
+type GroupResult = { group: number; top: Standing[] };
+type BetLine = { position_id: number; round_id: number; market: Market; side: Side; margin: Usdc; leverage: number;
+                 result: Signed };
+type ReviewView = {
+  week: number; first_round: number; last_round: number; written_at: Ms; backfilled: boolean;
+  rounds: number; settled: number;          // rounds of the week that opened; of those, settled
+  bets: number; refused: number; skipped: number;   // verdicts: approved bets (a long-shot ticket included), NOPEs, SKIPs
+  result: Signed;                           // dollars back minus dollars out over the settled rounds
+  best_bet: BetLine | null; worst_bet: BetLine | null;
+  refusals: { code: RefusalCode; count: number }[];   // only the codes that occurred
+  rank_start: RankName; rank_end: RankName; status_end: Status;
+  pool_start: Usdc; pool_end: Usdc;         // BRAVE at the week's first opening, and at the next week's (or the last known)
+  long_shot: boolean; league_players: number;
+  stamps: number; bar: number; bar_filled: boolean; stamping_open: boolean;
+};
+```
+
 ## 10. Events and the feed
 
 Every change is announced twice, with the same content:
@@ -748,6 +797,9 @@ The site and the stream poll `get_feed({ after_seq })` every 2–3 seconds. Ther
 | `draw_held` *(1.4)* | `{ period, winner \| null, prize, runners_up, each, tickets_total, rolled_over? }` |
 | `prize_paid` *(1.4)* | `{ account_id, amount }` |
 | `long_shot_allowed` *(1.5)* | `{ round_id }` (the round with the ticket) |
+| `league_closed` *(1.6)* | `{ week, players, groups, winners: { group, account_id, points }[] }` (each group's first place) |
+| `review_written` *(1.6)* | `{ week, bets, refused, skipped, result, rank_end }` |
+| `review_bar_filled` *(1.6)* | `{ week, stamps }` |
 
 The launchpad announces `launched`, `bought` and `sold` as NEP-297 logs with the standard `intern-launch` (it keeps no feed of its own; read its views).
 
@@ -850,11 +902,18 @@ pub struct Built {
     pub digest: [u8; 32],      // what NEAR's signing network must sign
 }
 
-pub enum HlError { BadPriceFormat, BadSizeFormat, Zero }
+pub enum HlError { BadPriceFormat, BadSizeFormat, Zero, CloidOnLeverage /* 1.6 */ }
 
 /// Builds the bytes Hyperliquid hashes and the final digest. No vault address.
 pub fn build<H: Host>(host: &H, action: &Action, nonce_ms: u64, expires_after_ms: u64,
                       testnet: bool) -> Result<Built, HlError>;
+
+/// (1.6) A client order id: 16 bytes, written "0x" + 32 lower-case hex digits.
+pub struct Cloid(pub [u8; 16]);
+/// (1.6) `build` with an optional client order id on an order, added as the order's last key "c" (inside the
+/// signed hash). `None` is exactly `build`. A cloid on a leverage change is refused (`CloidOnLeverage`).
+pub fn build_with_cloid<H: Host>(host: &H, action: &Action, cloid: Option<Cloid>, nonce_ms: u64,
+                                 expires_after_ms: u64, testnet: bool) -> Result<Built, HlError>;
 
 /// Dollars (6 decimals) of an order: px_e8 × sz_e8 / 10^10, rounded up.
 pub fn notional_e6(px_e8: u64, sz_e8: u64) -> u128;
@@ -867,6 +926,8 @@ pub fn check_format(px_e8: u64, sz_e8: u64, sz_decimals: u8) -> Result<(), HlErr
 ```
 
 *(1.2)* The contract calls `check_format` with the market's size decimals before `build`: `Action::Order` carries no size decimals, so `build` alone cannot check the size.
+
+*(1.6)* **Every order the contract signs carries a client order id**, built with `build_with_cloid`; a leverage change carries none. Its 16 bytes, each field big-endian: bytes 0–3 the round id (low 32 bits), 4–7 the position id (low 32 bits), 8–15 the order's own Hyperliquid nonce. For example round 7's opening order (position 3, nonce 1794483574065) would be `0x0000000700000003000001a1cf8e5531`. It is unique because the contract never signs a nonce twice (a re-signed close gets a new one). A `SignedAction`'s `action` then has the key `"c"`; Hyperliquid returns it with every fill (`userFills`), so anyone can match each fill to its bet exactly.
 
 The contract, not this library, calls NEAR's signing network. The call the probe used on testnet (VERIFIED by running it): contract `v1.signer-prod.testnet`, method `sign`, arguments `{"request":{"path":"<path>","payload_v2":{"Ecdsa":"<digest hex>"},"domain_id":0}}`, a deposit of 1 yocto.
 
@@ -974,11 +1035,16 @@ Accounts that already exist from the research, for reference only: the signing c
 14. *(1.4)* **Draw tickets are an approximation of "dollars held over time"**: the smaller of the dollars at the period's start and at the draw, times the rounds in it. Entry is opt-in (`enter_draw`), so the draw walks at most 200 entrants; all the pool's interest goes to the draw, and bosses who do not join do not win it.
 15. *(1.4)* **The jackpot's "held for 7 rounds"** is checked as: became a boss at least 7 rounds earlier and holds at least $10 now. A boss who left and came back keeps their first round.
 16. *(1.5)* **The long shot is the one exception to the fixed limits**, and only by a vote: one ticket of 0.5% of the pool at up to 10x, at most once every seven rounds, inside the round's limit. Without the vote, nothing changes what the Intern may trade.
+17. *(1.6)* **A bet of exactly the rulebook's `max_margin_e6` can be refused `OVER_TRADE_LIMIT` after a cash-out.** The rulebook states the limit from `brave_at_open`; checks 11 and 12 use the smaller of that and the pool now (section 3). If someone cashes out between the round's opening and the proposal, the largest bet the rulebook allows is over the limit by a little. The rule held; the AI did not break it. (Found by Engine 2's simulation.)
+18. *(1.6)* **Many small accounts can crowd the reward ladder.** The draw takes the first 200 entrants and the jackpot needs only $10 held for 7 rounds, so accounts made for the purpose could take most draw places and jackpot shares with little money. On testnet the prizes are cents; a real-money version would need a minimum stake per entry or a cost per account. (Found by Engine 2's simulation.)
+19. *(1.6)* **Leagues hold 25 groups of 20 a week** (500 players); later guessers earn points but have no group that week. League standings and reviews are computed from rounds and guesses on chain; nothing in them changes what the Intern may trade, and they carry no prize.
+20. *(1.6)* **A vote that nobody voted in fails, whatever its kind.** Section 9.2's wording alone ("yes of at least 34% of the locked weight") would let a demote or fire vote pass with no votes when no weight is locked (0 ≥ 34% of 0); the contract fails it (`crates/rules/src/vote.rs`, `passed`: "Nobody voted: fails"). (Found by Engine 2.)
 
 ## 15. Change log
 
 | Version | Date | Change |
 |---|---|---|
+| 1.6 | 2026-11-13 | Leagues and the weekly review (owner's decisions; section 9.8): `get_week`, `get_league`, `get_league_results`, `get_review`, `get_reviews`, `stamp_review`, the events `league_closed`, `review_written`, `review_bar_filled`; `rewards_tick` also closes leagues and writes reviews. Client order ids on every order (section 11.2, `build_with_cloid`, Engine 2's PR #3). `get_outbox` keeps 200 actions (section 8). Known limits 17–20. Nothing here changes what the Intern may trade. The diary is not built (future scope) |
 | 1.0 | 2026-11-11 | First version |
 | 1.1 | 2026-11-11 | From Engine 1's review. Limits use the smaller of the pool at round open and the pool now. Cash-out during an open bet excludes the margin in play. `sign_next` is runner-only and needs no deposit; `close` may be signed again. Pending money becomes coins lazily, per account. Demotion, vote timing and vote-opening rules spelled out. `ecrecover`: `v` is 0 or 1, high-s accepted. Rulebook example bet raised to $10. `"0"` is a well-formed margin. `stuck` defined. Paging defined. `OUTSIDE_WINDOW` limit for late proposals. Undecodable input is a NOPE, not an abort. Test cases 25, 26 and D13 added. Three known limits added |
 | 1.2 | 2026-11-12 | Owner's decisions, from Engine 1's vote work and Engine 2's open items. Demote and fire pass at 34% of all locked weight, not of the weight that voted. `min_notional` is $11, not $10. The rulebook gains a `min_notional_e6` line and one sentence on amounts; its example bet is $11. Blank lines around the decision line are `MALFORMED_DECISION` (unchanged rule, said plainly). Pinned model `z-ai/glm-5.3-flash`, `ed25519`. The request's allowed shape and two NEAR AI headers written down. `px_e8` is a decimal string (a number is also accepted). A signed action's `v` is 27 or 28. The contract calls `check_format` before `build`. Test cases 7, 8, 9, 18, 19, 20 and 24 moved to the $11 minimum. Deployments filled in. Clarified the same day (Engine 2's items P and Q): the TypeScript shape in 8.1 says "1.2"; `sign_next` and `close` return `null` when the signature failed |

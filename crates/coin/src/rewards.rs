@@ -558,6 +558,7 @@ impl Coin {
         counts[g as usize] += 1;
         self.rw.round_counts.insert(r.id, counts);
         self.feed.push(EventName::Guessed, json!({"round_id": r.id, "account_id": who}));
+        self.wk_guess(&who, r.id, g); // 1.6: this week's league
         // R2: a golden sticker, 1 in `golden_odds`, of a code chosen by the same draw, while that code has some left.
         let h = random(&[b"golden".as_slice(), who.as_bytes(), &r.id.to_le_bytes()].concat());
         let roll = u128_of(&h);
@@ -627,12 +628,14 @@ impl Coin {
         self.rw.entries.remove(&who);
     }
 
-    /// Anyone (the runner does it each round): settles the jackpots of closed rounds and holds a draw that is due.
+    /// Anyone (the runner does it each round): settles the jackpots of closed rounds, holds a draw that is due, and
+    /// (1.6) closes the leagues and writes the reviews of weeks that are over.
     pub fn rewards_tick(&mut self) {
         self.tick();
         let current = self.current.expect("round").id;
         self.rw_jackpots(current);
         self.rw_draw(current);
+        self.wk_tick(current); // 1.6: leagues and the weekly review
     }
 
     /// Pays every prize owed to the caller (jackpot shares, draw prizes). 1 yocto, at least 40 TGas.
