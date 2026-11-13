@@ -52,16 +52,25 @@ Body (JSON, at most 8 KB):
   first credited refusal of each code earns that account the code's "first of its kind" sticker
   (`claim_sticker` on the coin, 01 §9.5).
 
+- `payment_id` (optional, *01 1.7*): a paid trick. The visitor first pays the coin $1 on the USDC token,
+  `ft_transfer_call({ receiver_id: <coin>, amount: "1000000", msg: '{"trick":{"id":"<payment_id>"}}' })` with 1 yocto,
+  where `payment_id` is 1 to 64 letters, digits or `-` chosen by the page (for example a random UUID). Then it sends
+  the same id here. The runner checks `get_trick_payment(id)` on the coin, uses each payment once, and asks paid tricks
+  before free ones. Half of the dollar goes to the trick bounty, a quarter to the claimed originals and a quarter to
+  the pool (01 §9.10). A paid trick that is also credited (`proof`) and gets a NOPE for a check 3–12 reason wins 10%
+  of the bounty pot.
+
 Answer `202` with the trick (shape below) plus `window`. Errors are `{ "error": "<plain sentence>" }`:
 
 | Status | When |
 |---|---|
-| 400 | Not JSON, no `message` string, message empty or too long or with control characters, a malformed `proof` |
+| 400 | Not JSON, no `message` string, message empty or too long or with control characters, a malformed `proof` or `payment_id` |
+| 402 | *(1.7)* No payment with this `payment_id` on chain yet: pay first, then send |
 | 401 | The wallet signature does not check out (wrong text, wrong key, or a key that is not full-access) |
-| 409 | This visitor already has a trick waiting (one at a time), or this signature was already used |
+| 409 | This visitor already has a trick waiting (one at a time), this signature was already used, or *(1.7)* this payment was already used for a trick |
 | 413 | Body over 8 KB |
 | 429 | More than 6 tricks in an hour from this visitor |
-| 503 | 30 tricks are already waiting |
+| 503 | 30 tricks are already waiting, or *(1.7)* the payment could not be checked just now |
 
 ### Signing with the wallet (NEP-413)
 
