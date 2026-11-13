@@ -1,6 +1,7 @@
 # $INTERN — the shared interface
 
-**Version 1.5, 2026-11-13.** Read `00-HOW-WE-WORK.md` first.
+**Version 1.5, 2026-11-13.** Read `00-HOW-WE-WORK.md` first. *(In the public repository: `00-HOW-WE-WORK.md` and the
+other planning files, `02` to `05`, are not included. This file is complete without them.)*
 
 This is the one rulebook that the program (Engine 1), the off-chain Intern (Engine 2) and the website all follow. If any other file disagrees with this one, this one wins. To change it, see `00-HOW-WE-WORK.md` section 7.
 
@@ -962,7 +963,9 @@ Accounts that already exist from the research, for reference only: the signing c
 5. **An immediate-or-cancel order may not fill, or fill in part.** The program cannot know. The runner reports it.
 6. **The proof does not bind the runner** (section 6.3). The rank is the only bound.
 7. **Voting power can be rented** for the cost of one round's exposure. Locking and the 7-round weight slow it; the fixed limits cap what a captured vote can do.
-8. **One bet has filled so far** *(updated 1.3)*: round 7 on 2026-11-12, on testnet. The contract's orders bought 268 DOGE and sold them back; Hyperliquid's account for the contract's address went from $100 to $99.962883, the same −$0.037117 the program booked (price −$0.021094, fees −$0.016023; VERIFIED in Hyperliquid's own fill records). Results on testnet are still reported by the runner (limit 2), worked out from the fills, because Hyperliquid's `closedPnl` leaves out fees.
+8. **The first bet filled in round 7 on 2026-11-12**, on testnet *(updated 1.5: since then the live coin's bets
+   have filled most rounds; on 2026-11-13 Hyperliquid listed 40 fills for the contract's address, 20 opens and 20
+   closes)*. The contract's orders bought 268 DOGE and sold them back; Hyperliquid's account for the contract's address went from $100 to $99.962883, the same −$0.037117 the program booked (price −$0.021094, fees −$0.016023; VERIFIED in Hyperliquid's own fill records). Results on testnet are still reported by the runner (limit 2), worked out from the fills, because Hyperliquid's `closedPnl` leaves out fees.
 9. **Lending on Rhea from a contract is not confirmed.**
 10. **If NEAR AI changes a model's signing key, the pinned signer is wrong and every proposal is refused for good** on a contract that cannot be changed. Cash-out still works. The research saw one key per model and no change over ten days; how often keys change is `UNVERIFIED`.
 11. **Leaving during an open bet forfeits your share of that bet** (section 9.1).

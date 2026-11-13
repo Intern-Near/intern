@@ -14,6 +14,7 @@ cd "$here"
 quick=0; [ "${1:-}" = "--quick" ] && quick=1
 log="$here/target/verify"; mkdir -p "$log"
 fail=0
+skipped_ts=
 note() { printf '%s\n' "$*"; }
 step() { printf '\n== %s\n' "$*"; }
 
@@ -98,9 +99,9 @@ if command -v npm >/dev/null 2>&1; then
     note "$(printf '%-9s' "$p") passed: ${np:-?}   failed: ${nf:-?}   $r"
   done
 else
-  note "skipped: npm not found (Node 24 is needed for this step only)"
+  note "SKIPPED: npm not found (Node 24.11+ is needed for this step only)"; skipped_ts=1
 fi
 
 step "Summary"
-if [ $fail = 0 ]; then note "ALL CHECKS PASSED"; else note "SOME CHECKS FAILED (logs in $log)"; fi
+if [ $fail = 0 ]; then note "ALL CHECKS PASSED${skipped_ts:+ (but the TypeScript tests were SKIPPED: no npm)}"; else note "SOME CHECKS FAILED (logs in $log)"; fi
 exit $fail

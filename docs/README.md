@@ -9,7 +9,7 @@
 | `ACCESS-KEYS.md` | The contracts can still be upgraded; how and when the keys would be removed (the owner's decision) |
 | `../fixtures/chain/testnet-accounts.md` | Every testnet account and the transaction behind each deploy and check |
 | `../interface/deployments.json` | Contract addresses the site and the runner use |
-| `../01-SHARED-INTERFACE.md` | The interface every part follows (v1.3), including the known limits (section 14) |
+| `../01-SHARED-INTERFACE.md` | The interface every part follows (v1.5), including the known limits (section 14) |
 
 The contracts' source is in `../crates/`: `coin` (the program), `rules` (the rank checks, no NEAR code), `shared`
 (types shared with Engine 2), `ai-check` and `hl-order` (Engine 2's crates, compiled into the coin), `mock-usdc`,
