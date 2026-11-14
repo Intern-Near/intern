@@ -7,6 +7,8 @@ nothing here is real money, depositors can lose what they put in the BRAVE pool,
 
 ## Where it is
 
+- The website: https://intern-org.xyz
+- On X: https://x.com/intern_live
 - Network: NEAR testnet. RPC: https://test.rpc.fastnear.com
 - The coin contract (everything below is read from it): coin.desk-lab-2026.testnet
 - Test dollar (stand-in for USDC): usdc.desk-lab-2026.testnet

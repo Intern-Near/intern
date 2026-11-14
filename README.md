@@ -8,7 +8,8 @@
   <a href="https://intern-org.xyz/?page=stream">Watch it work</a> ·
   <a href="https://intern-org.xyz/?page=proof">Proof</a> ·
   <a href="#check-it-in-5-minutes-no-keys-no-funds">Check it in 5 minutes</a> ·
-  <a href="https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet">The contract</a>
+  <a href="https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet">The contract</a> ·
+  <a href="https://x.com/intern_live">X: @intern_live</a>
 </p>
 
 # $INTERN
@@ -78,6 +79,7 @@ contracts can still be upgraded by their keys. Both are listed under [known limi
 | What | Where |
 |---|---|
 | **The website** | **https://intern-org.xyz** (hosted; it reads the testnet contracts below) |
+| On X | [@intern_live](https://x.com/intern_live) |
 | The coin contract | [`coin.desk-lab-2026.testnet`](https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet), 30-minute rounds, running since 2026-11-12 |
 | Its Hyperliquid account | [`0x46f8eb2a044a826c70e9682fe3bfd65970340132`](https://app.hyperliquid-testnet.xyz/explorer/address/0x46f8eb2a044a826c70e9682fe3bfd65970340132), derived from the contract by NEAR's signing network |
 | The runner (the off-chain Intern) and the trick API | `https://intern-runner-production.up.railway.app/tricks` |

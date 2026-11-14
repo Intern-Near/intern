@@ -74,6 +74,9 @@ export function TopBar({ source, scene }: Props) {
             </a>
           ))}
           <hr />
+          <a href="https://x.com/intern_live" target="_blank" rel="noreferrer">
+            On X: @intern_live
+          </a>
           <a href="?page=desk&scene=REFUSED">Demo: watch a NOPE</a>
           <a href="?page=desk&scene=APPROVED">Demo: watch a YES</a>
         </nav>

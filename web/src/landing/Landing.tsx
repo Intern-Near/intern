@@ -608,6 +608,9 @@ function Final() {
         <span>$INTERN, a NEAR hackathon entry. Test network.</span>
         <span>The characters were made with AI image tools.</span>
         <a href={href("judge")}>For judges: what is real and what is a stand-in</a>
+        <a href="https://x.com/intern_live" target="_blank" rel="noreferrer">
+          On X: @intern_live
+        </a>
       </footer>
     </section>
   );
