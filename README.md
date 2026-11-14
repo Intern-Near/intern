@@ -470,3 +470,5 @@ MIT: see [`LICENSE`](LICENSE). The fonts and outside libraries keep their own li
 - [Kaustubh-404](https://github.com/Kaustubh-404): the contracts (Engine 1), the website, the product and the art.
 - [AtharvaWaghchoure](https://github.com/AtharvaWaghchoure): the runner and the AI and order crates
   (Engine 2).
+
+**Contact:** [kaustubhp2003@gmail.com](mailto:kaustubhp2003@gmail.com) · on X: [@intern_live](https://x.com/intern_live)
