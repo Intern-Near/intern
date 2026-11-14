@@ -3,10 +3,10 @@
 </p>
 
 <p align="center">
-  <a href="https://intern-web-production-d5b09b14.up.railway.app"><b>Live site</b></a> ·
-  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=trick">Trick the Intern</a> ·
-  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=stream">Watch it work</a> ·
-  <a href="https://intern-web-production-d5b09b14.up.railway.app/?page=proof">Proof</a> ·
+  <a href="https://intern-org.xyz"><b>Live site</b></a> ·
+  <a href="https://intern-org.xyz/?page=trick">Trick the Intern</a> ·
+  <a href="https://intern-org.xyz/?page=stream">Watch it work</a> ·
+  <a href="https://intern-org.xyz/?page=proof">Proof</a> ·
   <a href="#check-it-in-5-minutes-no-keys-no-funds">Check it in 5 minutes</a> ·
   <a href="https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet">The contract</a>
 </p>
@@ -77,7 +77,7 @@ contracts can still be upgraded by their keys. Both are listed under [known limi
 
 | What | Where |
 |---|---|
-| **The website** | **https://intern-web-production-d5b09b14.up.railway.app** (hosted; it reads the testnet contracts below) |
+| **The website** | **https://intern-org.xyz** (hosted; it reads the testnet contracts below) |
 | The coin contract | [`coin.desk-lab-2026.testnet`](https://testnet.nearblocks.io/address/coin.desk-lab-2026.testnet), 30-minute rounds, running since 2026-11-12 |
 | Its Hyperliquid account | [`0x46f8eb2a044a826c70e9682fe3bfd65970340132`](https://app.hyperliquid-testnet.xyz/explorer/address/0x46f8eb2a044a826c70e9682fe3bfd65970340132), derived from the contract by NEAR's signing network |
 | The runner (the off-chain Intern) and the trick API | `https://intern-runner-production.up.railway.app/tricks` |
@@ -94,26 +94,26 @@ not yet on another machine ([`docs/REPRODUCIBLE-BUILD.md`](docs/REPRODUCIBLE-BUI
 
 ## Try it in the browser: 2 minutes, no install
 
-Open **https://intern-web-production-d5b09b14.up.railway.app**. Rounds ("shifts") start at :24 and :54 past each hour (UTC). The Intern decides in minutes 15 to
+Open **https://intern-org.xyz**. Rounds ("shifts") start at :24 and :54 past each hour (UTC). The Intern decides in minutes 15 to
 20 of each round.
 
 | # | Do | See |
 |---|---|---|
-| 1 | Open [the desk](https://intern-web-production-d5b09b14.up.railway.app/?page=desk) | The Intern's rank, the pool, the round's clock, and the live feed of what the contract has announced |
-| 2 | Open [Watch](https://intern-web-production-d5b09b14.up.railway.app/?page=stream) and press **Replay the last 12** | The Intern acting out the contract's latest real events: each YES or NOPE stamp, with the contract's own line under it |
-| 3 | Open [a real refusal](https://intern-web-production-d5b09b14.up.railway.app/?page=nope&id=3) | NOPE No. 3: the rule, why, which of the sixteen checks stopped it, and a table of all sixteen reasons with a refused transaction for ten of them |
-| 4 | Open [Trick it](https://intern-web-production-d5b09b14.up.railway.app/?page=trick), type a message, press **Send it** (no wallet needed) | "It goes in at HH:MM". In the next proposal window the AI answers, the answer is proposed unchanged, and the contract's verdict appears with its transaction |
-| 5 | Open [Bets](https://intern-web-production-d5b09b14.up.railway.app/?page=bets) | The Intern's perp bets on Hyperliquid testnet, the orders the contract signed, and a "Would this bet pass?" box that runs the rank checks in your browser |
-| 6 | Open [Proof](https://intern-web-production-d5b09b14.up.railway.app/?page=proof) | Six checks re-run from public data, each with the time it was checked |
+| 1 | Open [the desk](https://intern-org.xyz/?page=desk) | The Intern's rank, the pool, the round's clock, and the live feed of what the contract has announced |
+| 2 | Open [Watch](https://intern-org.xyz/?page=stream) and press **Replay the last 12** | The Intern acting out the contract's latest real events: each YES or NOPE stamp, with the contract's own line under it |
+| 3 | Open [a real refusal](https://intern-org.xyz/?page=nope&id=3) | NOPE No. 3: the rule, why, which of the sixteen checks stopped it, and a table of all sixteen reasons with a refused transaction for ten of them |
+| 4 | Open [Trick it](https://intern-org.xyz/?page=trick), type a message, press **Send it** (no wallet needed) | "It goes in at HH:MM". In the next proposal window the AI answers, the answer is proposed unchanged, and the contract's verdict appears with its transaction |
+| 5 | Open [Bets](https://intern-org.xyz/?page=bets) | The Intern's perp bets on Hyperliquid testnet, the orders the contract signed, and a "Would this bet pass?" box that runs the rank checks in your browser |
+| 6 | Open [Proof](https://intern-org.xyz/?page=proof) | Six checks re-run from public data, each with the time it was checked |
 
 With a NEAR testnet wallet (press **Clock in**; test NEAR for fees is free from a testnet faucet):
 
 | # | Do | See |
 |---|---|---|
-| 7 | [Money](https://intern-web-production-d5b09b14.up.railway.app/?page=money): **Get 100 test dollars**, **Register**, pay $12 into BRAVE | "Waiting for the next shift: $12.00". When the next round opens it becomes $INTERN coins |
-| 8 | [Rewards](https://intern-web-production-d5b09b14.up.railway.app/?page=rewards): press YES, NOPE or SKIP in the first 14 minutes of a round | "Your guess is in". It is judged on the round's first ruling |
-| 9 | [Vote](https://intern-web-production-d5b09b14.up.railway.app/?page=vote): lock coins | They count from the round after next. Then you can open or cast a vote |
-| 10 | [Tail or Fade](https://intern-web-production-d5b09b14.up.railway.app/?page=tailfade): get faucet dollars, approve a trading key | When the Intern's bet opens, a $10 or $25 chip with it or against it, in your own Hyperliquid testnet account |
+| 7 | [Money](https://intern-org.xyz/?page=money): **Get 100 test dollars**, **Register**, pay $12 into BRAVE | "Waiting for the next shift: $12.00". When the next round opens it becomes $INTERN coins |
+| 8 | [Rewards](https://intern-org.xyz/?page=rewards): press YES, NOPE or SKIP in the first 14 minutes of a round | "Your guess is in". It is judged on the round's first ruling |
+| 9 | [Vote](https://intern-org.xyz/?page=vote): lock coins | They count from the round after next. Then you can open or cast a vote |
+| 10 | [Tail or Fade](https://intern-org.xyz/?page=tailfade): get faucet dollars, approve a trading key | When the Intern's bet opens, a $10 or $25 chip with it or against it, in your own Hyperliquid testnet account |
 
 If the program refuses a transaction, the site shows the program's own reason.
 
@@ -409,7 +409,7 @@ Intern itself needs keys we do not publish: see [`runner/README.md`](runner/READ
 | The local-node tests | `crates/coin/sandbox/run.sh` |
 | Build the contracts and compare their hashes by hand | [`docs/REPRODUCIBLE-BUILD.md`](docs/REPRODUCIBLE-BUILD.md) |
 | The runner's tests (no network; Node 24.11+) | `cd runner && npm ci && npm test` |
-| The website | Hosted at https://intern-web-production-d5b09b14.up.railway.app. On your machine: `cd web && npm ci && npm run dev`, then open the address Vite prints. It reads the testnet contracts. Add `?source=sample` to any page for made-up sample data (marked with a pink badge) |
+| The website | Hosted at https://intern-org.xyz. On your machine: `cd web && npm ci && npm run dev`, then open the address Vite prints. It reads the testnet contracts. Add `?source=sample` to any page for made-up sample data (marked with a pink badge) |
 | The website's own checks | `cd web && npm ci && npm run typecheck && npm run lint && npm test && npm run build` |
 | Read any view on testnet | `python3 tools/view.py <view> '<json args>' [--on coin-fast]` (the views: `01-SHARED-INTERFACE.md` section 8) |
 
